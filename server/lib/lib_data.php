@@ -78,7 +78,8 @@ class LookupServer_Data {
 	 * @param string vcard
 	 */
 	public function store($key,$federationid,$name,$email,$country,$city,$picture,$vcard) {
-		$stmt = LookupUpServer_DB::prepare('insert into user (authkey,federationid,name,email,country,city,picture,vcard) values(:authkey,:federationid,:name,:email,:country,:city,:picture,:vcard)');
+		$created = time();
+		$stmt = LookupUpServer_DB::prepare('insert into user (authkey,federationid,name,email,country,city,picture,vcard,created) values(:authkey,:federationid,:name,:email,:country,:city,:picture,:vcard,:created)');
 		$stmt->bindParam(':authkey', $key, PDO::PARAM_STR);
 		$stmt->bindParam(':federationid', $federationid, PDO::PARAM_STR);
 		$stmt->bindParam(':name', $name, PDO::PARAM_STR);
@@ -87,6 +88,7 @@ class LookupServer_Data {
 		$stmt->bindParam(':city', $city, PDO::PARAM_STR);
 		$stmt->bindParam(':picture', $picture, PDO::PARAM_STR);
 		$stmt->bindParam(':vcard', $vcard, PDO::PARAM_STR);
+		$stmt->bindParam(':created', $created, PDO::PARAM_INT);
 		$stmt->execute();
 	}
 
@@ -102,7 +104,8 @@ class LookupServer_Data {
 	 * @param string $vcard
 	 */
 	public function update($key,$federationid,$name,$email,$country,$city,$picture,$vcard) {
-		$stmt=LookupUpServer_DB::prepare('update user set federationid=:federationid,name=:name,email=:email,country=:country,city=:city,picture=:picture,vcard=:vcard where authkey=:authkey');
+		$changed = time();
+		$stmt=LookupUpServer_DB::prepare('update user set federationid=:federationid,name=:name,email=:email,country=:country,city=:city,picture=:picture,vcard=:vcard,changed=:changed where authkey=:authkey');
 		$stmt->bindParam(':authkey', $key, PDO::PARAM_STR);
 		$stmt->bindParam(':federationid', $federationid, PDO::PARAM_STR);
 		$stmt->bindParam(':name', $name, PDO::PARAM_STR);
@@ -111,6 +114,7 @@ class LookupServer_Data {
 		$stmt->bindParam(':city', $city, PDO::PARAM_STR);
 		$stmt->bindParam(':picture', $picture, PDO::PARAM_STR);
 		$stmt->bindParam(':vcard', $vcard, PDO::PARAM_STR);
+		$stmt->bindParam(':changed', $changed, PDO::PARAM_INT);
 		$stmt->execute();
 	}
 

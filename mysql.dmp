@@ -11,6 +11,8 @@ CREATE TABLE IF NOT EXISTS `user` (
   `city` varchar(255) NOT NULL,
   `picture` text NOT NULL,
   `vcard` text NOT NULL,
+  `created` int NOT NULL,
+  `changed` int NOT NULL,
   PRIMARY KEY (`id`),
   KEY `authkey` (`authkey`),
   KEY `name` (`name`),
