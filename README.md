@@ -21,19 +21,19 @@ The Lookup-Server is a server component that can be run independently from an ow
 
 ## Examples for REST calls
 Create user:
-curl -X POST -d key=myauthkey -d federationid=myfedid -d name=myname -d email=myemail -d country=DE -d city=Stuttgart -d picture=binarypicture -d data=vcarddata http://dev/owncloud/lookup-server/server/
+curl -X POST -d key=myauthkey -d federationid=myfedid -d name=myname -d email=myemail -d country=DE -d city=Stuttgart -d picture=binarypicture -d vcard=vcarddata http://dev/owncloud/lookup-server/server/
 
 Get user:
 curl -X GET http://dev/owncloud/lookup-server/server/?key=myauthkey
 
 Update user:
-curl -X PUT -d key=myauthkey -d federationid=myfedid -d name=myname -d email=myemail -d country=DE -d city=Stuttgart -d picture=binarypicture -d data=vcarddata http://dev/owncloud/lookup-server/server/
+curl -X PUT -d key=myauthkey -d federationid=myfedid -d name=myname -d email=myemail -d country=DE -d city=Stuttgart -d picture=binarypicture -d vcard=vcarddata http://dev/owncloud/lookup-server/server/
 
 Delete user:
 curl -X DELETE http://dev/owncloud/lookup-server/server/?key=myauthkey
 
 Search users:
-curl -X GET http://dev/owncloud/lookup-server/server/?search=name
+curl -X GET http://dev/owncloud/lookup-server/server/?search=name\&page=0
 
 
 
