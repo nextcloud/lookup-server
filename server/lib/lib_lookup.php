@@ -94,6 +94,7 @@ class LookupServer {
 		isset($_POST['federationid']) and
 		isset($_POST['name']) and
 		isset($_POST['email']) and
+		isset($_POST['organisation']) and
 		isset($_POST['country']) and
 		isset($_POST['city']) and
 		isset($_POST['picture']) and
@@ -103,13 +104,14 @@ class LookupServer {
 			$federationid = $this -> sanitize($_POST['federationid']);
 			$name         = $this -> sanitize($_POST['name']);
 			$email        = $this -> sanitize($_POST['email']);
+			$organisation = $this -> sanitize($_POST['organisation']);
 			$country      = $this -> sanitize($_POST['country']);
 			$city         = $this -> sanitize($_POST['city']);
 			$picture      = $this -> sanitize($_POST['picture']);
 			$vcard         = $this -> sanitize($_POST['vcard']);
 
 			$d = new LookupServer_Data();
-			$d -> store($key,$federationid,$name,$email,$country,$city,$picture,$vcard);
+			$d -> store($key,$federationid,$name,$email,$organisation,$country,$city,$picture,$vcard);
 			echo(json_encode(true,JSON_PRETTY_PRINT));
 		}
 	}
@@ -125,6 +127,7 @@ class LookupServer {
 		isset($PUT['federationid']) and
 		isset($PUT['name']) and
 		isset($PUT['email']) and
+		isset($PUT['organisation']) and
 		isset($PUT['country']) and
 		isset($PUT['city']) and
 		isset($PUT['picture']) and
@@ -134,13 +137,14 @@ class LookupServer {
 			$federationid = $this -> sanitize($PUT['federationid']);
 			$name         = $this -> sanitize($PUT['name']);
 			$email        = $this -> sanitize($PUT['email']);
+			$organisation = $this -> sanitize($PUT['organisation']);
 			$country      = $this -> sanitize($PUT['country']);
 			$city         = $this -> sanitize($PUT['city']);
 			$picture      = $this -> sanitize($PUT['picture']);
 			$vcard         = $this -> sanitize($PUT['vcard']);
 
 			$d = new LookupServer_Data();
-			$d -> update($key,$federationid,$name,$email,$country,$city,$picture,$vcard);
+			$d -> update($key,$federationid,$name,$email,$organisation,$country,$city,$picture,$vcard);
 			echo(json_encode(true,JSON_PRETTY_PRINT));
 		}
 	}
