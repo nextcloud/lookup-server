@@ -1,0 +1,20 @@
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+SET time_zone = "+00:00";
+
+CREATE TABLE IF NOT EXISTS `user` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `authkey` varchar(255) NOT NULL,
+  `federationid` varchar(255) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `country` varchar(255) NOT NULL,
+  `city` varchar(255) NOT NULL,
+  `picture` text NOT NULL,
+  `data` text NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `authkey` (`authkey`),
+  KEY `name` (`name`),
+  KEY `email` (`email`),
+  KEY `country` (`country`),
+  KEY `city` (`city`)
+) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
