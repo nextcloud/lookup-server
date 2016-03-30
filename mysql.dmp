@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS `user` (
   `country` varchar(255) NOT NULL,
   `city` varchar(255) NOT NULL,
   `picture` text NOT NULL,
-  `data` text NOT NULL,
+  `vcard` text NOT NULL,
   PRIMARY KEY (`id`),
   KEY `authkey` (`authkey`),
   KEY `name` (`name`),

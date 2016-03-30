@@ -97,7 +97,7 @@ class LookupServer {
 		isset($_POST['country']) and
 		isset($_POST['city']) and
 		isset($_POST['picture']) and
-		isset($_POST['data'])
+		isset($_POST['vcard'])
 		){
 			$key          = $this -> sanitize($_POST['key']);
 			$federationid = $this -> sanitize($_POST['federationid']);
@@ -106,10 +106,10 @@ class LookupServer {
 			$country      = $this -> sanitize($_POST['country']);
 			$city         = $this -> sanitize($_POST['city']);
 			$picture      = $this -> sanitize($_POST['picture']);
-			$data         = $this -> sanitize($_POST['data']);
+			$vcard         = $this -> sanitize($_POST['vcard']);
 
 			$d = new LookupServer_Data();
-			$d -> store($key,$federationid,$name,$email,$country,$city,$picture,$data);
+			$d -> store($key,$federationid,$name,$email,$country,$city,$picture,$vcard);
 			echo(json_encode(true,JSON_PRETTY_PRINT));
 		}
 	}
@@ -128,7 +128,7 @@ class LookupServer {
 		isset($PUT['country']) and
 		isset($PUT['city']) and
 		isset($PUT['picture']) and
-		isset($PUT['data'])
+		isset($PUT['vcard'])
 		){
 			$key          = $this -> sanitize($PUT['key']);
 			$federationid = $this -> sanitize($PUT['federationid']);
@@ -137,10 +137,10 @@ class LookupServer {
 			$country      = $this -> sanitize($PUT['country']);
 			$city         = $this -> sanitize($PUT['city']);
 			$picture      = $this -> sanitize($PUT['picture']);
-			$data         = $this -> sanitize($PUT['data']);
+			$vcard         = $this -> sanitize($PUT['vcard']);
 
 			$d = new LookupServer_Data();
-			$d -> update($key,$federationid,$name,$email,$country,$city,$picture,$data);
+			$d -> update($key,$federationid,$name,$email,$country,$city,$picture,$vcard);
 			echo(json_encode(true,JSON_PRETTY_PRINT));
 		}
 	}
