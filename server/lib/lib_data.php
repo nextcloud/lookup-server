@@ -35,10 +35,30 @@ class LookupServer_Data {
         $stmt->execute();
         $num=$stmt->rowCount();
 
-		if($num==0) return(array());
+		if($num==0) return(false);
 		if($num>1) $this->error('more then one DB entry found for key: '.$key);
         $data = $stmt->fetch(PDO::FETCH_ASSOC);
 		return($data);
+	}
+
+
+	/**
+	 * Check if user exists
+	 * @param string $key
+	 * @return bool $exists
+	 */
+	public function userExist($key) {
+		$stmt=LookupUpServer_DB::prepare('select id from user where authkey = :key');
+        $stmt->bindParam(':key', $key, PDO::PARAM_STR);
+        $stmt->execute();
+        $num=$stmt->rowCount();
+
+		if($num==1) {
+			return(true);
+		} else {
+			return(false);
+		}
+
 	}
 
 

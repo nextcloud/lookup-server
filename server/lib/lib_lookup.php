@@ -111,7 +111,12 @@ class LookupServer {
 			$vcard         = $this -> sanitize($_POST['vcard']);
 
 			$d = new LookupServer_Data();
-			$d -> store($key,$federationid,$name,$email,$organisation,$country,$city,$picture,$vcard);
+			$user = $d -> userExist($key);
+			if(!$user) {
+				$d -> store($key,$federationid,$name,$email,$organisation,$country,$city,$picture,$vcard);
+			} else {
+				$d -> update($key,$federationid,$name,$email,$organisation,$country,$city,$picture,$vcard);
+			}
 			echo(json_encode(true,JSON_PRETTY_PRINT));
 		}
 	}
