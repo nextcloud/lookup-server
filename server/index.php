@@ -30,6 +30,10 @@ date_default_timezone_set('Europe/Berlin');
 //you have to include lib_lookup.
 require('lib/lib_lookup.php');
 
+//Do the any brute force check
+$bf = new LookupServer_BruteForce();
+$bf -> check();
+
 //process the request.
 $s = new LookupServer();
 $s -> handlerequest();

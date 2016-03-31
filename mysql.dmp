@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS `user` (
   `federationid` varchar(255) NOT NULL,
   `name` varchar(255) NOT NULL,
   `email` varchar(255) NOT NULL,
-  `organisation` varchar(255) NOT NULL,  
+  `organisation` varchar(255) NOT NULL,
   `country` varchar(255) NOT NULL,
   `city` varchar(255) NOT NULL,
   `picture` text NOT NULL,
@@ -20,4 +20,11 @@ CREATE TABLE IF NOT EXISTS `user` (
   KEY `email` (`email`),
   KEY `country` (`country`),
   KEY `city` (`city`)
-) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
+
+
+CREATE TABLE `apitraffic` (
+  `ip` bigint(20) NOT NULL,
+  `count` int(11) NOT NULL,
+  PRIMARY KEY (`ip`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;

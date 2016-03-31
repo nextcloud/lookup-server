@@ -22,6 +22,7 @@
 // include all the required libraries and configuration file
 require('config.php');
 require('lib_db.php');
+require('lib_bruteforce.php');
 require('lib_data.php');
 
 /**
@@ -177,6 +178,9 @@ class LookupServer {
 	 *  Cleanup
 	 */
 	public function cleanup() {
+		// cleanup the traffic limit DB table
+		$bf = new LookupServer_BruteForce();
+		$bf -> cleanupTrafficLimit();
 	}
 
 
