@@ -189,9 +189,9 @@ class LookupServer {
 	 */
 	public function error($text) {
 		error_log($text);
+		if(LOOKUPSERVER_ERROR_VERBOSE) echo($text);
 		exit;
 	}
-
 
 
 }

@@ -10,3 +10,6 @@ define('LOOKUPSERVER_DB_LOGIN', '');
 
 // DB password
 define('LOOKUPSERVER_DB_PASSWD', '');
+
+// error verbose
+define('LOOKUPSERVER_ERROR_VERBOSE', true);
