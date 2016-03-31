@@ -70,8 +70,8 @@ class LookupServer_Data {
 	 * @return array $data
 	 */
 	public function searchuser($search,$start,$count) {
-		$searchstr = '%'.$search.'%';
-		$stmt=LookupUpServer_DB::prepare('select id,federationid,name,email,organisation,country,city,picture,vcard from user where name like :search limit :start,:count');
+		$searchstr = ''.$search.'';
+		$stmt=LookupUpServer_DB::prepare("select id,federationid,name,email,organisation,country,city,picture,vcard from user where match (name,email,organisation,country,city) against (:search in boolean mode) limit :start,:count");
 		$stmt->bindParam(':search', $searchstr, PDO::PARAM_STR);
         $stmt->bindParam(':start', $start, PDO::PARAM_INT);
         $stmt->bindParam(':count', $count, PDO::PARAM_INT);

@@ -19,7 +19,8 @@ CREATE TABLE IF NOT EXISTS `user` (
   KEY `name` (`name`),
   KEY `email` (`email`),
   KEY `country` (`country`),
-  KEY `city` (`city`)
+  KEY `city` (`city`),
+  FULLTEXT KEY `FullText` (`name`,`email`,`organisation`,`country`,`city`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
 
 
