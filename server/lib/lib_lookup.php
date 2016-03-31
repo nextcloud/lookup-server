@@ -81,6 +81,7 @@ class LookupServer {
 		$pagesize = 10;
 		if(isset($_GET['search']) and isset($_GET['page'])) {
 			$this -> log('SEARCH USER : '.$_GET['search'].' '.$_GET['page']);
+			if($_GET['page'] > LOOKUPSERVER_MAX_SEARCH_PAGE) $this->error('page is too high');
 			$data = new LookupServer_Data();
 			$users = $data -> searchuser($_GET['search'], $_GET['page']*$pagesize, $pagesize);
 			echo(json_encode($users,JSON_PRETTY_PRINT));

@@ -16,3 +16,6 @@ define('LOOKUPSERVER_ERROR_VERBOSE', true);
 
 // logfile
 define('LOOKUPSERVER_LOG', '/var/log/owncloud/lookup.log');
+
+// max user search page. limit the maximum number of pages to avoid scraping.
+define('LOOKUPSERVER_MAX_SEARCH_PAGE', 10);
