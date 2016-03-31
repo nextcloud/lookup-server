@@ -159,6 +159,7 @@ class LookupServer_Data {
 	 */
 	public function error($text) {
 		error_log($text);
+		if(LOOKUPSERVER_ERROR_VERBOSE) echo($text);
 		exit;
 	}
 
