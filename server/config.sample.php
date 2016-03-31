@@ -13,3 +13,6 @@ define('LOOKUPSERVER_DB_PASSWD', '');
 
 // error verbose
 define('LOOKUPSERVER_ERROR_VERBOSE', true);
+
+// logfile
+define('LOOKUPSERVER_LOG', '/var/log/owncloud/lookup.log');

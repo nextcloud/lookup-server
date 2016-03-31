@@ -66,6 +66,7 @@ class LookupServer {
 	 */
 	public function getuser() {
 		if(isset($_GET['key'])) {
+			$this -> log('GET USER : '.$_GET['key']);
 			$data = new LookupServer_Data();
 			$user = $data -> getByKey($_GET['key']);
 			echo(json_encode($user,JSON_PRETTY_PRINT));
@@ -79,6 +80,7 @@ class LookupServer {
 	public function searchusers() {
 		$pagesize = 10;
 		if(isset($_GET['search']) and isset($_GET['page'])) {
+			$this -> log('SEARCH USER : '.$_GET['search'].' '.$_GET['page']);
 			$data = new LookupServer_Data();
 			$users = $data -> searchuser($_GET['search'], $_GET['page']*$pagesize, $pagesize);
 			echo(json_encode($users,JSON_PRETTY_PRINT));
@@ -108,7 +110,8 @@ class LookupServer {
 			$country      = $this -> sanitize($_POST['country']);
 			$city         = $this -> sanitize($_POST['city']);
 			$picture      = $this -> sanitize($_POST['picture']);
-			$vcard         = $this -> sanitize($_POST['vcard']);
+			$vcard        = $this -> sanitize($_POST['vcard']);
+			$this -> log('CREATE USER : '.$key);
 
 			$d = new LookupServer_Data();
 			$user = $d -> userExist($key);
@@ -146,7 +149,8 @@ class LookupServer {
 			$country      = $this -> sanitize($PUT['country']);
 			$city         = $this -> sanitize($PUT['city']);
 			$picture      = $this -> sanitize($PUT['picture']);
-			$vcard         = $this -> sanitize($PUT['vcard']);
+			$vcard        = $this -> sanitize($PUT['vcard']);
+			$this -> log('UPDATE USER : '.$key);
 
 			$d = new LookupServer_Data();
 			$d -> update($key,$federationid,$name,$email,$organisation,$country,$city,$picture,$vcard);
@@ -161,6 +165,7 @@ class LookupServer {
 	public function deleteuser() {
 		$data = new LookupServer_Data();
 		if(isset($_GET['key'])) {
+			$this -> log('DELETE USER : '.$_GET['key']);
 			$data -> deleteByKey($_GET['key']);
 			echo(json_encode(true,JSON_PRETTY_PRINT));
 		}
@@ -193,5 +198,14 @@ class LookupServer {
 		exit;
 	}
 
+	/**
+	 *  Logfile handler
+	 * @param string $text
+	 */
+	public function log($text) {
+		if(LOOKUPSERVER_LOG<>'') {
+			file_put_contents(LOOKUPSERVER_LOG, $_SERVER['REMOTE_ADDR'].' '.'['.date('c').']'.' '.$text."\n", FILE_APPEND);
+		}
+	}
 
 }
