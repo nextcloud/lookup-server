@@ -47,9 +47,11 @@ class LookupServer {
 		    break;
 		  case 'GET':
 		    if(isset($_GET['search'])) {
-				$this->searchusers();
+				$this->searchUsers();
+			}elseif(isset($_GET['email'])) {
+				$this->getUserByEmail($_GET['email']);
 			} else {
-				$this->getuser();
+				$this->getUserByKey();
 			}
 		    break;
 		  case 'DELETE':
@@ -65,11 +67,24 @@ class LookupServer {
 	/**
 	 *  Get User
 	 */
-	public function getuser() {
+	public function getUserByKey() {
 		if(isset($_GET['key'])) {
-			$this -> log('GET USER : '.$_GET['key']);
+			$this -> log('GET USER BY KEY: '.$_GET['key']);
 			$data = new LookupServer_Data();
 			$user = $data -> getByKey($_GET['key']);
+			echo(json_encode($user,JSON_PRETTY_PRINT));
+		}
+	}
+
+
+	/**
+	 *  Get User by email
+	 */
+	public function getUserByEmail() {
+		if(isset($_GET['email'])) {
+			$this -> log('GET USER BY EMAIL: '.$_GET['email']);
+			$data = new LookupServer_Data();
+			$user = $data -> getByEmail($_GET['email']);
 			echo(json_encode($user,JSON_PRETTY_PRINT));
 		}
 	}

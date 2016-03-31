@@ -30,13 +30,31 @@ class LookupServer_Data {
 	 * @return array $data
 	 */
 	public function getByKey($key) {
-		$stmt=LookupUpServer_DB::prepare('select id,federationid,name,email,organistion,country,city,picture,vcard from user where authkey = :key');
+		$stmt=LookupUpServer_DB::prepare('select id,federationid,name,email,organisation,country,city,picture,vcard from user where authkey = :key');
         $stmt->bindParam(':key', $key, PDO::PARAM_STR);
         $stmt->execute();
         $num=$stmt->rowCount();
 
 		if($num==0) return(false);
 		if($num>1) $this->error('more then one DB entry found for key: '.$key);
+        $data = $stmt->fetch(PDO::FETCH_ASSOC);
+		return($data);
+	}
+
+
+	/**
+	 * Get an user data entry by email
+	 * @param string $email
+	 * @return array $data
+	 */
+	public function getByEmail($email) {
+		$stmt=LookupUpServer_DB::prepare('select id,federationid,name,email,organisation,country,city,picture,vcard from user where email=:email');
+        $stmt->bindParam(':email', $email, PDO::PARAM_STR);
+        $stmt->execute();
+        $num=$stmt->rowCount();
+		if($num==0) return(false);
+
+		if($num>1) $this->error('more then one DB entry found for email: '.$email);
         $data = $stmt->fetch(PDO::FETCH_ASSOC);
 		return($data);
 	}
