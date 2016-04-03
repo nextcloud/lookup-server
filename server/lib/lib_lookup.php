@@ -21,6 +21,7 @@
 
 // include all the required libraries and configuration file
 require('config/config.php');
+require('config/version.php');
 require('lib_db.php');
 require('lib_bruteforce.php');
 require('lib_data.php');
