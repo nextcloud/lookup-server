@@ -7,7 +7,6 @@
 - Make IPv6 ready
 - Add server to server replication calls
 - Replication log
-- Get user by userid
 - optimize DB indexes
 
 ## 2.0
