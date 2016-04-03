@@ -8,6 +8,7 @@
 - Add server to server replication calls
 - Replication log
 - Get user by userid
+- optimize DB indexes
 
 ## 2.0
 - Config file option to blacklist certain spam IP spaces and keywords

@@ -23,6 +23,7 @@
 require('config/config.php');
 require('config/version.php');
 require('lib_db.php');
+require('lib_util.php');
 require('lib_bruteforce.php');
 require('lib_data.php');
 
@@ -35,8 +36,9 @@ class LookupServer {
 	 * Handle an incoming REST call
 	 */
 	public function handlerequest() {
+		$util = new LookupUpServer_Util();
 
-		if(!isset($_SERVER['REQUEST_METHOD'])) $this->error('no request method');
+		if(!isset($_SERVER['REQUEST_METHOD'])) $util->error('no request method');
 		$method = $_SERVER['REQUEST_METHOD'];
 
 		switch ($method) {
@@ -61,7 +63,7 @@ class LookupServer {
 		    $this->deleteuser();
 		    break;
 		  default:
-		    $this->error('invalid request');
+		    $util->error('invalid request');
 		}
 
 	}
@@ -72,7 +74,8 @@ class LookupServer {
 	 */
 	public function getUserByKey() {
 		if(isset($_GET['key'])) {
-			$this -> log('GET USER BY KEY: '.$_GET['key']);
+			$util = new LookupUpServer_Util();
+			$util -> log('GET USER BY KEY: '.$_GET['key']);
 			$data = new LookupServer_Data();
 			$user = $data -> getByKey($_GET['key']);
 			echo(json_encode($user,JSON_PRETTY_PRINT));
@@ -85,7 +88,8 @@ class LookupServer {
 	 */
 	public function getUserByEmail() {
 		if(isset($_GET['email'])) {
-			$this -> log('GET USER BY EMAIL: '.$_GET['email']);
+			$util = new LookupUpServer_Util();
+			$util -> log('GET USER BY EMAIL: '.$_GET['email']);
 			$data = new LookupServer_Data();
 			$user = $data -> getByEmail($_GET['email']);
 			echo(json_encode($user,JSON_PRETTY_PRINT));
@@ -97,7 +101,8 @@ class LookupServer {
 	 */
 	public function getUserByUserId() {
 		if(isset($_GET['userid'])) {
-			$this -> log('GET USER BY USERID: '.$_GET['userid']);
+			$util = new LookupUpServer_Util();
+			$util -> log('GET USER BY USERID: '.$_GET['userid']);
 			$data = new LookupServer_Data();
 			$user = $data -> getByUserId($_GET['userid']);
 			echo(json_encode($user,JSON_PRETTY_PRINT));
@@ -111,8 +116,12 @@ class LookupServer {
 	public function searchusers() {
 		$pagesize = 10;
 		if(isset($_GET['search']) and isset($_GET['page'])) {
-			$this -> log('SEARCH USER : '.$_GET['search'].' '.$_GET['page']);
-			if($_GET['page'] > LOOKUPSERVER_MAX_SEARCH_PAGE) $this->error('page is too high');
+			$util = new LookupUpServer_Util();
+			$util -> log('SEARCH USER : '.$_GET['search'].' '.$_GET['page']);
+			if($_GET['page'] > LOOKUPSERVER_MAX_SEARCH_PAGE) {
+				$util = new LookupUpServer_Util();
+				$util->error('page is too high');
+			}
 			$data = new LookupServer_Data();
 			$users = $data -> searchuser($_GET['search'], $_GET['page']*$pagesize, $pagesize);
 			echo(json_encode($users,JSON_PRETTY_PRINT));
@@ -124,6 +133,7 @@ class LookupServer {
 	 *  Create User
 	 */
 	public function createuser() {
+		$util = new LookupUpServer_Util();
 		if(isset($_POST['key']) and
 		isset($_POST['federationid']) and
 		isset($_POST['name']) and
@@ -134,16 +144,17 @@ class LookupServer {
 		isset($_POST['picture']) and
 		isset($_POST['vcard'])
 		){
-			$key          = $this -> sanitize($_POST['key']);
-			$federationid = $this -> sanitize($_POST['federationid']);
-			$name         = $this -> sanitize($_POST['name']);
-			$email        = $this -> sanitize($_POST['email']);
-			$organisation = $this -> sanitize($_POST['organisation']);
-			$country      = $this -> sanitize($_POST['country']);
-			$city         = $this -> sanitize($_POST['city']);
-			$picture      = $this -> sanitize($_POST['picture']);
-			$vcard        = $this -> sanitize($_POST['vcard']);
-			$this -> log('CREATE USER : '.$key);
+			$key          = $util -> sanitize($_POST['key']);
+			$federationid = $util -> sanitize($_POST['federationid']);
+			$name         = $util -> sanitize($_POST['name']);
+			$email        = $util -> sanitize($_POST['email']);
+			$organisation = $util -> sanitize($_POST['organisation']);
+			$country      = $util -> sanitize($_POST['country']);
+			$city         = $util -> sanitize($_POST['city']);
+			$picture      = $util -> sanitize($_POST['picture']);
+			$vcard        = $util -> sanitize($_POST['vcard']);
+
+			$util -> log('CREATE USER : '.$key);
 
 			$d = new LookupServer_Data();
 			$user = $d -> userExist($key);
@@ -161,6 +172,7 @@ class LookupServer {
 	 *  Update User
 	 */
 	public function updateuser() {
+		$util = new LookupUpServer_Util();
 		parse_str(file_get_contents('php://input'), $PUT);
 
 		if(isset($PUT['key']) and
@@ -173,16 +185,16 @@ class LookupServer {
 		isset($PUT['picture']) and
 		isset($PUT['vcard'])
 		){
-			$key          = $this -> sanitize($PUT['key']);
-			$federationid = $this -> sanitize($PUT['federationid']);
-			$name         = $this -> sanitize($PUT['name']);
-			$email        = $this -> sanitize($PUT['email']);
-			$organisation = $this -> sanitize($PUT['organisation']);
-			$country      = $this -> sanitize($PUT['country']);
-			$city         = $this -> sanitize($PUT['city']);
-			$picture      = $this -> sanitize($PUT['picture']);
-			$vcard        = $this -> sanitize($PUT['vcard']);
-			$this -> log('UPDATE USER : '.$key);
+			$key          = $util -> sanitize($PUT['key']);
+			$federationid = $util -> sanitize($PUT['federationid']);
+			$name         = $util -> sanitize($PUT['name']);
+			$email        = $util -> sanitize($PUT['email']);
+			$organisation = $util -> sanitize($PUT['organisation']);
+			$country      = $util -> sanitize($PUT['country']);
+			$city         = $util -> sanitize($PUT['city']);
+			$picture      = $util -> sanitize($PUT['picture']);
+			$vcard        = $util -> sanitize($PUT['vcard']);
+			$util -> log('UPDATE USER : '.$key);
 
 			$d = new LookupServer_Data();
 			$d -> update($key,$federationid,$name,$email,$organisation,$country,$city,$picture,$vcard);
@@ -197,7 +209,8 @@ class LookupServer {
 	public function deleteuser() {
 		$data = new LookupServer_Data();
 		if(isset($_GET['key'])) {
-			$this -> log('DELETE USER : '.$_GET['key']);
+			$util = LookupUpServer_Util();
+			$util -> log('DELETE USER : '.$_GET['key']);
 			$data -> deleteByKey($_GET['key']);
 			echo(json_encode(true,JSON_PRETTY_PRINT));
 		}
@@ -213,34 +226,5 @@ class LookupServer {
 		$bf -> cleanupTrafficLimit();
 	}
 
-
-	/**
-	 *  Sanitize some input
-	 * @param string $text
-	 */
-	public function sanitize($text) {
-		return(strip_tags($text));
-	}
-
-
-	/**
-	 *  Handle error
-	 * @param string $text
-	 */
-	public function error($text) {
-		error_log($text);
-		if(LOOKUPSERVER_ERROR_VERBOSE) echo($text);
-		exit;
-	}
-
-	/**
-	 *  Logfile handler
-	 * @param string $text
-	 */
-	public function log($text) {
-		if(LOOKUPSERVER_LOG<>'') {
-			file_put_contents(LOOKUPSERVER_LOG, $_SERVER['REMOTE_ADDR'].' '.'['.date('c').']'.' '.$text."\n", FILE_APPEND);
-		}
-	}
 
 }

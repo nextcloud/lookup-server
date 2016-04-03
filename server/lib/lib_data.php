@@ -30,14 +30,15 @@ class LookupServer_Data {
 	 * @return array $data
 	 */
 	public function getByKey($key) {
-	$stmt=LookupUpServer_DB::prepare('select userid,federationid,name,email,organisation,country,city,picture,vcard from user where authkey = :key');
-        $stmt->bindParam(':key', $key, PDO::PARAM_STR);
-        $stmt->execute();
-        $num=$stmt->rowCount();
+		$util = new LookupServer_Util();
+		$stmt=LookupUpServer_DB::prepare('select userid,federationid,name,email,organisation,country,city,picture,vcard from user where authkey = :key');
+	        $stmt->bindParam(':key', $key, PDO::PARAM_STR);
+	        $stmt->execute();
+	        $num=$stmt->rowCount();
 
 		if($num==0) return(false);
-		if($num>1) $this->error('more then one DB entry found for key: '.$key);
-        $data = $stmt->fetch(PDO::FETCH_ASSOC);
+		if($num>1) $util->error('more then one DB entry found for key: '.$key);
+	        $data = $stmt->fetch(PDO::FETCH_ASSOC);
 		return($data);
 	}
 
@@ -48,14 +49,15 @@ class LookupServer_Data {
 	 * @return array $data
 	 */
 	public function getByEmail($email) {
+		$util = new LookupServer_Util();
 		$stmt=LookupUpServer_DB::prepare('select userid,federationid,name,email,organisation,country,city,picture,vcard from user where email=:email and karma>0');
-        $stmt->bindParam(':email', $email, PDO::PARAM_STR);
-        $stmt->execute();
-        $num=$stmt->rowCount();
+	        $stmt->bindParam(':email', $email, PDO::PARAM_STR);
+	        $stmt->execute();
+	        $num=$stmt->rowCount();
 		if($num==0) return(false);
 
-		if($num>1) $this->error('more then one DB entry found for email: '.$email);
-        $data = $stmt->fetch(PDO::FETCH_ASSOC);
+		if($num>1) $util->error('more then one DB entry found for email: '.$email);
+	        $data = $stmt->fetch(PDO::FETCH_ASSOC);
 		return($data);
 	}
 
@@ -65,14 +67,15 @@ class LookupServer_Data {
 	 * @return array $data
 	 */
 	public function getByUserId($userid) {
+		$util = new LookupServer_Util();
 		$stmt=LookupUpServer_DB::prepare('select userid,federationid,name,email,organisation,country,city,picture,vcard from user where userid=:userid and karma>0');
-        $stmt->bindParam(':userid', $userid, PDO::PARAM_STR);
-        $stmt->execute();
-        $num=$stmt->rowCount();
+	        $stmt->bindParam(':userid', $userid, PDO::PARAM_STR);
+	        $stmt->execute();
+	        $num=$stmt->rowCount();
 		if($num==0) return(false);
 
-		if($num>1) $this->error('more then one DB entry found for userid: '.$userid);
-        $data = $stmt->fetch(PDO::FETCH_ASSOC);
+		if($num>1) $util->error('more then one DB entry found for userid: '.$userid);
+	        $data = $stmt->fetch(PDO::FETCH_ASSOC);
 		return($data);
 	}
 
@@ -83,9 +86,9 @@ class LookupServer_Data {
 	 */
 	public function userExist($key) {
 		$stmt=LookupUpServer_DB::prepare('select id from user where authkey = :key');
-        $stmt->bindParam(':key', $key, PDO::PARAM_STR);
-        $stmt->execute();
-        $num=$stmt->rowCount();
+	        $stmt->bindParam(':key', $key, PDO::PARAM_STR);
+	        $stmt->execute();
+	        $num=$stmt->rowCount();
 
 		if($num==1) {
 			return(true);
@@ -132,7 +135,8 @@ class LookupServer_Data {
 	 * @param string vcard
 	 */
 	public function store($key,$federationid,$name,$email,$organisation,$country,$city,$picture,$vcard) {
-		$userid = $this -> generateUserId();
+                $util = new LookupServer_Util();
+		$userid = $util -> generateUserId();
 		$created = time();
 		$changed = time();
 		$stmt = LookupUpServer_DB::prepare('insert into user (userid,authkey,federationid,name,email,organisation,country,city,picture,vcard,created,changed) values(:userid,:authkey,:federationid,:name,:email,:organisation,:country,:city,:picture,:vcard,:created,:changed)');
@@ -190,26 +194,6 @@ class LookupServer_Data {
         	$stmt->bindParam(':key', $key, PDO::PARAM_STR);
         	$stmt->execute();
 	}
-
-
-	/**
-	 *  Handle error
-	 * @param string $text
-	 */
-	public function error($text) {
-		error_log($text);
-		if(LOOKUPSERVER_ERROR_VERBOSE) echo($text);
-		exit;
-	}
-
-	/**
-	 *  Generate random userid
-	 * @return string $userid
-	 */
-	public function generateUserId() {
-		return('oc'.rand().rand().rand().rand());
-	}
-
 
 
 }
