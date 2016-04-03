@@ -68,6 +68,29 @@ class LookupServer {
 
 	}
 
+	/**
+	 * Handle an incoming Replication REST call
+	 */
+	public function handleReplication() {
+		$util = new LookupUpServer_Util();
+
+		if(!isset($_SERVER['REQUEST_METHOD'])) $util->error('no request method');
+		$method = $_SERVER['REQUEST_METHOD'];
+
+		if($method == 'GET' and isset($_GET['timestamp']) and isset($_SERVER['PHP_AUTH_PW'])) {
+
+			if(isset($_SERVER['PHP_AUTH_PW']) and isset($_SERVER['PHP_AUTH_USER']) and ($_SERVER['PHP_AUTH_PW']==LOOKUPSERVER_REPLICATION_AUTH) and (LOOKUPSERVER_REPLICATION_AUTH<>'foobar')  ) {
+				$this->getReplicationLog();
+			} else {
+				$util -> replicationLog('Invalid Replication auth: '.$_SERVER['PHP_AUTH_PW']);
+		    	$util->error('Invalid replication auth');
+			}
+
+		} else {
+		    $util->error('invalid replication request');
+		}
+
+	}
 
 	/**
 	 *  Get User
@@ -213,6 +236,19 @@ class LookupServer {
 			$util -> log('DELETE USER : '.$_GET['key']);
 			$data -> deleteByKey($_GET['key']);
 			echo(json_encode(true,JSON_PRETTY_PRINT));
+		}
+	}
+
+	/**
+	 *  Get user for replication
+	 */
+	public function getReplicationLog() {
+		if(isset($_GET['timestamp'])) {
+			$util = new LookupUpServer_Util();
+			$util -> replicationLog('GET TIMESTAMP: '.$_GET['timestamp']);
+			$data = new LookupServer_Data();
+			$users = $data -> getReplicationLog($_GET['timestamp']);
+			echo(json_encode($users,JSON_PRETTY_PRINT));
 		}
 	}
 

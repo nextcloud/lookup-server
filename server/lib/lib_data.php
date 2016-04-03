@@ -121,6 +121,25 @@ class LookupServer_Data {
 		return($content);
 	}
 
+	/**
+	 * GetReplicationLog
+	 * @param int $timestamp
+	 * @return array $data
+	 */
+	public function getReplicationLog($timestamp) {
+		$stmt=LookupUpServer_DB::prepare("select userid,authkey,federationid,name,email,organisation,country,city,picture,vcard,karma,changed,created from user where changed >= :timestamp");
+		$stmt->bindParam(':timestamp', $timestamp, PDO::PARAM_STR);
+        $stmt->execute();
+        $num=$stmt->rowCount();
+
+        $content=array();
+        for($i = 0; $i < $num; $i++) {
+            $content[]=$stmt->fetch(PDO::FETCH_ASSOC);
+        }
+		return($content);
+	}
+
+
 
 	/**
 	 * Create a user

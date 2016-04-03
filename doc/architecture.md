@@ -44,6 +44,11 @@ This call can be used to search for a user by userid. For example to update the 
 Example:
 curl -X GET http://dev/owncloud/lookup-server/server/?userid=oc12345...
 
+### Get replication log
+This call is used for master-master replication between different nodes.
+Example:
+curl -X GET http://lookup:foobar@dev/owncloud/lookup-server/server/replication.php/?timestamp=123456
+
 ## High availability
 Several Lookup-Server can do master-master replication and sync their data. This is useful to keep the data between different servers in sync.
 A user only need to publish, update or delete the record only one one server but the data will be available on different servers.
