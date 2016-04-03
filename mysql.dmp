@@ -14,12 +14,14 @@ CREATE TABLE IF NOT EXISTS `user` (
   `vcard` text NOT NULL,
   `created` int NOT NULL,
   `changed` int NOT NULL,
+  `karma` int NOT NULL,
   PRIMARY KEY (`id`),
   KEY `authkey` (`authkey`),
   KEY `name` (`name`),
   KEY `email` (`email`),
   KEY `country` (`country`),
   KEY `city` (`city`),
+  KEY `karma` (`karma`),
   FULLTEXT KEY `FullText` (`name`,`email`,`organisation`,`country`,`city`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
 

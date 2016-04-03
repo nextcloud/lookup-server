@@ -30,7 +30,7 @@ class LookupServer_Data {
 	 * @return array $data
 	 */
 	public function getByKey($key) {
-		$stmt=LookupUpServer_DB::prepare('select id,federationid,name,email,organisation,country,city,picture,vcard from user where authkey = :key');
+	$stmt=LookupUpServer_DB::prepare('select id,federationid,name,email,organisation,country,city,picture,vcard from user where authkey = :key');
         $stmt->bindParam(':key', $key, PDO::PARAM_STR);
         $stmt->execute();
         $num=$stmt->rowCount();
@@ -48,7 +48,7 @@ class LookupServer_Data {
 	 * @return array $data
 	 */
 	public function getByEmail($email) {
-		$stmt=LookupUpServer_DB::prepare('select id,federationid,name,email,organisation,country,city,picture,vcard from user where email=:email');
+		$stmt=LookupUpServer_DB::prepare('select id,federationid,name,email,organisation,country,city,picture,vcard from user where email=:email and karma>0');
         $stmt->bindParam(':email', $email, PDO::PARAM_STR);
         $stmt->execute();
         $num=$stmt->rowCount();
@@ -89,7 +89,7 @@ class LookupServer_Data {
 	 */
 	public function searchuser($search,$start,$count) {
 		$searchstr = ''.$search.'';
-		$stmt=LookupUpServer_DB::prepare("select id,federationid,name,email,organisation,country,city,picture,vcard from user where match (name,email,organisation,country,city) against (:search in boolean mode) limit :start,:count");
+		$stmt=LookupUpServer_DB::prepare("select id,federationid,name,email,organisation,country,city,picture,vcard from user where match (name,email,organisation,country,city) against (:search in boolean mode) and karma>0 limit :start,:count");
 		$stmt->bindParam(':search', $searchstr, PDO::PARAM_STR);
         $stmt->bindParam(':start', $start, PDO::PARAM_INT);
         $stmt->bindParam(':count', $count, PDO::PARAM_INT);
@@ -167,9 +167,11 @@ class LookupServer_Data {
 	 * @param string $key
 	 */
 	public function deleteByKey($key) {
-		$stmt=LookupUpServer_DB::prepare('delete from user where authkey = :key');
-        $stmt->bindParam(':key', $key, PDO::PARAM_STR);
-        $stmt->execute();
+		$changed = time();
+		$stmt=LookupUpServer_DB::prepare('update user set karma=-1,changed=:changed where authkey = :key');
+        	$stmt->bindParam(':changed', $changed, PDO::PARAM_STR);
+        	$stmt->bindParam(':key', $key, PDO::PARAM_STR);
+        	$stmt->execute();
 	}
 
 
