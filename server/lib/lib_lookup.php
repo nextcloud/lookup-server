@@ -51,6 +51,8 @@ class LookupServer {
 				$this->searchUsers();
 			}elseif(isset($_GET['email'])) {
 				$this->getUserByEmail($_GET['email']);
+			}elseif(isset($_GET['userid'])) {
+				$this->getUserByUserId($_GET['userid']);
 			} else {
 				$this->getUserByKey();
 			}
@@ -86,6 +88,18 @@ class LookupServer {
 			$this -> log('GET USER BY EMAIL: '.$_GET['email']);
 			$data = new LookupServer_Data();
 			$user = $data -> getByEmail($_GET['email']);
+			echo(json_encode($user,JSON_PRETTY_PRINT));
+		}
+	}
+
+	/**
+	 *  Get User by userid
+	 */
+	public function getUserByUserId() {
+		if(isset($_GET['userid'])) {
+			$this -> log('GET USER BY USERID: '.$_GET['userid']);
+			$data = new LookupServer_Data();
+			$user = $data -> getByUserId($_GET['userid']);
 			echo(json_encode($user,JSON_PRETTY_PRINT));
 		}
 	}

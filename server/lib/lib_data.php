@@ -59,6 +59,22 @@ class LookupServer_Data {
 		return($data);
 	}
 
+	/**
+	 * Get an user data entry by userid
+	 * @param string $userid
+	 * @return array $data
+	 */
+	public function getByUserId($userid) {
+		$stmt=LookupUpServer_DB::prepare('select userid,federationid,name,email,organisation,country,city,picture,vcard from user where userid=:userid and karma>0');
+        $stmt->bindParam(':userid', $userid, PDO::PARAM_STR);
+        $stmt->execute();
+        $num=$stmt->rowCount();
+		if($num==0) return(false);
+
+		if($num>1) $this->error('more then one DB entry found for userid: '.$userid);
+        $data = $stmt->fetch(PDO::FETCH_ASSOC);
+		return($data);
+	}
 
 	/**
 	 * Check if user exists

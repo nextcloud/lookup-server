@@ -39,6 +39,10 @@ This call can be used to search for a user by email. This has to be a perfect ma
 Example:
 curl -X GET http://dev/owncloud/lookup-server/server/?email=searchstring
 
+### Search users by userid
+This call can be used to search for a user by userid. For example to update the vcard entry in the local addressbook. This has to be a perfect match.
+Example:
+curl -X GET http://dev/owncloud/lookup-server/server/?userid=oc12345...
 
 ## High availability
 Several Lookup-Server can do master-master replication and sync their data. This is useful to keep the data between different servers in sync.
