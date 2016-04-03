@@ -118,7 +118,8 @@ class LookupServer_Data {
 	 */
 	public function store($key,$federationid,$name,$email,$organisation,$country,$city,$picture,$vcard) {
 		$created = time();
-		$stmt = LookupUpServer_DB::prepare('insert into user (authkey,federationid,name,email,organisation,country,city,picture,vcard,created) values(:authkey,:federationid,:name,:email,:organisation,:country,:city,:picture,:vcard,:created)');
+		$changed = time();
+		$stmt = LookupUpServer_DB::prepare('insert into user (authkey,federationid,name,email,organisation,country,city,picture,vcard,created,changed) values(:authkey,:federationid,:name,:email,:organisation,:country,:city,:picture,:vcard,:created,:changed)');
 		$stmt->bindParam(':authkey', $key, PDO::PARAM_STR);
 		$stmt->bindParam(':federationid', $federationid, PDO::PARAM_STR);
 		$stmt->bindParam(':name', $name, PDO::PARAM_STR);
@@ -129,6 +130,7 @@ class LookupServer_Data {
 		$stmt->bindParam(':picture', $picture, PDO::PARAM_STR);
 		$stmt->bindParam(':vcard', $vcard, PDO::PARAM_STR);
 		$stmt->bindParam(':created', $created, PDO::PARAM_INT);
+		$stmt->bindParam(':changed', $changed, PDO::PARAM_INT);
 		$stmt->execute();
 	}
 
