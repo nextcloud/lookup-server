@@ -5,8 +5,9 @@
 - Twitter verification and increase Karma level
 - Reset authkey by email feature
 - Make IPv6 ready
-- Change delete to keep empty records instead for syncing
-- Add server to server syncing calls
+- Add server to server replication calls
+- Replication log
+- Get user by userid
 
 ## 2.0
 - Config file option to blacklist certain spam IP spaces and keywords

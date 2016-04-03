@@ -45,6 +45,24 @@ Several Lookup-Server can do master-master replication and sync their data. This
 A user only need to publish, update or delete the record only one one server but the data will be available on different servers.
 The url of the other servers and the credentials of the own server needs to be configured in the config.php file.
 
+
+## DB Structure
+* id - The primary key. This is specific to the current host and is not replicated. Internal only.
+* userid - A world wide unique public userid. This can be used by users to remember and identify other users.
+* authkey - The private secret that is needed to update or delete a record.
+* federationid - The public federation ID. visible to others.
+* name - The public name of a user.
+* email - The public email of a user.
+* organisation - The organisation or company of a user. Can help to be found easier.
+* country - The country of a user in cleartext.
+* city - The city of a user
+* picture - The binary picture of the user.
+* vcard - The public vcard of a user.
+* created - The internal time stamp when this record was created.
+* changed - The internal time stamp when this record was created or changed.
+* karma - The karma of the user. See below for detailed explenation.
+
+
 ## Karma
 The visibility of a user in the search call depends on the Karma of a user. There are the following Karma levels.
 * 0 - A newly created record where the email is not yet verified. This record is not visible in the search.
