@@ -7,7 +7,8 @@ Lookup-Servers can be configured on the ownCloud Admin page. By default some are
 Communication with Lookup-Servers provide should be SSL encrypted and they provide basic authentication via key for managing the personal data. Additionally Lookup-Servers provide some protection against user data scraping. But the overall idea is that all information that a user chooses to publish on a Lookup-Server is considered public and and is published optionally to be found by others. When a user decided to publish their own information an authentication key is set. The record can later be changed or deleted using this authkey.
 
 
-## Communication between ownCloud servers and Lookup-Servers happens via REST calls. The following REST calls exists:
+## REST
+Communication between ownCloud servers and Lookup-Servers happens via REST calls. The following REST calls exists:
 
 ### Create user
 This can be used by a user to create a record and initially publish their own information.
