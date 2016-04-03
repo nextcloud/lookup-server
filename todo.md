@@ -4,7 +4,6 @@
 - Email verification on register with ‘verified’ flag
 - Reset authkey by email feature
 - Make IPv6 ready
-- Move config to protected config directory
 - Add doc directory with architecture, config and ops information
 - Change delete to keep empty records instead for syncing
 - add server to server syncing calls

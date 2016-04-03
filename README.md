@@ -15,6 +15,7 @@ The Lookup-Server is a server component that can be run independently from an ow
 * Put the server subfolder on a webserver vhost root.
 * Create a lookup MySQL database. User the mysql.dmp
 * Create a config.php as adapt the settings. config.sample.php can be used as a template.
+* Make sure that that config folder is not accessible from the internet by configure Apache to respect the .htaccess
 * Add user accounts to the users table in the database
 * Add a cronjob that calls cronjob.php every few minutes. Recommended is 10min
 
