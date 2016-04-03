@@ -5,7 +5,6 @@
 - Twitter verification and increase Karma level
 - Reset authkey by email feature
 - Make IPv6 ready
-- Add doc directory with architecture, config and ops information
 - Change delete to keep empty records instead for syncing
 - Add server to server syncing calls
 
