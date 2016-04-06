@@ -1,7 +1,7 @@
 <?php
 
 /**
-* Lookup Server main page.
+* Lookup Server replication
 *
 * @author Frank Karlitschek
 * @copyright 2016 Frank Karlitschek frank@karlitschek.de

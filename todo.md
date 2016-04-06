@@ -6,7 +6,6 @@
 - Reset authkey by email feature
 - Make IPv6 ready
 - Add server to server replication calls
-- Add a get full dump call in case replication is out of sync
 - Optimize DB indexes
 
 ## 2.0
@@ -14,7 +13,6 @@
 - Github verification and increase Karma level
 - Website verification and increase Karma level
 - Add automatic updater
-- Implement replication for read only servers
 
 ## 3.0
 - REST call caching

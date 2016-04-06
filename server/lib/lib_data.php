@@ -126,10 +126,15 @@ class LookupServer_Data {
 	 * @param int $timestamp
 	 * @param int $start
 	 * @param int $count
+	 * @param bool $fullfetch Get all entries not only the local modified ones
+	 * @param bool $slave Don't read the authkey. Useful for replication for not trusted read only nodes
 	 * @return array $data
 	 */
-	public function getReplicationLog($timestamp,$start,$count) {
-		$stmt=LookupUpServer_DB::prepare("select userid,authkey,federationid,name,email,organisation,country,city,picture,vcard,karma,changed,created from user where localchange=1 and changed >= :timestamp limit :start,:count");
+	public function getReplicationLog($timestamp,$start,$count,$fullfetch,$slave) {
+		if(!$fullfetch) $fullquery = 'localchange=1 and'; else $fullquery = '';
+		if(!$slave) $authquery = ',authkey'; else $authquery = '';
+		$query = "select userid".$authquery.",federationid,name,email,organisation,country,city,picture,vcard,karma,changed,created from user where ".$fullquery." changed >= :timestamp limit :start,:count";
+		$stmt=LookupUpServer_DB::prepare($query);
 		$stmt->bindParam(':timestamp', $timestamp, PDO::PARAM_STR);
 		$stmt->bindParam(':start', $start, PDO::PARAM_INT);
 		$stmt->bindParam(':count', $count, PDO::PARAM_INT);

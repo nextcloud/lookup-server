@@ -80,7 +80,9 @@ class LookupServer {
 		if($method == 'GET' and isset($_GET['timestamp']) and isset($_SERVER['PHP_AUTH_PW'])) {
 
 			if(isset($_SERVER['PHP_AUTH_PW']) and isset($_SERVER['PHP_AUTH_USER']) and ($_SERVER['PHP_AUTH_PW']==LOOKUPSERVER_REPLICATION_AUTH) and (LOOKUPSERVER_REPLICATION_AUTH<>'foobar')  ) {
-				$this->getReplicationLog();
+				$this->getReplicationLog(false);
+			}elseif(isset($_SERVER['PHP_AUTH_PW']) and isset($_SERVER['PHP_AUTH_USER']) and ($_SERVER['PHP_AUTH_PW']==LOOKUPSERVER_SLAVEREPLICATION_AUTH) and (LOOKUPSERVER_SLAVEREPLICATION_AUTH<>'slavefoobar')  ) {
+					$this->getReplicationLog(true);
 			} else {
 				$util -> replicationLog('Invalid Replication auth: '.$_SERVER['PHP_AUTH_PW']);
 		    	$util->error('Invalid replication auth');
@@ -242,13 +244,14 @@ class LookupServer {
 	/**
 	 *  Get user for replication
 	 */
-	public function getReplicationLog() {
+	public function getReplicationLog($slave) {
 		$pagesize = 10;
+		if(isset($_GET['fullfetch'])) $fullfetch = true; else $fullfetch = false;
 		if(isset($_GET['timestamp']) and isset($_GET['page'])) {
 			$util = new LookupUpServer_Util();
-			$util -> replicationLog('GET TIMESTAMP: '.$_GET['timestamp'].' PAGE: '.$_GET['page']);
+			$util -> replicationLog('GET TIMESTAMP: '.$_GET['timestamp'].' PAGE: '.$_GET['page'].' FULLFETCH: '.$fullfetch.' SLAVE: '.$slave);
 			$data = new LookupServer_Data();
-			$users = $data -> getReplicationLog($_GET['timestamp'], $_GET['page']*$pagesize, $pagesize);
+			$users = $data -> getReplicationLog($_GET['timestamp'], $_GET['page']*$pagesize, $pagesize, $fullfetch, $slave);
 			echo(json_encode($users,JSON_PRETTY_PRINT));
 		}
 	}
