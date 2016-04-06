@@ -48,7 +48,7 @@ curl -X GET http://dev/owncloud/lookup-server/server/?userid=oc12345...
 ### Get replication log
 This call is used for master-master replication between different nodes.
 Example:
-curl -X GET http://lookup:foobar@dev/owncloud/lookup-server/server/replication.php/?timestamp=123456
+curl -X GET http://lookup:foobar@dev/owncloud/lookup-server/server/replication.php/?timestamp=123456\&page=0  
 
 ## High availability
 Several Lookup-Server can do master-master replication and sync their data. This is useful to keep the data between different servers in sync.
@@ -70,6 +70,7 @@ The url of the other servers and the credentials of the own server needs to be c
 * vcard - The public vcard of a user.
 * created - The internal time stamp when this record was created.
 * changed - The internal time stamp when this record was created or changed.
+* localchange - This is 1 if the record was changed locally. It is 0 if this was changed on a remote server and copied over by replication.
 * karma - The karma of the user. See below for detailed explenation.
 
 

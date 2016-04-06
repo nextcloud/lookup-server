@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS `user` (
   `vcard` text NOT NULL,
   `created` int NOT NULL,
   `changed` int NOT NULL,
+  `localchange` int NOT NULL,
   `karma` int NOT NULL,
   PRIMARY KEY (`id`),
   KEY `authkey` (`authkey`),

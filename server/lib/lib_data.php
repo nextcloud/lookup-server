@@ -32,13 +32,13 @@ class LookupServer_Data {
 	public function getByKey($key) {
 		$util = new LookupServer_Util();
 		$stmt=LookupUpServer_DB::prepare('select userid,federationid,name,email,organisation,country,city,picture,vcard from user where authkey = :key');
-	        $stmt->bindParam(':key', $key, PDO::PARAM_STR);
-	        $stmt->execute();
-	        $num=$stmt->rowCount();
+		$stmt->bindParam(':key', $key, PDO::PARAM_STR);
+		$stmt->execute();
+		$num=$stmt->rowCount();
 
 		if($num==0) return(false);
 		if($num>1) $util->error('more then one DB entry found for key: '.$key);
-	        $data = $stmt->fetch(PDO::FETCH_ASSOC);
+			$data = $stmt->fetch(PDO::FETCH_ASSOC);
 		return($data);
 	}
 
@@ -51,13 +51,13 @@ class LookupServer_Data {
 	public function getByEmail($email) {
 		$util = new LookupServer_Util();
 		$stmt=LookupUpServer_DB::prepare('select userid,federationid,name,email,organisation,country,city,picture,vcard from user where email=:email and karma>0');
-	        $stmt->bindParam(':email', $email, PDO::PARAM_STR);
-	        $stmt->execute();
-	        $num=$stmt->rowCount();
+		$stmt->bindParam(':email', $email, PDO::PARAM_STR);
+		$stmt->execute();
+		$num=$stmt->rowCount();
 		if($num==0) return(false);
 
 		if($num>1) $util->error('more then one DB entry found for email: '.$email);
-	        $data = $stmt->fetch(PDO::FETCH_ASSOC);
+			$data = $stmt->fetch(PDO::FETCH_ASSOC);
 		return($data);
 	}
 
@@ -69,13 +69,13 @@ class LookupServer_Data {
 	public function getByUserId($userid) {
 		$util = new LookupServer_Util();
 		$stmt=LookupUpServer_DB::prepare('select userid,federationid,name,email,organisation,country,city,picture,vcard from user where userid=:userid and karma>0');
-	        $stmt->bindParam(':userid', $userid, PDO::PARAM_STR);
-	        $stmt->execute();
-	        $num=$stmt->rowCount();
+		$stmt->bindParam(':userid', $userid, PDO::PARAM_STR);
+		$stmt->execute();
+		$num=$stmt->rowCount();
 		if($num==0) return(false);
 
 		if($num>1) $util->error('more then one DB entry found for userid: '.$userid);
-	        $data = $stmt->fetch(PDO::FETCH_ASSOC);
+			$data = $stmt->fetch(PDO::FETCH_ASSOC);
 		return($data);
 	}
 
@@ -86,9 +86,9 @@ class LookupServer_Data {
 	 */
 	public function userExist($key) {
 		$stmt=LookupUpServer_DB::prepare('select id from user where authkey = :key');
-	        $stmt->bindParam(':key', $key, PDO::PARAM_STR);
-	        $stmt->execute();
-	        $num=$stmt->rowCount();
+		$stmt->bindParam(':key', $key, PDO::PARAM_STR);
+		$stmt->execute();
+		$num=$stmt->rowCount();
 
 		if($num==1) {
 			return(true);
@@ -109,33 +109,37 @@ class LookupServer_Data {
 		$searchstr = ''.$search.'';
 		$stmt=LookupUpServer_DB::prepare("select userid,federationid,name,email,organisation,country,city,picture,vcard from user where match (name,email,organisation,country,city) against (:search in boolean mode) and karma>0 limit :start,:count");
 		$stmt->bindParam(':search', $searchstr, PDO::PARAM_STR);
-        $stmt->bindParam(':start', $start, PDO::PARAM_INT);
-        $stmt->bindParam(':count', $count, PDO::PARAM_INT);
-        $stmt->execute();
-        $num=$stmt->rowCount();
+		$stmt->bindParam(':start', $start, PDO::PARAM_INT);
+		$stmt->bindParam(':count', $count, PDO::PARAM_INT);
+		$stmt->execute();
+		$num=$stmt->rowCount();
 
-        $content=array();
-        for($i = 0; $i < $num; $i++) {
-            $content[]=$stmt->fetch(PDO::FETCH_ASSOC);
-        }
+		$content=array();
+		for($i = 0; $i < $num; $i++) {
+			$content[]=$stmt->fetch(PDO::FETCH_ASSOC);
+		}
 		return($content);
 	}
 
 	/**
 	 * GetReplicationLog
 	 * @param int $timestamp
+	 * @param int $start
+	 * @param int $count
 	 * @return array $data
 	 */
-	public function getReplicationLog($timestamp) {
-		$stmt=LookupUpServer_DB::prepare("select userid,authkey,federationid,name,email,organisation,country,city,picture,vcard,karma,changed,created from user where changed >= :timestamp");
+	public function getReplicationLog($timestamp,$start,$count) {
+		$stmt=LookupUpServer_DB::prepare("select userid,authkey,federationid,name,email,organisation,country,city,picture,vcard,karma,changed,created from user where localchange=1 and changed >= :timestamp limit :start,:count");
 		$stmt->bindParam(':timestamp', $timestamp, PDO::PARAM_STR);
-        $stmt->execute();
-        $num=$stmt->rowCount();
+		$stmt->bindParam(':start', $start, PDO::PARAM_INT);
+		$stmt->bindParam(':count', $count, PDO::PARAM_INT);
+		$stmt->execute();
+		$num=$stmt->rowCount();
 
-        $content=array();
-        for($i = 0; $i < $num; $i++) {
-            $content[]=$stmt->fetch(PDO::FETCH_ASSOC);
-        }
+		$content=array();
+		for($i = 0; $i < $num; $i++) {
+			$content[]=$stmt->fetch(PDO::FETCH_ASSOC);
+		}
 		return($content);
 	}
 
@@ -154,11 +158,11 @@ class LookupServer_Data {
 	 * @param string vcard
 	 */
 	public function store($key,$federationid,$name,$email,$organisation,$country,$city,$picture,$vcard) {
-                $util = new LookupServer_Util();
+        $util = new LookupServer_Util();
 		$userid = $util -> generateUserId();
 		$created = time();
 		$changed = time();
-		$stmt = LookupUpServer_DB::prepare('insert into user (userid,authkey,federationid,name,email,organisation,country,city,picture,vcard,created,changed) values(:userid,:authkey,:federationid,:name,:email,:organisation,:country,:city,:picture,:vcard,:created,:changed)');
+		$stmt = LookupUpServer_DB::prepare('insert into user (userid,authkey,federationid,name,email,organisation,country,city,picture,vcard,created,changed,localchange) values(:userid,:authkey,:federationid,:name,:email,:organisation,:country,:city,:picture,:vcard,:created,:changed,1)');
 		$stmt->bindParam(':userid', $userid, PDO::PARAM_STR);
 		$stmt->bindParam(':authkey', $key, PDO::PARAM_STR);
 		$stmt->bindParam(':federationid', $federationid, PDO::PARAM_STR);
@@ -188,7 +192,7 @@ class LookupServer_Data {
 	 */
 	public function update($key,$federationid,$name,$email,$organisation,$country,$city,$picture,$vcard) {
 		$changed = time();
-		$stmt=LookupUpServer_DB::prepare('update user set federationid=:federationid,name=:name,email=:email,organisation=:organisation,country=:country,city=:city,picture=:picture,vcard=:vcard,changed=:changed where authkey=:authkey');
+		$stmt=LookupUpServer_DB::prepare('update user set federationid=:federationid,name=:name,email=:email,organisation=:organisation,country=:country,city=:city,picture=:picture,vcard=:vcard,changed=:changed,localchange=1 where authkey=:authkey');
 		$stmt->bindParam(':authkey', $key, PDO::PARAM_STR);
 		$stmt->bindParam(':federationid', $federationid, PDO::PARAM_STR);
 		$stmt->bindParam(':name', $name, PDO::PARAM_STR);
@@ -208,11 +212,10 @@ class LookupServer_Data {
 	 */
 	public function deleteByKey($key) {
 		$changed = time();
-		$stmt=LookupUpServer_DB::prepare("update user set federationid='',name='',email='',organisation='',country='',city='',picture='',vcard='',changed=:changed,karma=-1,changed=:changed where authkey = :key");
-        	$stmt->bindParam(':changed', $changed, PDO::PARAM_INT);
-        	$stmt->bindParam(':key', $key, PDO::PARAM_STR);
-        	$stmt->execute();
+		$stmt=LookupUpServer_DB::prepare("update user set federationid='',name='',email='',organisation='',country='',city='',picture='',vcard='',changed=:changed,localchange=1,karma=-1,changed=:changed where authkey = :key");
+		$stmt->bindParam(':changed', $changed, PDO::PARAM_INT);
+		$stmt->bindParam(':key', $key, PDO::PARAM_STR);
+		$stmt->execute();
 	}
-
 
 }

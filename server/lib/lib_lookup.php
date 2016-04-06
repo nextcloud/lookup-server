@@ -140,10 +140,10 @@ class LookupServer {
 		$pagesize = 10;
 		if(isset($_GET['search']) and isset($_GET['page'])) {
 			$util = new LookupUpServer_Util();
-			$util -> log('SEARCH USER : '.$_GET['search'].' '.$_GET['page']);
+			$util -> log('SEARCH USER : '.$_GET['search'].' PAGE:'.$_GET['page']);
 			if($_GET['page'] > LOOKUPSERVER_MAX_SEARCH_PAGE) {
 				$util = new LookupUpServer_Util();
-				$util->error('page is too high');
+				$util->error('page number is too high');
 			}
 			$data = new LookupServer_Data();
 			$users = $data -> searchuser($_GET['search'], $_GET['page']*$pagesize, $pagesize);
@@ -243,11 +243,12 @@ class LookupServer {
 	 *  Get user for replication
 	 */
 	public function getReplicationLog() {
-		if(isset($_GET['timestamp'])) {
+		$pagesize = 10;
+		if(isset($_GET['timestamp']) and isset($_GET['page'])) {
 			$util = new LookupUpServer_Util();
-			$util -> replicationLog('GET TIMESTAMP: '.$_GET['timestamp']);
+			$util -> replicationLog('GET TIMESTAMP: '.$_GET['timestamp'].' PAGE: '.$_GET['page']);
 			$data = new LookupServer_Data();
-			$users = $data -> getReplicationLog($_GET['timestamp']);
+			$users = $data -> getReplicationLog($_GET['timestamp'], $_GET['page']*$pagesize, $pagesize);
 			echo(json_encode($users,JSON_PRETTY_PRINT));
 		}
 	}

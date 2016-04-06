@@ -14,6 +14,7 @@
 - Github verification and increase Karma level
 - Website verification and increase Karma level
 - Add automatic updater
+- Implement replication for read only servers
 
 ## 3.0
 - REST call caching
