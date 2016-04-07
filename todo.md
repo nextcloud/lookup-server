@@ -5,7 +5,6 @@
 - Twitter verification and increase Karma level
 - Website verification and increase Karma level
 - Reset authkey by email feature
-- Check if email is set more then once
 - Optimize DB indexes
 
 ## 2.0

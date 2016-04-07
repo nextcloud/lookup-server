@@ -164,6 +164,12 @@ class LookupServer_Data {
 	 */
 	public function store($key,$federationid,$name,$email,$organisation,$country,$city,$picture,$vcard) {
 		$util = new LookupServer_Util();
+
+		// check if email already exists
+		if($this -> getByEmail($email)) {
+			$util -> error('Can\'t store user because of duplicate email: '.$email);
+		}
+
 		$userid = $util -> generateUserId();
 		$created = time();
 		$changed = time();
@@ -196,6 +202,19 @@ class LookupServer_Data {
 	 * @param string $vcard
 	 */
 	public function update($key,$federationid,$name,$email,$organisation,$country,$city,$picture,$vcard) {
+		$util = new LookupServer_Util();
+
+		// check if email already exists
+		$query = 'select userid from user where email=:email and authkey!=:authkey';
+		$stmt=LookupServer_DB::prepare($query);
+		$stmt->bindParam(':authkey', $key, PDO::PARAM_STR);
+		$stmt->bindParam(':email', $email, PDO::PARAM_STR);
+		$stmt->execute();
+		$num=$stmt->rowCount();
+		if($num>0) {
+			$util -> error('ERROR UPDATE USER: Can\'t update user because of duplicate email: '.$email);
+		}
+
 		$changed = time();
 		$stmt=LookupServer_DB::prepare('update user set federationid=:federationid,name=:name,email=:email,organisation=:organisation,country=:country,city=:city,picture=:picture,vcard=:vcard,changed=:changed,localchange=1 where authkey=:authkey');
 		$stmt->bindParam(':authkey', $key, PDO::PARAM_STR);

@@ -273,7 +273,6 @@ class LookupServer {
 				$util -> replicationLog('FETCH HOST: '.$host.' TIMESTAMP: '.$timestamp.' PAGE: '.$page);
 				$replicationdata = file_get_contents($host.'/replication.php?timestamp='.$timestamp.'&page='.$page);
 				$entries = json_decode($replicationdata);
-//				print_r($entries);
 				$count = count($entries);
 				for ($i = 0; $i < $count; $i++) $data -> importReplication($entries[$i]);
 				$page++;

@@ -32,13 +32,14 @@ class LookupServer_Util {
 	*/
 	public function error($text) {
 		error_log($text);
-		if(LOOKUPSERVER_ERROR_VERBOSE) echo($text);
+		$this -> log($text);
+		if(LOOKUPSERVER_ERROR_VERBOSE) echo(json_encode(array('error' => $text)));
 		exit;
 	}
 
 	/**
 	*  Generate random userid
-	* @return string $userid
+	* @return string $userids
 	*/
 	public function generateUserId() {
 		return(rand(1,9200000000000000000)); // mysql bigint
