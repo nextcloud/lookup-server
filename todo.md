@@ -5,10 +5,9 @@
 - Twitter verification and increase Karma level
 - Website verification and increase Karma level
 - Reset authkey by email feature
-- Optimize DB indexes
 
 ## 2.0
 - Github verification and increase Karma level
 - Add automatic updater
 - REST call caching
-- Make IPv6 ready in bruteforce protection and ip black listing
+- Make IPv6 ready in brute-force protection and ip black listing

@@ -17,12 +17,11 @@ CREATE TABLE IF NOT EXISTS `user` (
   `localchange` int NOT NULL,
   `karma` int NOT NULL,
   PRIMARY KEY (`userid`),
+  KEY `userid` (`userid`,`karma`),
   KEY `authkey` (`authkey`),
-  KEY `name` (`name`),
-  KEY `email` (`email`),
-  KEY `country` (`country`),
-  KEY `city` (`city`),
-  KEY `karma` (`karma`),
+  KEY `email` (`email`, `karma`),
+  KEY `email2` (`email`, `authkey`),
+  KEY `karma` (`localchange`,`changed`),
   FULLTEXT KEY `FullText` (`name`,`email`,`organisation`,`country`,`city`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
 
