@@ -26,29 +26,39 @@
 */
 class LookupServer_Util {
 
-    /**
-     *  Handle error
-     * @param string $text
-     */
-    public function error($text) {
-    	error_log($text);
-    	if(LOOKUPSERVER_ERROR_VERBOSE) echo($text);
-    	exit;
-    }
+	/**
+	* Handle error
+	* @param string $text
+	*/
+	public function error($text) {
+		error_log($text);
+		if(LOOKUPSERVER_ERROR_VERBOSE) echo($text);
+		exit;
+	}
 
-    /**
-     *  Generate random userid
-     * @return string $userid
-     */
-    public function generateUserId() {
-    	return(rand(1,9200000000000000000)); // mysql bigint
-    }
+	/**
+	*  Generate random userid
+	* @return string $userid
+	*/
+	public function generateUserId() {
+		return(rand(1,9200000000000000000)); // mysql bigint
+	}
 
-    /**
+	/**
 	 *  Sanitize some input
 	 * @param string $text
 	 */
 	public function sanitize($text) {
+		$found = false;
+		// search in all bad ip ranges for a match with the current ip
+		foreach($GLOBALS['LOOKUPSERVER_SPAM_BLACKLIST'] as $bad_word) {
+			if(stripos($text, $bad_word) <> false) $found = true;
+		}
+		if($found) {
+			$util = new LookupServer_Util();
+			$util -> log('SPAM WORD FOUND IN: '.$text);
+			exit;
+		}
 		return(strip_tags($text));
 	}
 
@@ -62,7 +72,7 @@ class LookupServer_Util {
 		}
 	}
 
-    /**
+	/**
 	 *  Replication Logfile handler
 	 * @param string $text
 	 */

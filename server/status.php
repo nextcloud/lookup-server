@@ -31,4 +31,3 @@ date_default_timezone_set('Europe/Berlin');
 require('lib/lib_lookup.php');
 
 echo(json_encode(array('version'=>$LOOKUPSERVER_VERSION)));
-

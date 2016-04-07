@@ -37,3 +37,6 @@ $LOOKUPSERVER_REPLICATION_HOSTS = ARRAY ('https://lookup:slavefoobar@example.com
 
 // replication interval. The number of seconds into the past that should be used when fetching the replication log from a remote server. Should be a bit higher then the cronjob intervall
 define('LOOKUPSERVER_REPLICATION_INTERVAL', 900); // 15min
+
+// ip black list. usefull to block spammers.
+$LOOKUPSERVER_IP_BLACKLIST = array ('333.444.555.','666.777.888.');
