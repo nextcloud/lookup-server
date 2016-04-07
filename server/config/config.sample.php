@@ -31,3 +31,9 @@ define('LOOKUPSERVER_REPLICATION_AUTH', 'foobar');
 
 // credential to read the slave replication log. Replication slaves are read only and don't get the authkey. IMPORTANT!! SET TO SOMETHING SECURE!!
 define('LOOKUPSERVER_SLAVEREPLICATION_AUTH', 'slavefoobar');
+
+// the list of remote replication servers that should be queried in the cronjob
+$LOOKUPSERVER_REPLICATION_HOSTS = ARRAY ('https://lookup:slavefoobar@example.com');
+
+// replication interval. The number of seconds into the past that should be used when fetching the replication log from a remote server. Should be a bit higher then the cronjob intervall
+define('LOOKUPSERVER_REPLICATION_INTERVAL', 900); // 15min

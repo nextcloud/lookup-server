@@ -32,11 +32,11 @@ class LookupServer_BruteForce {
 
 		// register new ip
 		$ip = ip2long($_SERVER['REMOTE_ADDR']);
-		$stmt=LookupUpServer_DB::prepare('insert into apitraffic (ip,count) values (:ip,1) on duplicate key update count=count+1 ');
+		$stmt=LookupServer_DB::prepare('insert into apitraffic (ip,count) values (:ip,1) on duplicate key update count=count+1 ');
         $stmt->bindParam(':ip', $ip, PDO::PARAM_STR);
         $stmt->execute();
 
-		$stmt=LookupUpServer_DB::prepare('select count from apitraffic where ip=:ip ');
+		$stmt=LookupServer_DB::prepare('select count from apitraffic where ip=:ip ');
         $stmt->bindParam(':ip', $ip, PDO::PARAM_STR);
 	    $stmt->execute();
         $num=$stmt->rowCount();
@@ -56,7 +56,7 @@ class LookupServer_BruteForce {
 	* this function should be call by a cronjob every 10 minutes
 	*/
 	public function cleanupTrafficLimit() {
-		$stmt=LookupUpServer_DB::prepare('truncate apitraffic');
+		$stmt=LookupServer_DB::prepare('truncate apitraffic');
 		$stmt->execute();
 	}
 

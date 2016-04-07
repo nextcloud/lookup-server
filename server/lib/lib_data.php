@@ -31,7 +31,7 @@ class LookupServer_Data {
 	 */
 	public function getByKey($key) {
 		$util = new LookupServer_Util();
-		$stmt=LookupUpServer_DB::prepare('select userid,federationid,name,email,organisation,country,city,picture,vcard from user where authkey = :key');
+		$stmt=LookupServer_DB::prepare('select userid,federationid,name,email,organisation,country,city,picture,vcard from user where authkey = :key');
 		$stmt->bindParam(':key', $key, PDO::PARAM_STR);
 		$stmt->execute();
 		$num=$stmt->rowCount();
@@ -50,7 +50,7 @@ class LookupServer_Data {
 	 */
 	public function getByEmail($email) {
 		$util = new LookupServer_Util();
-		$stmt=LookupUpServer_DB::prepare('select userid,federationid,name,email,organisation,country,city,picture,vcard from user where email=:email and karma>0');
+		$stmt=LookupServer_DB::prepare('select userid,federationid,name,email,organisation,country,city,picture,vcard from user where email=:email and karma>0');
 		$stmt->bindParam(':email', $email, PDO::PARAM_STR);
 		$stmt->execute();
 		$num=$stmt->rowCount();
@@ -68,7 +68,7 @@ class LookupServer_Data {
 	 */
 	public function getByUserId($userid) {
 		$util = new LookupServer_Util();
-		$stmt=LookupUpServer_DB::prepare('select userid,federationid,name,email,organisation,country,city,picture,vcard from user where userid=:userid and karma>0');
+		$stmt=LookupServer_DB::prepare('select userid,federationid,name,email,organisation,country,city,picture,vcard from user where userid=:userid and karma>0');
 		$stmt->bindParam(':userid', $userid, PDO::PARAM_STR);
 		$stmt->execute();
 		$num=$stmt->rowCount();
@@ -85,12 +85,12 @@ class LookupServer_Data {
 	 * @return bool $exists
 	 */
 	public function userExist($key) {
-		$stmt=LookupUpServer_DB::prepare('select id from user where authkey = :key');
+		$stmt=LookupServer_DB::prepare('select userid from user where authkey = :key');
 		$stmt->bindParam(':key', $key, PDO::PARAM_STR);
 		$stmt->execute();
 		$num=$stmt->rowCount();
 
-		if($num==1) {
+		if($num>0) {
 			return(true);
 		} else {
 			return(false);
@@ -107,7 +107,7 @@ class LookupServer_Data {
 	 */
 	public function searchuser($search,$start,$count) {
 		$searchstr = ''.$search.'';
-		$stmt=LookupUpServer_DB::prepare("select userid,federationid,name,email,organisation,country,city,picture,vcard from user where match (name,email,organisation,country,city) against (:search in boolean mode) and karma>0 limit :start,:count");
+		$stmt=LookupServer_DB::prepare("select userid,federationid,name,email,organisation,country,city,picture,vcard from user where match (name,email,organisation,country,city) against (:search in boolean mode) and karma>0 limit :start,:count");
 		$stmt->bindParam(':search', $searchstr, PDO::PARAM_STR);
 		$stmt->bindParam(':start', $start, PDO::PARAM_INT);
 		$stmt->bindParam(':count', $count, PDO::PARAM_INT);
@@ -122,7 +122,7 @@ class LookupServer_Data {
 	}
 
 	/**
-	 * GetReplicationLog
+	 * exportReplication
 	 * @param int $timestamp
 	 * @param int $start
 	 * @param int $count
@@ -130,11 +130,11 @@ class LookupServer_Data {
 	 * @param bool $slave Don't read the authkey. Useful for replication for not trusted read only nodes
 	 * @return array $data
 	 */
-	public function getReplicationLog($timestamp,$start,$count,$fullfetch,$slave) {
+	public function exportReplication($timestamp,$start,$count,$fullfetch,$slave) {
 		if(!$fullfetch) $fullquery = 'localchange=1 and'; else $fullquery = '';
 		if(!$slave) $authquery = ',authkey'; else $authquery = '';
 		$query = "select userid".$authquery.",federationid,name,email,organisation,country,city,picture,vcard,karma,changed,created from user where ".$fullquery." changed >= :timestamp limit :start,:count";
-		$stmt=LookupUpServer_DB::prepare($query);
+		$stmt=LookupServer_DB::prepare($query);
 		$stmt->bindParam(':timestamp', $timestamp, PDO::PARAM_STR);
 		$stmt->bindParam(':start', $start, PDO::PARAM_INT);
 		$stmt->bindParam(':count', $count, PDO::PARAM_INT);
@@ -158,16 +158,16 @@ class LookupServer_Data {
 	 * @param string $email
 	 * @param string $organisation
 	 * @param string $country
- 	 * @param string $city
- 	 * @param string $picture
+	 * @param string $city
+	 * @param string $picture
 	 * @param string vcard
 	 */
 	public function store($key,$federationid,$name,$email,$organisation,$country,$city,$picture,$vcard) {
-        $util = new LookupServer_Util();
+		$util = new LookupServer_Util();
 		$userid = $util -> generateUserId();
 		$created = time();
 		$changed = time();
-		$stmt = LookupUpServer_DB::prepare('insert into user (userid,authkey,federationid,name,email,organisation,country,city,picture,vcard,created,changed,localchange) values(:userid,:authkey,:federationid,:name,:email,:organisation,:country,:city,:picture,:vcard,:created,:changed,1)');
+		$stmt = LookupServer_DB::prepare('insert into user (userid,authkey,federationid,name,email,organisation,country,city,picture,vcard,created,changed,localchange) values(:userid,:authkey,:federationid,:name,:email,:organisation,:country,:city,:picture,:vcard,:created,:changed,1)');
 		$stmt->bindParam(':userid', $userid, PDO::PARAM_STR);
 		$stmt->bindParam(':authkey', $key, PDO::PARAM_STR);
 		$stmt->bindParam(':federationid', $federationid, PDO::PARAM_STR);
@@ -197,7 +197,7 @@ class LookupServer_Data {
 	 */
 	public function update($key,$federationid,$name,$email,$organisation,$country,$city,$picture,$vcard) {
 		$changed = time();
-		$stmt=LookupUpServer_DB::prepare('update user set federationid=:federationid,name=:name,email=:email,organisation=:organisation,country=:country,city=:city,picture=:picture,vcard=:vcard,changed=:changed,localchange=1 where authkey=:authkey');
+		$stmt=LookupServer_DB::prepare('update user set federationid=:federationid,name=:name,email=:email,organisation=:organisation,country=:country,city=:city,picture=:picture,vcard=:vcard,changed=:changed,localchange=1 where authkey=:authkey');
 		$stmt->bindParam(':authkey', $key, PDO::PARAM_STR);
 		$stmt->bindParam(':federationid', $federationid, PDO::PARAM_STR);
 		$stmt->bindParam(':name', $name, PDO::PARAM_STR);
@@ -217,10 +217,36 @@ class LookupServer_Data {
 	 */
 	public function deleteByKey($key) {
 		$changed = time();
-		$stmt=LookupUpServer_DB::prepare("update user set federationid='',name='',email='',organisation='',country='',city='',picture='',vcard='',changed=:changed,localchange=1,karma=-1,changed=:changed where authkey = :key");
+		$stmt=LookupServer_DB::prepare("update user set federationid='',name='',email='',organisation='',country='',city='',picture='',vcard='',changed=:changed,localchange=1,karma=-1,changed=:changed where authkey = :key");
 		$stmt->bindParam(':changed', $changed, PDO::PARAM_INT);
 		$stmt->bindParam(':key', $key, PDO::PARAM_STR);
 		$stmt->execute();
 	}
+
+	/**
+	 * Import data from a remote server
+	 * @param string $key
+	 */
+	public function importReplication($data) {
+		$stmt = LookupServer_DB::prepare('insert into user (userid,authkey,federationid,name,email,organisation,country,city,picture,vcard,karma,created,changed,localchange) values(:userid,:authkey,:federationid,:name,:email,:organisation,:country,:city,:picture,:vcard,:karma,:created,:changed,0) ON DUPLICATE KEY UPDATE userid=:userid,authkey=:authkey,federationid=:federationid,name=:name,email=:email,organisation=:organisation,country=:country,city=:city,picture=:picture,vcard=:vcard,karma=:karma,created=:created,changed=:changed,localchange=0 ');
+		$stmt->bindParam(':userid', $data -> userid, PDO::PARAM_STR);
+		$stmt->bindParam(':authkey', $data -> authkey, PDO::PARAM_STR);
+		$stmt->bindParam(':federationid', $data -> federationid, PDO::PARAM_STR);
+		$stmt->bindParam(':name', $data -> name, PDO::PARAM_STR);
+		$stmt->bindParam(':email', $data -> email, PDO::PARAM_STR);
+		$stmt->bindParam(':organisation', $data -> organisation, PDO::PARAM_STR);
+		$stmt->bindParam(':country', $data -> country, PDO::PARAM_STR);
+		$stmt->bindParam(':city', $data -> city, PDO::PARAM_STR);
+		$stmt->bindParam(':picture', $data -> picture, PDO::PARAM_STR);
+		$stmt->bindParam(':vcard', $data -> vcard, PDO::PARAM_STR);
+		$stmt->bindParam(':karma', $data -> karma, PDO::PARAM_STR);
+		$stmt->bindParam(':created', $data -> created, PDO::PARAM_INT);
+		$stmt->bindParam(':changed', $data -> changed, PDO::PARAM_INT);
+		$stmt->execute();
+
+	}
+
+
+
 
 }

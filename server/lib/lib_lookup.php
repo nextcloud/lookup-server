@@ -36,7 +36,7 @@ class LookupServer {
 	 * Handle an incoming REST call
 	 */
 	public function handlerequest() {
-		$util = new LookupUpServer_Util();
+		$util = new LookupServer_Util();
 
 		if(!isset($_SERVER['REQUEST_METHOD'])) $util->error('no request method');
 		$method = $_SERVER['REQUEST_METHOD'];
@@ -72,7 +72,7 @@ class LookupServer {
 	 * Handle an incoming Replication REST call
 	 */
 	public function handleReplication() {
-		$util = new LookupUpServer_Util();
+		$util = new LookupServer_Util();
 
 		if(!isset($_SERVER['REQUEST_METHOD'])) $util->error('no request method');
 		$method = $_SERVER['REQUEST_METHOD'];
@@ -80,9 +80,9 @@ class LookupServer {
 		if($method == 'GET' and isset($_GET['timestamp']) and isset($_SERVER['PHP_AUTH_PW'])) {
 
 			if(isset($_SERVER['PHP_AUTH_PW']) and isset($_SERVER['PHP_AUTH_USER']) and ($_SERVER['PHP_AUTH_PW']==LOOKUPSERVER_REPLICATION_AUTH) and (LOOKUPSERVER_REPLICATION_AUTH<>'foobar')  ) {
-				$this->getReplicationLog(false);
+				$this->exportReplication(false);
 			}elseif(isset($_SERVER['PHP_AUTH_PW']) and isset($_SERVER['PHP_AUTH_USER']) and ($_SERVER['PHP_AUTH_PW']==LOOKUPSERVER_SLAVEREPLICATION_AUTH) and (LOOKUPSERVER_SLAVEREPLICATION_AUTH<>'slavefoobar')  ) {
-					$this->getReplicationLog(true);
+					$this->exportReplication(true);
 			} else {
 				$util -> replicationLog('Invalid Replication auth: '.$_SERVER['PHP_AUTH_PW']);
 		    	$util->error('Invalid replication auth');
@@ -99,7 +99,7 @@ class LookupServer {
 	 */
 	public function getUserByKey() {
 		if(isset($_GET['key'])) {
-			$util = new LookupUpServer_Util();
+			$util = new LookupServer_Util();
 			$util -> log('GET USER BY KEY: '.$_GET['key']);
 			$data = new LookupServer_Data();
 			$user = $data -> getByKey($_GET['key']);
@@ -113,7 +113,7 @@ class LookupServer {
 	 */
 	public function getUserByEmail() {
 		if(isset($_GET['email'])) {
-			$util = new LookupUpServer_Util();
+			$util = new LookupServer_Util();
 			$util -> log('GET USER BY EMAIL: '.$_GET['email']);
 			$data = new LookupServer_Data();
 			$user = $data -> getByEmail($_GET['email']);
@@ -126,7 +126,7 @@ class LookupServer {
 	 */
 	public function getUserByUserId() {
 		if(isset($_GET['userid'])) {
-			$util = new LookupUpServer_Util();
+			$util = new LookupServer_Util();
 			$util -> log('GET USER BY USERID: '.$_GET['userid']);
 			$data = new LookupServer_Data();
 			$user = $data -> getByUserId($_GET['userid']);
@@ -141,10 +141,10 @@ class LookupServer {
 	public function searchusers() {
 		$pagesize = 10;
 		if(isset($_GET['search']) and isset($_GET['page'])) {
-			$util = new LookupUpServer_Util();
+			$util = new LookupServer_Util();
 			$util -> log('SEARCH USER : '.$_GET['search'].' PAGE:'.$_GET['page']);
 			if($_GET['page'] > LOOKUPSERVER_MAX_SEARCH_PAGE) {
-				$util = new LookupUpServer_Util();
+				$util = new LookupServer_Util();
 				$util->error('page number is too high');
 			}
 			$data = new LookupServer_Data();
@@ -158,7 +158,7 @@ class LookupServer {
 	 *  Create User
 	 */
 	public function createuser() {
-		$util = new LookupUpServer_Util();
+		$util = new LookupServer_Util();
 		if(isset($_POST['key']) and
 		isset($_POST['federationid']) and
 		isset($_POST['name']) and
@@ -197,7 +197,7 @@ class LookupServer {
 	 *  Update User
 	 */
 	public function updateuser() {
-		$util = new LookupUpServer_Util();
+		$util = new LookupServer_Util();
 		parse_str(file_get_contents('php://input'), $PUT);
 
 		if(isset($PUT['key']) and
@@ -234,7 +234,7 @@ class LookupServer {
 	public function deleteuser() {
 		$data = new LookupServer_Data();
 		if(isset($_GET['key'])) {
-			$util = LookupUpServer_Util();
+			$util = LookupServer_Util();
 			$util -> log('DELETE USER : '.$_GET['key']);
 			$data -> deleteByKey($_GET['key']);
 			echo(json_encode(true,JSON_PRETTY_PRINT));
@@ -242,17 +242,42 @@ class LookupServer {
 	}
 
 	/**
-	 *  Get user for replication
+	 *  Get users for replication
 	 */
-	public function getReplicationLog($slave) {
+	public function exportReplication($slave) {
 		$pagesize = 10;
 		if(isset($_GET['fullfetch'])) $fullfetch = true; else $fullfetch = false;
 		if(isset($_GET['timestamp']) and isset($_GET['page'])) {
-			$util = new LookupUpServer_Util();
-			$util -> replicationLog('GET TIMESTAMP: '.$_GET['timestamp'].' PAGE: '.$_GET['page'].' FULLFETCH: '.$fullfetch.' SLAVE: '.$slave);
+			$util = new LookupServer_Util();
+			$util -> replicationLog('GET TIMESTAMP: '.$_GET['timestamp'].' PAGE: '.$_GET['page'].' FULLFETCH: '.json_encode($fullfetch).' SLAVE: '.json_encode($slave));
 			$data = new LookupServer_Data();
-			$users = $data -> getReplicationLog($_GET['timestamp'], $_GET['page']*$pagesize, $pagesize, $fullfetch, $slave);
+			$users = $data -> exportReplication($_GET['timestamp'], $_GET['page']*$pagesize, $pagesize, $fullfetch, $slave);
 			echo(json_encode($users,JSON_PRETTY_PRINT));
+		}
+	}
+
+
+	/**
+	 *  Import replication log
+	 */
+	public function importReplication() {
+		global $LOOKUPSERVER_REPLICATION_HOSTS;
+		$data = new LookupServer_Data();
+		$util = new LookupServer_Util();
+
+		foreach($LOOKUPSERVER_REPLICATION_HOSTS as $host) {
+			$timestamp = time() - LOOKUPSERVER_REPLICATION_INTERVAL;
+			$page=0;
+			$count=1;
+			while($count<>0) {
+				$util -> replicationLog('FETCH HOST: '.$host.' TIMESTAMP: '.$timestamp.' PAGE: '.$page);
+				$replicationdata = file_get_contents($host.'/replication.php?timestamp='.$timestamp.'&page='.$page);
+				$entries = json_decode($replicationdata);
+//				print_r($entries);
+				$count = count($entries);
+				for ($i = 0; $i < $count; $i++) $data -> importReplication($entries[$i]);
+				$page++;
+			}
 		}
 	}
 

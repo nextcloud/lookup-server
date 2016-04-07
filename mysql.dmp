@@ -2,8 +2,7 @@ SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
 
 CREATE TABLE IF NOT EXISTS `user` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `userid` varchar(255) NOT NULL,
+  `userid` bigint,
   `authkey` varchar(255) NOT NULL,
   `federationid` varchar(255) NOT NULL,
   `name` varchar(255) NOT NULL,
@@ -17,7 +16,7 @@ CREATE TABLE IF NOT EXISTS `user` (
   `changed` int NOT NULL,
   `localchange` int NOT NULL,
   `karma` int NOT NULL,
-  PRIMARY KEY (`id`),
+  PRIMARY KEY (`userid`),
   KEY `authkey` (`authkey`),
   KEY `name` (`name`),
   KEY `email` (`email`),

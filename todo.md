@@ -5,8 +5,8 @@
 - Twitter verification and increase Karma level
 - Reset authkey by email feature
 - Make IPv6 ready
-- Add server to server replication calls
 - Optimize DB indexes
+- Add status.php with version number
 
 ## 2.0
 - Config file option to blacklist certain spam IP spaces and keywords

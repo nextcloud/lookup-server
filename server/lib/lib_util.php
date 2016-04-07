@@ -24,7 +24,7 @@
 /**
 * The LookUp util class
 */
-class LookupUpServer_Util {
+class LookupServer_Util {
 
     /**
      *  Handle error
@@ -41,7 +41,7 @@ class LookupUpServer_Util {
      * @return string $userid
      */
     public function generateUserId() {
-    	return('oc'.rand().rand().rand().rand());
+    	return(rand(1,9200000000000000000)); // mysql bigint
     }
 
     /**
@@ -68,7 +68,8 @@ class LookupUpServer_Util {
 	 */
 	public function replicationLog($text) {
 		if(LOOKUPSERVER_REPLICATION_LOG<>'') {
-			file_put_contents(LOOKUPSERVER_REPLICATION_LOG, $_SERVER['REMOTE_ADDR'].' '.'['.date('c').']'.' '.$text."\n", FILE_APPEND);
+			if(isset($_SERVER['REMOTE_ADDR'])) $remote_addr = $_SERVER['REMOTE_ADDR']; else $remote_addr = 'local';
+			file_put_contents(LOOKUPSERVER_REPLICATION_LOG, $remote_addr.' '.'['.date('c').']'.' '.$text."\n", FILE_APPEND);
 		}
 	}
 

@@ -24,7 +24,7 @@
 /**
 * The LookUp Server database access class
 */
-class LookupUpServer_DB {
+class LookupServer_DB {
 
     /**
      * prepare a query on the database
@@ -37,6 +37,7 @@ class LookupUpServer_DB {
 
         if(!isset($LookupServer_Connection)) {
             $LookUpServer_Connection = new PDO(LOOKUPSERVER_DB_STRING, LOOKUPSERVER_DB_LOGIN, LOOKUPSERVER_DB_PASSWD);
+			$LookUpServer_Connection -> setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
             if (!$LookUpServer_Connection) {
                 @ob_end_clean();

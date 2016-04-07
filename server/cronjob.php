@@ -31,4 +31,9 @@ require('lib_lookup.php');
 
 // Cronjob
 $s = new LookupServer();
+
+// Cleanup the API Traffic Limit
 $s -> cleanup();
+
+// Import from other replication hosts
+$s -> importReplication();
