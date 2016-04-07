@@ -6,7 +6,6 @@
 - Reset authkey by email feature
 - Make IPv6 ready
 - Optimize DB indexes
-- Add status.php with version number
 
 ## 2.0
 - Config file option to blacklist certain spam IP spaces and keywords
