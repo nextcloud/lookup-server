@@ -7,7 +7,7 @@ The Lookup-Server is a server component that can be run independently from an ow
 Please look into the doc directory for more information
 
 ## License
-This code is licenses as AGPL v2
+This code is licenses as AGPL v3
 
 ## Contribute
 If you want to contribute please open a pull request here on github. Every improvement is welcome.
