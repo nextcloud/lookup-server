@@ -5,6 +5,7 @@
 - Website verification and increase Karma level
 - Reset authkey by email feature
 - Make email verification website and verification email prettier
+- Cleanup Logging and Error levels and reporting
 
 ## 2.0
 - Github verification and increase Karma level

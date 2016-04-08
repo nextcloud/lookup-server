@@ -84,8 +84,8 @@ class LookupServer {
 			}elseif(isset($_SERVER['PHP_AUTH_PW']) and isset($_SERVER['PHP_AUTH_USER']) and ($_SERVER['PHP_AUTH_PW']==LOOKUPSERVER_SLAVEREPLICATION_AUTH) and (LOOKUPSERVER_SLAVEREPLICATION_AUTH<>'slavefoobar')  ) {
 					$this->exportReplication(true);
 			} else {
-				$util -> replicationLog('Invalid Replication auth: '.$_SERVER['PHP_AUTH_PW']);
-		    	$util->error('Invalid replication auth');
+				$util -> replicationLog('Invalid replication auth: '.$_SERVER['PHP_AUTH_PW']);
+		    	$util -> error('Invalid replication auth');
 			}
 
 		} else {

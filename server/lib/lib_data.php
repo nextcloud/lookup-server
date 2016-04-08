@@ -301,6 +301,7 @@ class LookupServer_Data {
 	 * Start email verification
 	 */
 	public function startEmailVerification($authkey,$email) {
+		$util = new LookupServer_Util();
 		$key = rand(1000000000,2000000000);
 
 		$stmt=LookupServer_DB::prepare("update user set emailstatus=:emailstatus,karma=0 where authkey = :authkey");
@@ -310,12 +311,14 @@ class LookupServer_Data {
 
 		$text = 'Please click this link to confirm your account: '.LOOKUPSERVER_PUBLIC_URL.'/verifyemail.php?key='.$key;
 		$this->sendEmail($email, 'Email Confirmation', $text);
+		$util -> Log('Email verification mail sent. EMAIL: '.$email);
 	}
 
 	/**
 	 * Verify Email
 	 */
 	public function verifyEmail() {
+		$util = new LookupServer_Util();
 		if(isset($_GET['key'])) $key = $_GET['key']; else $key = '';
 
 		$stmt=LookupServer_DB::prepare("select userid from user where emailstatus=:key");
@@ -334,9 +337,12 @@ class LookupServer_Data {
 
 			$this->updateKarma($userid);
 
+			$util -> Log('Email verified. USER: '.$userid.' KEY: '.$key);
 			echo('email verified');
 
+
 		} else {
+			$util -> Log('Email NOT verified. KEY: '.$key);
 			echo('email not verified');
 		}
 
