@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS `user` (
   `federationid` varchar(255) NOT NULL,
   `name` varchar(255) NOT NULL,
   `email` varchar(255) NOT NULL,
+  `emailstatus` int NOT NULL,
   `organisation` varchar(255) NOT NULL,
   `country` varchar(255) NOT NULL,
   `city` varchar(255) NOT NULL,

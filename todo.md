@@ -1,10 +1,10 @@
 # Todo:
 
 ## 1.0
-- Email verification and increase Karma level
 - Twitter verification and increase Karma level
 - Website verification and increase Karma level
 - Reset authkey by email feature
+- Make email verification website and verification email prettier
 
 ## 2.0
 - Github verification and increase Karma level

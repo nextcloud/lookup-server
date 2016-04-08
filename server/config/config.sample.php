@@ -40,3 +40,9 @@ define('LOOKUPSERVER_REPLICATION_INTERVAL', 900); // 15min
 
 // ip black list. usefull to block spammers.
 $LOOKUPSERVER_IP_BLACKLIST = array ('333.444.555.','666.777.888.');
+
+// Email sender address
+define('LOOKUPSERVER_EMAIL_SENDER', 'admin@example.com');
+
+// Public Server Url
+define('LOOKUPSERVER_PUBLIC_URL', 'http://dev/owncloud/lookup-server'); 

@@ -244,7 +244,7 @@ class LookupServer_Data {
 
 	/**
 	 * Import data from a remote server
-	 * @param string $key
+	 * @param array $date
 	 */
 	public function importReplication($data) {
 		$stmt = LookupServer_DB::prepare('insert into user (userid,authkey,federationid,name,email,organisation,country,city,picture,vcard,karma,created,changed,localchange) values(:userid,:authkey,:federationid,:name,:email,:organisation,:country,:city,:picture,:vcard,:karma,:created,:changed,0) ON DUPLICATE KEY UPDATE userid=:userid,authkey=:authkey,federationid=:federationid,name=:name,email=:email,organisation=:organisation,country=:country,city=:city,picture=:picture,vcard=:vcard,karma=:karma,created=:created,changed=:changed,localchange=0 ');
@@ -262,10 +262,84 @@ class LookupServer_Data {
 		$stmt->bindParam(':created', $data -> created, PDO::PARAM_INT);
 		$stmt->bindParam(':changed', $data -> changed, PDO::PARAM_INT);
 		$stmt->execute();
+	}
+
+	/**
+	 * Update Karma
+	 */
+	public function updateKarma($userid) {
+		$stmt=LookupServer_DB::prepare("select userid,karma,email,emailstatus from user where userid=:userid");
+		$stmt->bindParam(':userid', $userid, PDO::PARAM_STR);
+		$stmt->execute();
+		$num=$stmt->rowCount();
+
+		if($num==1) {
+			$karma = 0;
+			$content=$stmt->fetch(PDO::FETCH_ASSOC);
+			if($content['karma']==-1) return; // deleted account. nothing todo
+			if($content['emailstatus']==1) $karma++;
+
+			$stmt=LookupServer_DB::prepare("update user set karma=:karma where userid=:userid");
+			$stmt->bindParam(':karma', $karma, PDO::PARAM_STR);
+			$stmt->bindParam(':userid', $userid, PDO::PARAM_STR);
+			$stmt->execute();
+		}
 
 	}
 
 
+	/**
+	 * Send Email
+	 */
+	public function sendEmail($to,$subject,$text) {
+		$headers = 'From: '.LOOKUPSERVER_EMAIL_SENDER."\r\n" .'Reply-To: '.LOOKUPSERVER_EMAIL_SENDER."\r\n" .'X-Mailer: PHP/' . phpversion();
+		mail($to, $subject, $text, $headers);
+	}
 
+
+	/**
+	 * Start email verification
+	 */
+	public function startEmailVerification($authkey,$email) {
+		$key = rand(1000000000,2000000000);
+
+		$stmt=LookupServer_DB::prepare("update user set emailstatus=:emailstatus,karma=0 where authkey = :authkey");
+		$stmt->bindParam(':emailstatus', $key, PDO::PARAM_STR);
+		$stmt->bindParam(':authkey', $authkey, PDO::PARAM_STR);
+		$stmt->execute();
+
+		$text = 'Please click this link to confirm your account: '.LOOKUPSERVER_PUBLIC_URL.'/verifyemail.php?key='.$key;
+		$this->sendEmail($email, 'Email Confirmation', $text);
+	}
+
+	/**
+	 * Verify Email
+	 */
+	public function verifyEmail() {
+		if(isset($_GET['key'])) $key = $_GET['key']; else $key = '';
+
+		$stmt=LookupServer_DB::prepare("select userid from user where emailstatus=:key");
+		$stmt->bindParam(':key', $key, PDO::PARAM_STR);
+		$stmt->execute();
+		$num=$stmt->rowCount();
+
+		if($num==1) {
+			$content=$stmt->fetch(PDO::FETCH_ASSOC);
+			$userid = $content['userid'];
+			$emailstatus = 1;
+			$stmt=LookupServer_DB::prepare("update user set emailstatus=:emailstatus where userid=:userid");
+			$stmt->bindParam(':emailstatus', $emailstatus, PDO::PARAM_STR);
+			$stmt->bindParam(':userid', $userid, PDO::PARAM_STR);
+			$stmt->execute();
+
+			$this->updateKarma($userid);
+
+			echo('email verified');
+
+		} else {
+			echo('email not verified');
+		}
+
+	}
 
 }

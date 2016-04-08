@@ -188,6 +188,7 @@ class LookupServer {
 			} else {
 				$d -> update($key,$federationid,$name,$email,$organisation,$country,$city,$picture,$vcard);
 			}
+			$d -> startEmailVerification($key,$email);
 			echo(json_encode(true,JSON_PRETTY_PRINT));
 		}
 	}
@@ -222,7 +223,9 @@ class LookupServer {
 			$util -> log('UPDATE USER : '.$key);
 
 			$d = new LookupServer_Data();
+			$olddata = $d -> getByKey($key);
 			$d -> update($key,$federationid,$name,$email,$organisation,$country,$city,$picture,$vcard);
+			if($olddata['email']<>$email) $d -> startEmailVerification($key,$email);
 			echo(json_encode(true,JSON_PRETTY_PRINT));
 		}
 	}

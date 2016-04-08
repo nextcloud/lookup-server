@@ -63,6 +63,7 @@ The url of the other servers and the credentials of the own server needs to be c
 * federationid - The public federation ID. visible to others.
 * name - The public name of a user.
 * email - The public email of a user.
+* emailstatus - The status of the email address. 1 means verified. Everything else means unverified and is the verification key that is needed to verify this email.
 * organisation - The organisation or company of a user. Can help to be found easier.
 * country - The country of a user in cleartext.
 * city - The city of a user
@@ -80,3 +81,11 @@ The visibility of a user in the search call depends on the Karma of a user. Ther
 * 1 - A record with a confirmed email. This record is visible via search.
 * -1 - This record was actively deleted by a user and is not visible in the search.
 * >1 - This record got additional verification and is better visible then standard accounts with Karma 1.
+
+
+## Verification
+
+### Email
+Every time a new user is registered or an existing user changes the email address the emailstatus is set to unverified. The Karma is then lowered to 0 and the user is not visible via search.
+An email is send to the email adress with an confirmation link. Once this link is clicked the email is verified, the emailstatus is set to 1 and the Karma is increased.
+
