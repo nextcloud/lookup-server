@@ -15,10 +15,10 @@ define('LOOKUPSERVER_DB_PASSWD', '');
 define('LOOKUPSERVER_ERROR_VERBOSE', true);
 
 // logfile
-define('LOOKUPSERVER_LOG', '/var/log/owncloud/lookup.log');
+define('LOOKUPSERVER_LOG', '/var/log/nextcloud/lookup.log');
 
 // replication logfile
-define('LOOKUPSERVER_REPLICATION_LOG', '/var/log/owncloud/lookup_replication.log');
+define('LOOKUPSERVER_REPLICATION_LOG', '/var/log/nextcloud/lookup_replication.log');
 
 // max user search page. limit the maximum number of pages to avoid scraping.
 define('LOOKUPSERVER_MAX_SEARCH_PAGE', 10);
@@ -45,4 +45,4 @@ $LOOKUPSERVER_IP_BLACKLIST = array ('333.444.555.','666.777.888.');
 define('LOOKUPSERVER_EMAIL_SENDER', 'admin@example.com');
 
 // Public Server Url
-define('LOOKUPSERVER_PUBLIC_URL', 'http://dev/owncloud/lookup-server'); 
+define('LOOKUPSERVER_PUBLIC_URL', 'http://dev/nextcloud/lookup-server'); 

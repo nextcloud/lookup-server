@@ -22,4 +22,5 @@
 * It is recommended to activate the logfile and monitor the activity at the beginning to make sure everything works
 * There is an additional replication logfile. This should also be monitored to make sure everything works
 * Regular Backups are strongly recommended
-* github.com/owncloud/lookup-server should be checked regulary to make sure that all securit updates are installed
+* github.com/nextcloud/lookup-server should be checked regulary to make sure that all securit updates are installed
+
