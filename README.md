@@ -14,4 +14,4 @@ If you want to contribute please open a pull request here on github. Every impro
 
 ## Author
 Frank Karlitschek
-frank@nextcloud.org
+frank@nextcloud.com
