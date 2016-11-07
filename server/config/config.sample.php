@@ -41,6 +41,9 @@ define('LOOKUPSERVER_REPLICATION_INTERVAL', 900); // 15min
 // ip black list. usefull to block spammers.
 $LOOKUPSERVER_IP_BLACKLIST = array ('333.444.555.','666.777.888.');
 
+// spam black list. usefull to block spammers.
+$LOOKUPSERVER_SPAM_BLACKLIST = array ();
+
 // Email sender address
 define('LOOKUPSERVER_EMAIL_SENDER', 'admin@example.com');
 
