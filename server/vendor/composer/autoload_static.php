@@ -9,15 +9,23 @@ class ComposerStaticInit509ee4e79733fbe3199b97373b795eca
     public static $prefixLengthsPsr4 = array (
         'L' => 
         array (
-            'Lookup\\' => 7,
+            'LookupServer\\' => 13,
         ),
     );
 
     public static $prefixDirsPsr4 = array (
-        'Lookup\\' => 
+        'LookupServer\\' => 
         array (
             0 => __DIR__ . '/../..' . '/lib',
         ),
+    );
+
+    public static $classMap = array (
+        'LookupServer\\BruteForce' => __DIR__ . '/../..' . '/lib/BruteForce.php',
+        'LookupServer\\DB' => __DIR__ . '/../..' . '/lib/DB.php',
+        'LookupServer\\Data' => __DIR__ . '/../..' . '/lib/Data.php',
+        'LookupServer\\Server' => __DIR__ . '/../..' . '/lib/Server.php',
+        'LookupServer\\Util' => __DIR__ . '/../..' . '/lib/Util.php',
     );
 
     public static function getInitializer(ClassLoader $loader)
@@ -25,6 +33,7 @@ class ComposerStaticInit509ee4e79733fbe3199b97373b795eca
         return \Closure::bind(function () use ($loader) {
             $loader->prefixLengthsPsr4 = ComposerStaticInit509ee4e79733fbe3199b97373b795eca::$prefixLengthsPsr4;
             $loader->prefixDirsPsr4 = ComposerStaticInit509ee4e79733fbe3199b97373b795eca::$prefixDirsPsr4;
+            $loader->classMap = ComposerStaticInit509ee4e79733fbe3199b97373b795eca::$classMap;
 
         }, null, ClassLoader::class);
     }

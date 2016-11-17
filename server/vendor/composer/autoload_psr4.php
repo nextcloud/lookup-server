@@ -6,5 +6,5 @@ $vendorDir = dirname(dirname(__FILE__));
 $baseDir = dirname($vendorDir);
 
 return array(
-    'Lookup\\' => array($baseDir . '/lib'),
+    'LookupServer\\' => array($baseDir . '/lib'),
 );

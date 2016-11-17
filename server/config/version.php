@@ -1,4 +1,6 @@
 <?php
 
+namespace {
 // Define Version Number
-$LOOKUPSERVER_VERSION = 0.1;
+    define('LOOKUPSERVER_VERSION', 0.1);
+}

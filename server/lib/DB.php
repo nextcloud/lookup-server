@@ -21,31 +21,33 @@
 *
 */
 
+namespace LookupServer;
+
 /**
 * The LookUp Server database access class
 */
-class LookupServer_DB {
+class DB {
+
+    static private $connection = null;
 
     /**
      * prepare a query on the database
      *
      * @param string $cmd
-     * @return statement object $stmt
+     * @return \PDOStatement object $stmt
      */
     public static function prepare($cmd) {
-        global $LookupServer_Connection;
+        if(self::$connection === null) {
+            self::$connection = new \PDO(LOOKUPSERVER_DB_STRING, LOOKUPSERVER_DB_LOGIN, LOOKUPSERVER_DB_PASSWD);
+			self::$connection -> setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 
-        if(!isset($LookupServer_Connection)) {
-            $LookUpServer_Connection = new PDO(LOOKUPSERVER_DB_STRING, LOOKUPSERVER_DB_LOGIN, LOOKUPSERVER_DB_PASSWD);
-			$LookUpServer_Connection -> setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-            if (!$LookUpServer_Connection) {
+            if (!self::$connection) {
                 @ob_end_clean();
                 echo('Can not connect to the database. Please check your configuration.');
                 exit();
             }
         }
-        $stmt = $LookUpServer_Connection->prepare($cmd);
+        $stmt = self::$connection->prepare($cmd);
         return($stmt);
     }
 

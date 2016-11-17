@@ -19,10 +19,12 @@
 *
 */
 
+namespace LookupServer;
+
 /**
  * Basic Brute Force Protection Class
  */
-class LookupServer_BruteForce {
+class BruteForce {
 
 	/**
 	 * Check if there are too many requests from one IP
@@ -38,24 +40,24 @@ class LookupServer_BruteForce {
 			if(strpos($ip, $bad_ip) === 0) $found=true;
 		}
 		if($found) {
-			$util = new LookupServer_Util();
-			$util -> log('REQUEST FROM BLACKLIST IP BLOCKED: '.$ip);
+			$util = new Util();
+			$util->log('REQUEST FROM BLACKLIST IP BLOCKED: '.$ip);
 			exit;
 		}
 
 		// register new ip
 		$ip = ip2long($_SERVER['REMOTE_ADDR']);
-		$stmt=LookupServer_DB::prepare('insert into apitraffic (ip,count) values (:ip,1) on duplicate key update count=count+1 ');
-		$stmt->bindParam(':ip', $ip, PDO::PARAM_STR);
+		$stmt = DB::prepare('insert into apitraffic (ip,count) values (:ip,1) on duplicate key update count=count+1 ');
+		$stmt->bindParam(':ip', $ip, \PDO::PARAM_STR);
 		$stmt->execute();
 
-		$stmt=LookupServer_DB::prepare('select count from apitraffic where ip=:ip ');
-		$stmt->bindParam(':ip', $ip, PDO::PARAM_STR);
+		$stmt = DB::prepare('select count from apitraffic where ip=:ip ');
+		$stmt->bindParam(':ip', $ip, \PDO::PARAM_STR);
 		$stmt->execute();
 		$num=$stmt->rowCount();
 
 		if($num==0) return(true);
-		$data = $stmt->fetch(PDO::FETCH_ASSOC);
+		$data = $stmt->fetch(\PDO::FETCH_ASSOC);
 		if($data['count']>LOOKUPSERVER_MAX_REQUESTS) {
 			echo(json_encode(array('error'=>'Too many requests. Please try again later.'),JSON_PRETTY_PRINT));
 			exit;
@@ -70,7 +72,7 @@ class LookupServer_BruteForce {
 	* this function should be call by a cronjob every 10 minutes
 	*/
 	public function cleanupTrafficLimit() {
-		$stmt=LookupServer_DB::prepare('truncate apitraffic');
+		$stmt = DB::prepare('truncate apitraffic');
 		$stmt->execute();
 	}
 

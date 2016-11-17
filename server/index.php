@@ -27,13 +27,18 @@ error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
 //set the default timezone to use.
 date_default_timezone_set('Europe/Berlin');
 
-//you have to include lib_lookup.
-require('lib/lib_lookup.php');
+require('vendor/autoload.php');
+
+require('config/config.php');
+require('config/version.php');
+
+use LookupServer\BruteForce;
+use LookupServer\Server;
 
 //Do the any brute force check
-$bf = new LookupServer_BruteForce();
-$bf -> check();
+$bf = new BruteForce();
+$bf->check();
 
 //process the request.
-$s = new LookupServer();
-$s -> handlerequest();
+$s = new Server();
+$s->handlerequest();

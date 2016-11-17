@@ -6,4 +6,9 @@ $vendorDir = dirname(dirname(__FILE__));
 $baseDir = dirname($vendorDir);
 
 return array(
+    'LookupServer\\BruteForce' => $baseDir . '/lib/BruteForce.php',
+    'LookupServer\\DB' => $baseDir . '/lib/DB.php',
+    'LookupServer\\Data' => $baseDir . '/lib/Data.php',
+    'LookupServer\\Server' => $baseDir . '/lib/Server.php',
+    'LookupServer\\Util' => $baseDir . '/lib/Util.php',
 );

@@ -28,6 +28,6 @@ error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
 date_default_timezone_set('Europe/Berlin');
 
 //you have to include lib_lookup.
-require('lib/lib_lookup.php');
+require('config/version.php');
 
-echo(json_encode(array('version'=>$LOOKUPSERVER_VERSION)));
+echo(json_encode(array('version'=>LOOKUPSERVER_VERSION)));

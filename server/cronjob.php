@@ -26,14 +26,13 @@
 error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE | E_ALL);
 
 // include the main contribook lib
-require('lib_lookup.php');
-
+require('vendor/autoload.php');
 
 // Cronjob
-$s = new LookupServer();
+$s = new \LookupServer\Server();
 
 // Cleanup the API Traffic Limit
-$s -> cleanup();
+$s->cleanup();
 
 // Import from other replication hosts
-$s -> importReplication();
+$s->importReplication();

@@ -28,8 +28,8 @@ error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
 date_default_timezone_set('Europe/Berlin');
 
 //you have to include lib_lookup.
-require('lib/lib_lookup.php');
+require('vendor/autoload.php');
 
 //process the request.
-$s = new LookupServer();
-$s -> handleReplication();
+$s = new \LookupServer\Server();
+$s->handleReplication();
