@@ -2,22 +2,38 @@
 
 require 'vendor/autoload.php';
 
-$config['displayErrorDetails'] = true;
-$config['addContentLengthHeader'] = false;
+$settings = [
+	'settings' => [
+		'displayErrorDetails' => true,
+		'addContentLengthHeader' => true,
+		'db' => [
+			'host' => "172.17.0.2",
+			'user' => "lookup",
+			'pass' => "lookup",
+			'dbname' => "lookup",
+		]
+	]
+];
 
-$config['db']['host']   = "localhost";
-$config['db']['user']   = "user";
-$config['db']['pass']   = "password";
-$config['db']['dbname'] = "exampleapp";
+$container = new \Slim\Container($settings);
 
-$c = new \Slim\Container();
-$c['UserManager'] = function() {
-    return new \LookupServer\UserManager();
+$container['db'] = function($c) {
+	$db = $c['settings']['db'];
+	$pdo = new PDO("mysql:host=" . $db['host'] . ";dbname=" . $db['dbname'],
+		$db['user'], $db['pass']);
+	$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+	$pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+	return $pdo;
+};
+$container['UserManager'] = function($c) {
+	return new \LookupServer\UserManager($c->db);
+};
+$container['BruteForceMiddleware'] = function ($c) {
+	return new \LookupServer\BruteForceMiddleware($c->db);
 };
 
-$app = new \Slim\App($c);
-$app->add(new \LookupServer\BruteForceMiddleware());
-
+$app = new \Slim\App($container);
+$app->add($container->get('BruteForceMiddleware'));
 
 
 $app->get('/users', 'UserManager:search');
