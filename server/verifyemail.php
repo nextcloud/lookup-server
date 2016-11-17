@@ -28,12 +28,12 @@ error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
 date_default_timezone_set('Europe/Berlin');
 
 //you have to include lib_lookup.
-require('lib/lib_lookup.php');
+require('vendor/autoload.php');
 
 //Do the any brute force check
-$bf = new LookupServer_BruteForce();
-$bf -> check();
+$bf = new \LookupServer\BruteForce();
+$bf->check();
 
 //process the request.
-$s = new LookupServer_Data();
-$s -> verifyEmail();
+$s = new \LookupServer\Data();
+$s->verifyEmail();

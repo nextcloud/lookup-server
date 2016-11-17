@@ -21,10 +21,12 @@
 *
 */
 
+namespace LookupServer;
+
 /**
 * The LookUp util class
 */
-class LookupServer_Util {
+class Util {
 
 	/**
 	* Handle error
@@ -46,8 +48,9 @@ class LookupServer_Util {
 	}
 
 	/**
-	 *  Sanitize some input
+	 * Sanitize some input
 	 * @param string $text
+     * @return string
 	 */
 	public function sanitize($text) {
 		$found = false;
@@ -56,8 +59,8 @@ class LookupServer_Util {
 			if(stripos($text, $bad_word) <> false) $found = true;
 		}
 		if($found) {
-			$util = new LookupServer_Util();
-			$util -> log('SPAM WORD FOUND IN: '.$text);
+			$util = new Util();
+			$util->log('SPAM WORD FOUND IN: '.$text);
 			exit;
 		}
 		return(strip_tags($text));

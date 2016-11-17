@@ -19,24 +19,18 @@
 *
 */
 
-// include all the required libraries and configuration file
-require('config/config.php');
-require('config/version.php');
-require('lib_db.php');
-require('lib_util.php');
-require('lib_bruteforce.php');
-require('lib_data.php');
+namespace LookupServer;
 
 /**
  * The main class of the Lookup Server
  */
-class LookupServer {
+class Server {
 
 	/**
 	 * Handle an incoming REST call
 	 */
 	public function handlerequest() {
-		$util = new LookupServer_Util();
+		$util = new Util();
 
 		if(!isset($_SERVER['REQUEST_METHOD'])) $util->error('no request method');
 		$method = $_SERVER['REQUEST_METHOD'];
@@ -50,7 +44,7 @@ class LookupServer {
 		    break;
 		  case 'GET':
 		    if(isset($_GET['search'])) {
-				$this->searchUsers();
+				$this->searchusers();
 			}elseif(isset($_GET['email'])) {
 				$this->getUserByEmail($_GET['email']);
 			}elseif(isset($_GET['userid'])) {
@@ -72,7 +66,7 @@ class LookupServer {
 	 * Handle an incoming Replication REST call
 	 */
 	public function handleReplication() {
-		$util = new LookupServer_Util();
+		$util = new Util();
 
 		if(!isset($_SERVER['REQUEST_METHOD'])) $util->error('no request method');
 		$method = $_SERVER['REQUEST_METHOD'];
@@ -99,9 +93,9 @@ class LookupServer {
 	 */
 	public function getUserByKey() {
 		if(isset($_GET['key'])) {
-			$util = new LookupServer_Util();
+			$util = new Util();
 			$util -> log('GET USER BY KEY: '.$_GET['key']);
-			$data = new LookupServer_Data();
+			$data = new Data();
 			$user = $data -> getByKey($_GET['key']);
 			echo(json_encode($user,JSON_PRETTY_PRINT));
 		}
@@ -113,9 +107,9 @@ class LookupServer {
 	 */
 	public function getUserByEmail() {
 		if(isset($_GET['email'])) {
-			$util = new LookupServer_Util();
+			$util = new Util();
 			$util -> log('GET USER BY EMAIL: '.$_GET['email']);
-			$data = new LookupServer_Data();
+			$data = new Data();
 			$user = $data -> getByEmail($_GET['email']);
 			echo(json_encode($user,JSON_PRETTY_PRINT));
 		}
@@ -126,9 +120,9 @@ class LookupServer {
 	 */
 	public function getUserByUserId() {
 		if(isset($_GET['userid'])) {
-			$util = new LookupServer_Util();
+			$util = new Util();
 			$util -> log('GET USER BY USERID: '.$_GET['userid']);
-			$data = new LookupServer_Data();
+			$data = new Data();
 			$user = $data -> getByUserId($_GET['userid']);
 			echo(json_encode($user,JSON_PRETTY_PRINT));
 		}
@@ -141,13 +135,13 @@ class LookupServer {
 	public function searchusers() {
 		$pagesize = 10;
 		if(isset($_GET['search']) and isset($_GET['page'])) {
-			$util = new LookupServer_Util();
+			$util = new Util();
 			$util -> log('SEARCH USER : '.$_GET['search'].' PAGE:'.$_GET['page']);
 			if($_GET['page'] > LOOKUPSERVER_MAX_SEARCH_PAGE) {
-				$util = new LookupServer_Util();
+				$util = new Util();
 				$util->error('page number is too high');
 			}
-			$data = new LookupServer_Data();
+			$data = new Data();
 			$users = $data -> searchuser($_GET['search'], $_GET['page']*$pagesize, $pagesize);
 			echo(json_encode($users,JSON_PRETTY_PRINT));
 		}
@@ -158,7 +152,7 @@ class LookupServer {
 	 *  Create User
 	 */
 	public function createuser() {
-		$util = new LookupServer_Util();
+		$util = new Util();
 		if(isset($_POST['key']) and
 		isset($_POST['federationid']) and
 		isset($_POST['name']) and
@@ -181,7 +175,7 @@ class LookupServer {
 
 			$util -> log('CREATE USER : '.$key);
 
-			$d = new LookupServer_Data();
+			$d = new Data();
 			$user = $d -> userExist($key);
 			if(!$user) {
 				$d -> store($key,$federationid,$name,$email,$organisation,$country,$city,$picture,$vcard);
@@ -198,7 +192,7 @@ class LookupServer {
 	 *  Update User
 	 */
 	public function updateuser() {
-		$util = new LookupServer_Util();
+		$util = new Util();
 		parse_str(file_get_contents('php://input'), $PUT);
 
 		if(isset($PUT['key']) and
@@ -222,7 +216,7 @@ class LookupServer {
 			$vcard        = $util -> sanitize($PUT['vcard']);
 			$util -> log('UPDATE USER : '.$key);
 
-			$d = new LookupServer_Data();
+			$d = new Data();
 			$olddata = $d -> getByKey($key);
 			$d -> update($key,$federationid,$name,$email,$organisation,$country,$city,$picture,$vcard);
 			if($olddata['email']<>$email) $d -> startEmailVerification($key,$email);
@@ -235,11 +229,11 @@ class LookupServer {
 	 *  Delete User
 	 */
 	public function deleteuser() {
-		$data = new LookupServer_Data();
+		$data = new Data();
 		if(isset($_GET['key'])) {
-			$util = LookupServer_Util();
-			$util -> log('DELETE USER : '.$_GET['key']);
-			$data -> deleteByKey($_GET['key']);
+			$util = new Util();
+			$util->log('DELETE USER : '.$_GET['key']);
+			$data->deleteByKey($_GET['key']);
 			echo(json_encode(true,JSON_PRETTY_PRINT));
 		}
 	}
@@ -251,9 +245,9 @@ class LookupServer {
 		$pagesize = 10;
 		if(isset($_GET['fullfetch'])) $fullfetch = true; else $fullfetch = false;
 		if(isset($_GET['timestamp']) and isset($_GET['page'])) {
-			$util = new LookupServer_Util();
+			$util = new Util();
 			$util -> replicationLog('GET TIMESTAMP: '.$_GET['timestamp'].' PAGE: '.$_GET['page'].' FULLFETCH: '.json_encode($fullfetch).' SLAVE: '.json_encode($slave));
-			$data = new LookupServer_Data();
+			$data = new Data();
 			$users = $data -> exportReplication($_GET['timestamp'], $_GET['page']*$pagesize, $pagesize, $fullfetch, $slave);
 			echo(json_encode($users,JSON_PRETTY_PRINT));
 		}
@@ -265,8 +259,8 @@ class LookupServer {
 	 */
 	public function importReplication() {
 		global $LOOKUPSERVER_REPLICATION_HOSTS;
-		$data = new LookupServer_Data();
-		$util = new LookupServer_Util();
+		$data = new Data();
+		$util = new Util();
 
 		foreach($LOOKUPSERVER_REPLICATION_HOSTS as $host) {
 			$timestamp = time() - LOOKUPSERVER_REPLICATION_INTERVAL;
@@ -289,8 +283,8 @@ class LookupServer {
 	 */
 	public function cleanup() {
 		// cleanup the traffic limit DB table
-		$bf = new LookupServer_BruteForce();
-		$bf -> cleanupTrafficLimit();
+		$bf = new BruteForce();
+		$bf->cleanupTrafficLimit();
 	}
 
 
