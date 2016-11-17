@@ -8,5 +8,8 @@
         "psr-4": {
             "LookupServer\\": "lib/"
         }
-    }
+    },
+     "require": {
+          "slim/slim": "^3.5"
+     }
 }
