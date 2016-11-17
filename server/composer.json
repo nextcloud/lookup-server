@@ -1,0 +1,12 @@
+{
+     "config": {
+       "vendor-dir": "vendor",
+       "optimize-autoloader": true,
+       "classmap-authoritative": true
+     },
+    "autoload" : {
+        "psr-4": {
+            "Lookup\\": "lib/"
+        }
+    }
+}
