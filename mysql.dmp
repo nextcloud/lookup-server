@@ -32,3 +32,5 @@ CREATE TABLE `apitraffic` (
   `count` int(11) NOT NULL,
   PRIMARY KEY (`ip`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
+

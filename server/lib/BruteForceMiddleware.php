@@ -13,7 +13,6 @@ class BruteForceMiddleware {
      * @return \Psr\Http\Message\ResponseInterface
      */
     public function __invoke($request, $response, $next) {
-		$response->getBody()->write('MIDDLE\n');
         $response = $next($request, $response);
         return $response;
     }
