@@ -1,36 +1,162 @@
+-- phpMyAdmin SQL Dump
+-- version 4.6.4
+-- https://www.phpmyadmin.net/
+--
+-- Host: 172.17.0.2
+-- Generation Time: Nov 18, 2016 at 01:23 PM
+-- Server version: 10.1.19-MariaDB-1~jessie
+-- PHP Version: 7.0.13
+
+-- TODO: FIX BIGINT AND ALL
+
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
 
-CREATE TABLE IF NOT EXISTS `user` (
-  `userid` bigint,
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
+
+--
+-- Database: `lookup`
+--
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `apitraffic`
+--
+
+CREATE TABLE `apitraffic` (
+  `ip` bigint(20) NOT NULL,
+  `count` int(11) NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
+--
+-- Dumping data for table `apitraffic`
+--
+
+INSERT INTO `apitraffic` (`ip`, `count`) VALUES
+(2130706433, 16);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `store`
+--
+
+CREATE TABLE `store` (
+  `id` int(11) NOT NULL,
+  `userId` int(11) NOT NULL,
+  `k` varchar(255) NOT NULL,
+  `v` varchar(255) NOT NULL,
+  `valid` tinyint(1) NOT NULL DEFAULT '0'
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+--
+-- Dumping data for table `store`
+--
+
+INSERT INTO `store` (`id`, `userId`, `k`, `v`, `valid`) VALUES
+(11, 10, 'name', 'admin', 0),
+(12, 10, 'email', 'a@b.nl', 0);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `user`
+--
+
+CREATE TABLE `user` (
+  `userid` bigint(20) NOT NULL,
   `authkey` varchar(255) NOT NULL DEFAULT '',
   `federationid` varchar(255) NOT NULL DEFAULT '',
   `name` varchar(255) NOT NULL DEFAULT '',
   `email` varchar(255) NOT NULL DEFAULT '',
-  `emailstatus` int NOT NULL DEFAULT 0,
+  `emailstatus` int(11) NOT NULL DEFAULT '0',
   `organisation` varchar(255) NOT NULL DEFAULT '',
   `country` varchar(255) NOT NULL DEFAULT '',
   `city` varchar(255) NOT NULL DEFAULT '',
-  `picture` text NOT NULL DEFAULT '',
-  `vcard` text NOT NULL DEFAULT '',
-  `created` int NOT NULL DEFAULT 0,
-  `changed` int NOT NULL DEFAULT 0,
-  `localchange` int NOT NULL DEFAULT 0,
-  `karma` int NOT NULL DEFAULT 0,
-  PRIMARY KEY (`userid`),
-  KEY `userid` (`userid`,`karma`),
-  KEY `authkey` (`authkey`),
-  KEY `email` (`email`, `karma`),
-  KEY `email2` (`email`, `authkey`),
-  KEY `karma` (`localchange`,`changed`),
-  FULLTEXT KEY `FullText` (`name`,`email`,`organisation`,`country`,`city`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
-
-
-CREATE TABLE `apitraffic` (
-  `ip` bigint(20) NOT NULL,
-  `count` int(11) NOT NULL,
-  PRIMARY KEY (`ip`)
+  `picture` text NOT NULL,
+  `vcard` text NOT NULL,
+  `created` int(11) NOT NULL DEFAULT '0',
+  `changed` int(11) NOT NULL DEFAULT '0',
+  `localchange` int(11) NOT NULL DEFAULT '0',
+  `karma` int(11) NOT NULL DEFAULT '0'
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
+-- --------------------------------------------------------
 
+--
+-- Table structure for table `users`
+--
+
+CREATE TABLE `users` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `federationId` varchar(255) NOT NULL,
+  `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+--
+-- Dumping data for table `users`
+--
+
+INSERT INTO `users` (`id`, `federationId`, `timestamp`) VALUES
+(10, 'admin@127.0.0.1:1234', '2016-11-18 13:18:44');
+
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indexes for table `apitraffic`
+--
+ALTER TABLE `apitraffic`
+  ADD PRIMARY KEY (`ip`);
+
+--
+-- Indexes for table `store`
+--
+ALTER TABLE `store`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `key` (`k`),
+  ADD KEY `value` (`v`),
+  ADD KEY `userId` (`userId`);
+
+--
+-- Indexes for table `user`
+--
+ALTER TABLE `user`
+  ADD PRIMARY KEY (`userid`),
+  ADD KEY `userid` (`userid`,`karma`),
+  ADD KEY `authkey` (`authkey`),
+  ADD KEY `email` (`email`,`karma`),
+  ADD KEY `email2` (`email`,`authkey`),
+  ADD KEY `karma` (`localchange`,`changed`);
+ALTER TABLE `user` ADD FULLTEXT KEY `FullText` (`name`,`email`,`organisation`,`country`,`city`);
+
+--
+-- Indexes for table `users`
+--
+ALTER TABLE `users`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `federationId` (`federationId`);
+
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `store`
+--
+ALTER TABLE `store`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+--
+-- AUTO_INCREMENT for table `users`
+--
+ALTER TABLE `users`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
