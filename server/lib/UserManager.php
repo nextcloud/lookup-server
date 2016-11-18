@@ -3,6 +3,7 @@
 namespace LookupServer;
 
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
 use \Psr\Http\Message\ServerRequestInterface as Request;
 use \Psr\Http\Message\ResponseInterface as Response;
 
@@ -155,18 +156,19 @@ class UserManager {
 	public function register(Request $request, Response $response) {
 		$body = json_decode($request->getBody(), true);
 
-		//TODO: Error out
+		if ($body === null || !isset($body['message']) || !isset($body['message']['data']) ||
+			!isset($body['message']['data']['federationId']) || !isset($body['signature']) ||
+			!isset($body['message']['timestamp'])) {
+			$response->withStatus(400);
+			return $response;
+		}
 
 		$cloudId = $body['message']['data']['federationId'];
 
 		// Get fed id
 		list($user, $host) = $this->splitCloudId($cloudId);
 
-		/*
-		 * Retrieve public key && store
-		 * TODO: To HTTPS
-		 * TODO: Cache?
-		 */
+		// Retrieve public key && store
 		$ocsreq = new \GuzzleHttp\Psr7\Request(
 			'GET',
 			'https://'.$host . '/ocs/v2.php/identityproof/key/' . $user,
@@ -176,17 +178,26 @@ class UserManager {
 			]);
 
 		$client = new Client();
-		$ocsresponse = $client->send($ocsreq, ['timeout' => 10]);
-		//TODO: handle timeout
-		//TODO: handle on 200 status
+		try {
+			$ocsresponse = $client->send($ocsreq, ['timeout' => 10]);
+		} catch(RequestException $e) {
+			$response->withStatus(400);
+			return $response;
+		}
+
 		$ocsresponse = json_decode($ocsresponse->getBody(), true);
+
+		if ($ocsresponse === null || !isset($ocsresponse['ocs']) ||
+			!isset($ocsresponse['ocs']['data']) || !isset($ocsresponse['ocs']['data']['public'])) {
+			$response->withStatus(400);
+			return $response;
+		}
 
 		$key = $ocsresponse['ocs']['data']['public'];
 
 		// verify message
 		$message = json_encode($body['message']);
 		$signature= base64_decode($body['signature']);
-
 
 		$res = openssl_verify($message, $signature, $key, OPENSSL_ALGO_SHA512);
 
