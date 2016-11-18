@@ -1,44 +1,42 @@
 <?php
 
-/**
-* Lookup Server main page.
-*
-* @author Frank Karlitschek
-* @copyright 2016 Frank Karlitschek frank@karlitschek.de
-*
-* This library is free software; you can redistribute it and/or
-* modify it under the terms of the GNU AFFERO GENERAL PUBLIC LICENSE
-* License as published by the Free Software Foundation; either
-* version 3 of the License, or any later version.
-*
-* This library is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU AFFERO GENERAL PUBLIC LICENSE for more details.
-*
-* You should have received a copy of the GNU Affero General Public
-* License along with this library.  If not, see <http://www.gnu.org/licenses/>.
-*
-*/
+require 'vendor/autoload.php';
 
-//makes it easier to debug
-error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
+$settings = [
+	'settings' => [
+		'displayErrorDetails' => true,
+		'addContentLengthHeader' => true,
+		'db' => [
+			'host' => "172.17.0.2",
+			'user' => "lookup",
+			'pass' => "lookup",
+			'dbname' => "lookup",
+		]
+	]
+];
 
-//set the default timezone to use.
-date_default_timezone_set('Europe/Berlin');
+$container = new \Slim\Container($settings);
 
-require('vendor/autoload.php');
+$container['db'] = function($c) {
+	$db = $c['settings']['db'];
+	$pdo = new PDO("mysql:host=" . $db['host'] . ";dbname=" . $db['dbname'],
+		$db['user'], $db['pass']);
+	$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+	$pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+	return $pdo;
+};
+$container['UserManager'] = function($c) {
+	return new \LookupServer\UserManager($c->db);
+};
+$container['BruteForceMiddleware'] = function ($c) {
+	return new \LookupServer\BruteForceMiddleware($c->db);
+};
 
-require('config/config.php');
-require('config/version.php');
+$app = new \Slim\App($container);
+$app->add($container->get('BruteForceMiddleware'));
 
-use LookupServer\BruteForce;
-use LookupServer\Server;
 
-//Do the any brute force check
-$bf = new BruteForce();
-$bf->check();
+$app->get('/users', 'UserManager:search');
+$app->post('/users', 'UserManager:register');
 
-//process the request.
-$s = new Server();
-$s->handlerequest();
+$app->run();
