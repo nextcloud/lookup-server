@@ -16,9 +16,58 @@ class UserManager {
 	}
 
 	public function search(Request $request, Response $response) {
-		$response->getBody()->write("HELLLO HELLO");
+		$search = $request->getQueryParams()['search'];
 
+		$stmt = $this->db->prepare('SELECT userId, SUM(valid) as karma
+									FROM `store`
+									WHERE v LIKE :search
+									GROUP BY userId
+									ORDER BY karma');
+		$search = '%' . $search . '%';
+		$stmt->bindParam(':search', $search, \PDO::PARAM_STR);
+		$stmt->execute();
+
+		/*
+		 * TODO: Dont' fetch everything. Fetch top x?
+		 * TODO: Better fuzzy search?
+		 * TODO: Only fetch at least 1 karma
+		 */
+
+		$users = [];
+		while($data = $stmt->fetch()) {
+			$users[] = $this->getForUserId((int)$data['userId']);
+		}
+		$stmt->closeCursor();
+
+		$response->getBody()->write(json_encode($users));
 		return $response;
+	}
+
+	private function getForUserId($userId) {
+		$stmt = $this->db->prepare('SELECT * FROM users WHERE id = :id');
+		$stmt->bindParam(':id', $userId, \PDO::PARAM_INT);
+		$stmt->execute();
+		$data = $stmt->fetch();
+		$stmt->closeCursor();
+
+		if (!$data) {
+			return [];
+		}
+
+		$result = [
+			'federationId' => $data['federationId']
+		];
+
+		$stmt = $this->db->prepare('SELECT * FROM store WHERE userId = :id');
+		$stmt->bindParam(':id', $userId, \PDO::PARAM_INT);
+		$stmt->execute();
+
+		while($data = $stmt->fetch()) {
+			$result[$data['k']] = $data['v'];
+		}
+
+		$stmt->closeCursor();
+		return $result;
 	}
 
 	/**
@@ -98,6 +147,11 @@ class UserManager {
 		$this->insertStore($id, 'phone', $data['phone']);
 	}
 
+
+	private function verify($data) {
+		//TODO Verify!
+	}
+
 	public function register(Request $request, Response $response) {
 		$body = json_decode($request->getBody(), true);
 
@@ -139,16 +193,11 @@ class UserManager {
 		if ($res === 1) {
 			$this->cleanup($cloudId, $body['message']['timestamp']);
 			$this->insert($body['message']['data'], $body['message']['timestamp']);
-			//Delete old data if it is there
-			$response->getBody()->write("ALL IS GOOD!");
 		} else {
 			// ERROR OUT
 			$response->withStatus(403);
 		}
-		return $response;
-	}
 
-	public function update(Request $request, Response $response) {
 		return $response;
 	}
 }
