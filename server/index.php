@@ -18,5 +18,6 @@ $app->add($container->get('BruteForceMiddleware'));
 
 $app->get('/users', 'UserManager:search');
 $app->post('/users', 'UserManager:register');
+$app->get('/validate/email/{token}', 'EmailValidator:validate');
 
 $app->run();

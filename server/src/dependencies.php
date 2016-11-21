@@ -9,5 +9,8 @@ $container['db'] = function($c) {
 	return $pdo;
 };
 $container['UserManager'] = function($c) {
-	return new \LookupServer\UserManager($c->db);
+	return new \LookupServer\UserManager($c->db, $c->EmailValidator);
+};
+$container['EmailValidator'] = function($c) {
+	return new \LookupServer\Validator\Email($c->db);
 };

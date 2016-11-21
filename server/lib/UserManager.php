@@ -4,6 +4,7 @@ namespace LookupServer;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
+use LookupServer\Validator\Email;
 use \Psr\Http\Message\ServerRequestInterface as Request;
 use \Psr\Http\Message\ResponseInterface as Response;
 
@@ -12,16 +13,26 @@ class UserManager {
 	/** @var \PDO */
 	private $db;
 
-	public function __construct(\PDO $db) {
+	/** @var Email */
+	private $emailValidator;
+
+	public function __construct(\PDO $db, Email $emailValidator) {
 		$this->db = $db;
+		$this->emailValidator = $emailValidator;
 	}
 
 	public function search(Request $request, Response $response) {
-		$search = $request->getQueryParams()['search'];
+		$params = $request->getQueryParams()['search'];
 
+		if (!isset($params['search']) || $params['search'] === '') {
+			$response->withStatus(404);
+			return $response;		}
+
+		$search = $params['search'];
 		$stmt = $this->db->prepare('SELECT userId, SUM(valid) as karma
 									FROM `store`
 									WHERE v LIKE :search
+									AND karma > 0
 									GROUP BY userId
 									ORDER BY karma');
 		$search = '%' . $search . '%';
@@ -110,7 +121,12 @@ class UserManager {
 			$stmt->bindParam(':k', $field, \PDO::PARAM_STR);
 			$stmt->bindParam(':v', $data[$field], \PDO::PARAM_STR);
 			$stmt->execute();
+			$storeId = $this->db->lastInsertId();
 			$stmt->closeCursor();
+
+			if ($field === 'email') {
+				$this->emailValidator->emailUpdated($data[$field], $storeId);
+			}
 		}
 	}
 
@@ -152,11 +168,13 @@ class UserManager {
 				if ($data[$key] === $value) {
 					continue;
 				}
-				$stmt = $this->db->prepare('UPDATE store SET v = :v WHERE id = :id');
+				$stmt = $this->db->prepare('UPDATE store SET v = :v, valid = 0 WHERE id = :id');
 				$stmt->bindParam(':id', $row['id']);
 				$stmt->bindParam(':v', $data[$key]);
 				$stmt->execute();
 				$stmt->closeCursor();
+
+				$this->emailValidator->emailUpdated($data[$key], $row['id']);
 			}
 		}
 
@@ -173,7 +191,10 @@ class UserManager {
 			$stmt->bindParam(':k', $field, \PDO::PARAM_STR);
 			$stmt->bindParam(':v', $data[$field], \PDO::PARAM_STR);
 			$stmt->execute();
+			$storeId = $this->db->lastInsertId();
 			$stmt->closeCursor();
+
+			$this->emailValidator->emailUpdated($data[$field], $storeId);
 		}
 	}
 
@@ -238,6 +259,12 @@ class UserManager {
 		return $response;
 	}
 
+	/**
+	 * @param string $cloudId
+	 * @param string[] $data
+	 * @param int $timestamp
+	 * @return bool
+	 */
 	private function insertOrUpdate($cloudId, $data, $timestamp) {
 
 		$stmt = $this->db->prepare('SELECT * FROM users WHERE federationId = :federationId');
