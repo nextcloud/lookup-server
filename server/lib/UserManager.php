@@ -29,7 +29,7 @@ class UserManager {
 		$stmt->execute();
 
 		/*
-		 * TODO: Dont' fetch everything. Fetch top x?
+		 * TODO: Don't fetch everything. Fetch top x?
 		 * TODO: Better fuzzy search?
 		 * TODO: Only fetch at least 1 karma
 		 */
@@ -86,71 +86,95 @@ class UserManager {
 	}
 
 	/**
-	 * @param $cloudId
-	 * @return bool If we can actually cleanup the server
+	 * @param string $cloudId
+	 * @param string[] $data
+	 * @param int $timestamp
 	 */
-	private function cleanup($cloudId, $timestamp) {
-		$stmt = $this->db->prepare('SELECT id, timestamp 
-									FROM users 
-									WHERE federationId = :federationId');
-		$stmt->bindParam(':federationId', $cloudId, \PDO::PARAM_STR);
-		$stmt->execute();
-
-		$data = $stmt->fetch();
-		$stmt->closeCursor();
-
-		if ($data) {
-
-			if ($timestamp <= (int)$data['timestamp']) {
-				return false;
-			}
-
-			$stmt = $this->db->prepare('DELETE FROM store WHERE userId = :id');
-			$stmt->bindParam(':id', $data['id'], \PDO::PARAM_INT);
-			$stmt->execute();
-			$stmt->closeCursor();
-
-			$stmt = $this->db->prepare('DELETE FROM users WHERE id = :id');
-			$stmt->bindParam(':id', $data['id'], \PDO::PARAM_INT);
-			$stmt->execute();
-			$stmt->closeCursor();
-		}
-
-		return true;
-	}
-
-	private function insertStore($userId, $key, $value) {
-		if ($value === '') {
-			return;
-		}
-
-		$stmt = $this->db->prepare('INSERT INTO store (userId, k, v) VALUES (:userId, :k, :v)');
-		$stmt->bindParam(':userId', $userId, \PDO::PARAM_INT);
-		$stmt->bindParam(':k', $key, \PDO::PARAM_STR);
-		$stmt->bindParam(':v', $value, \PDO::PARAM_STR);
-		$stmt->execute();
-		$stmt->closeCursor();
-	}
-
-	private function insert($data, $timestamp) {
+	private function insert($cloudId, $data, $timestamp) {
 		$stmt = $this->db->prepare('INSERT INTO users (federationId, timestamp) VALUES (:federationId, FROM_UNIXTIME(:timestamp))');
-		$stmt->bindParam(':federationId', $data['federationId'], \PDO::PARAM_STR);
+		$stmt->bindParam(':federationId', $cloudId, \PDO::PARAM_STR);
 		$stmt->bindParam(':timestamp', $timestamp, \PDO::PARAM_INT);
 		$stmt->execute();
 		$id = $this->db->lastInsertId();
 		$stmt->closeCursor();
 
-		$this->insertStore($id, 'name', $data['name']);
-		$this->insertStore($id, 'email', $data['email']);
-		$this->insertStore($id, 'address', $data['address']);
-		$this->insertStore($id, 'website', $data['website']);
-		$this->insertStore($id, 'twitter', $data['twitter']);
-		$this->insertStore($id, 'phone', $data['phone']);
+		$fields = ['name', 'email', 'address', 'website', 'twitter', 'phone'];
+
+		foreach ($fields as $field) {
+			if (!isset($data[$field]) || $data[$field] === '') {
+				continue;
+			}
+
+			$stmt = $this->db->prepare('INSERT INTO store (userId, k, v) VALUES (:userId, :k, :v)');
+			$stmt->bindParam(':userId', $id, \PDO::PARAM_INT);
+			$stmt->bindParam(':k', $field, \PDO::PARAM_STR);
+			$stmt->bindParam(':v', $data[$field], \PDO::PARAM_STR);
+			$stmt->execute();
+			$stmt->closeCursor();
+		}
 	}
 
+	/**
+	 * @param int $id
+	 * @param string[] $data
+	 * @param int $timestamp
+	 */
+	private function update($id, $data, $timestamp) {
+		$stmt = $this->db->prepare('UPDATE users SET timestamp = FROM_UNIXTIME(:timestamp) WHERE id = :id');
+		$stmt->bindParam(':id', $id, \PDO::PARAM_STR);
+		$stmt->bindParam(':timestamp', $timestamp, \PDO::PARAM_INT);
+		$stmt->execute();
+		$stmt->closeCursor();
 
-	private function verify($data) {
-		//TODO Verify!
+		$fields = ['name', 'email', 'address', 'website', 'twitter', 'phone'];
+
+		$stmt = $this->db->prepare('SELECT * FROM store WHERE userId = :userId');
+		$stmt->bindParam(':userId', $id, \PDO::PARAM_INT);
+		$stmt->execute();
+		$rows = $stmt->fetchAll();
+		$stmt->closeCursor();
+
+		foreach ($rows as $row) {
+			$key = $row['k'];
+			$value = $row['v'];
+			if (($loc = array_search($key, $fields)) !== false) {
+				unset($fields[$loc]);
+			}
+
+			if (!isset($data[$key]) || $data[$key] === '') {
+				// key not present in new data so delete
+				$stmt = $this->db->prepare('DELETE FROM store WHERE id = :id');
+				$stmt->bindParam(':id', $row['id']);
+				$stmt->execute();
+				$stmt->closeCursor();
+			} else {
+				// Key present check if we need to update
+				if ($data[$key] === $value) {
+					continue;
+				}
+				$stmt = $this->db->prepare('UPDATE store SET v = :v WHERE id = :id');
+				$stmt->bindParam(':id', $row['id']);
+				$stmt->bindParam(':v', $data[$key]);
+				$stmt->execute();
+				$stmt->closeCursor();
+			}
+		}
+
+		//Check for new fields
+		foreach ($fields as $field) {
+			// Not set or empty field
+			if (!isset($data[$field]) || $data[$field] === '') {
+				continue;
+			}
+
+			// Insert
+			$stmt = $this->db->prepare('INSERT INTO store (userId, k, v) VALUES (:userId, :k, :v)');
+			$stmt->bindParam(':userId', $id, \PDO::PARAM_INT);
+			$stmt->bindParam(':k', $field, \PDO::PARAM_STR);
+			$stmt->bindParam(':v', $data[$field], \PDO::PARAM_STR);
+			$stmt->execute();
+			$stmt->closeCursor();
+		}
 	}
 
 	public function register(Request $request, Response $response) {
@@ -171,7 +195,7 @@ class UserManager {
 		// Retrieve public key && store
 		$ocsreq = new \GuzzleHttp\Psr7\Request(
 			'GET',
-			'https://'.$host . '/ocs/v2.php/identityproof/key/' . $user,
+			'http://'.$host . '/ocs/v2.php/identityproof/key/' . $user,
 			[
 				'OCS-APIREQUEST' => 'true',
 				'Accept' => 'application/json',
@@ -202,13 +226,40 @@ class UserManager {
 		$res = openssl_verify($message, $signature, $key, OPENSSL_ALGO_SHA512);
 
 		if ($res === 1) {
-			$this->cleanup($cloudId, $body['message']['timestamp']);
-			$this->insert($body['message']['data'], $body['message']['timestamp']);
+			$result = $this->insertOrUpdate($cloudId, $body['message']['data'], $body['message']['timestamp']);
+			if ($result === false) {
+				$response->withStatus(403);
+			}
 		} else {
 			// ERROR OUT
 			$response->withStatus(403);
 		}
 
 		return $response;
+	}
+
+	private function insertOrUpdate($cloudId, $data, $timestamp) {
+
+		$stmt = $this->db->prepare('SELECT * FROM users WHERE federationId = :federationId');
+		$stmt->bindParam(':federationId', $cloudId);
+		$stmt->execute();
+		$row = $stmt->fetch();
+		$stmt->closeCursor();
+
+		// If we can't find the user
+		if ($row === false) {
+			// INSERT
+			$this->insert($cloudId, $data, $timestamp);
+		} else {
+			// User found. Check if it is not a replay from an old
+			if ($timestamp <= (int)$row['timestamp']) {
+				return false;
+			}
+
+			// UPDATE
+			$this->update($row['id'], $data, $timestamp);
+		}
+
+		return true;
 	}
 }
