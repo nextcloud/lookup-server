@@ -22,27 +22,33 @@ class UserManager {
 	}
 
 	public function search(Request $request, Response $response) {
-		$params = $request->getQueryParams()['search'];
+		$params = $request->getQueryParams();
 
 		if (!isset($params['search']) || $params['search'] === '') {
 			$response->withStatus(404);
 			return $response;		}
 
 		$search = $params['search'];
-		$stmt = $this->db->prepare('SELECT userId, SUM(valid) as karma
-									FROM `store`
-									WHERE v LIKE :search
-									AND karma > 0
-									GROUP BY userId
-									ORDER BY karma');
+		$stmt = $this->db->prepare('SELECT *
+FROM (
+	SELECT userId AS userId, SUM(valid) AS karma
+	FROM `store`
+	WHERE userId IN (
+		SELECT DISTINCT userId
+		FROM `store`
+		WHERE v LIKE :search
+	)
+	GROUP BY userId
+) AS tmp
+WHERE karma > 0
+ORDER BY karma
+LIMIT 50');
 		$search = '%' . $search . '%';
 		$stmt->bindParam(':search', $search, \PDO::PARAM_STR);
 		$stmt->execute();
 
 		/*
-		 * TODO: Don't fetch everything. Fetch top x?
 		 * TODO: Better fuzzy search?
-		 * TODO: Only fetch at least 1 karma
 		 */
 
 		$users = [];
@@ -75,7 +81,10 @@ class UserManager {
 		$stmt->execute();
 
 		while($data = $stmt->fetch()) {
-			$result[$data['k']] = $data['v'];
+			$result[$data['k']] = [
+				'value' => $data['v'],
+				'verified' => $data['valid']
+			];
 		}
 
 		$stmt->closeCursor();
