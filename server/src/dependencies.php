@@ -12,5 +12,10 @@ $container['UserManager'] = function($c) {
 	return new \LookupServer\UserManager($c->db, $c->EmailValidator);
 };
 $container['EmailValidator'] = function($c) {
-	return new \LookupServer\Validator\Email($c->db);
+	return new \LookupServer\Validator\Email(
+		$c->db,
+		$c->router,
+		$c->settings['host'],
+		$c->settings['emailfrom']
+	);
 };

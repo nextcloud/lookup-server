@@ -10,12 +10,31 @@ class Email {
 	/** @var \PDO */
 	private $db;
 
+	/** @var \Slim\Interfaces\RouterInterface */
+	private $router;
+
+	/** @var string */
+	private $host;
+
+	/** @var string */
+	private $from;
+
 	/**
 	 * Email constructor.
 	 * @param \PDO $db
+	 * @param \Slim\Interfaces\RouterInterface $router
+	 * @param string $host
+	 * @param string $from
 	 */
-	public function __construct(\PDO $db) {
+	public function __construct(\PDO $db,
+								\Slim\Interfaces\RouterInterface $router,
+								$host,
+								$from) {
 		$this->db = $db;
+		$this->router = $router;
+		$this->host = $host;
+		$this->from = $from;
+
 	}
 
 	public function validate(Request $request, Response $response) {
@@ -33,7 +52,8 @@ class Email {
 			$response->withStatus(403);
 			$response->getBody()->write('Invalid token');
 		} else {
-			$stmt = $this->db->prepare('UPDATE store SET valid = 1');
+			$stmt = $this->db->prepare('UPDATE store SET valid = 1 WHERE id = :storeId');
+			$stmt->bindParam('storeId', $validation['storeId']);
 			$stmt->execute();
 			$stmt->closeCursor();
 
@@ -66,8 +86,11 @@ class Email {
 		$stmt->closeCursor();
 
 		// Actually send e-mail
-		$text = 'Please click this link to ';
+		$link = $this->host . $this->router->pathFor('validateEmail', ['token' => $token]);
+		$text = 'Please click this link to confirm your e-mail address: ' . $link;
 
+		$headers = 'From: '.$this->from."\r\n" .'X-Mailer: PHP/' . phpversion();
+		mail($email, 'Email confirmation', $text, $headers);
 	}
 
 	private function generate($length,

@@ -9,6 +9,8 @@ return [
 			'user' => "lookup",
 			'pass' => "lookup",
 			'dbname' => "lookup",
-		]
+		],
+		'host' => 'https://lookup.nextcloud.com',
+		'emailfrom' => 'no-reply@lookup.nextcloud.com',
 	]
 ];

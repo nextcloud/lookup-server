@@ -183,7 +183,9 @@ LIMIT 50');
 				$stmt->execute();
 				$stmt->closeCursor();
 
-				$this->emailValidator->emailUpdated($data[$key], $row['id']);
+				if ($key === 'email') {
+					$this->emailValidator->emailUpdated($data[$key], $row['id']);
+				}
 			}
 		}
 
