@@ -1,32 +1,23 @@
--- phpMyAdmin SQL Dump
--- version 4.6.4
--- https://www.phpmyadmin.net/
---
--- Host: 172.17.0.2
--- Generation Time: Nov 21, 2016 at 12:48 PM
--- Server version: 10.1.19-MariaDB-1~jessie
--- PHP Version: 7.0.13
-
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
-
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
 /*!40101 SET NAMES utf8mb4 */;
 
---
--- Database: `lookup`
---
 CREATE DATABASE IF NOT EXISTS `lookup` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE `lookup`;
 
--- --------------------------------------------------------
-
---
--- Table structure for table `store`
---
+DROP TABLE IF EXISTS `emailValidation`;
+CREATE TABLE IF NOT EXISTS `emailValidation` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `storeId` int(11) NOT NULL,
+  `token` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `token` (`token`),
+  KEY `storeId` (`storeId`)
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 DROP TABLE IF EXISTS `store`;
 CREATE TABLE IF NOT EXISTS `store` (
@@ -39,13 +30,7 @@ CREATE TABLE IF NOT EXISTS `store` (
   KEY `key` (`k`(191)),
   KEY `value` (`v`(191)),
   KEY `userId` (`userId`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `users`
---
+) ENGINE=InnoDB AUTO_INCREMENT=51 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 DROP TABLE IF EXISTS `users`;
 CREATE TABLE IF NOT EXISTS `users` (
@@ -54,7 +39,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `federationId` (`federationId`(191))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
