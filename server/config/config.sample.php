@@ -2,50 +2,58 @@
 
 // Lookup-Server Config
 
-// DB connect string
-define('LOOKUPSERVER_DB_STRING', 'mysql:host=localhost;dbname=lookup' );
+$CONFIG = [
+	//DB
+	'DB' => [
+		'host' => 'localhost',
+		'db' => 'lookup',
+		'user' => 'lookup',
+		'pass' => 'lookup',
+	],
 
-// DB login
-define('LOOKUPSERVER_DB_LOGIN', '');
+	// error verbose
+	'ERROR_VERBOSE' => true,
 
-// DB password
-define('LOOKUPSERVER_DB_PASSWD', '');
+	// logfile
+	'LOG' => '/tmp/lookup.log',
 
-// error verbose
-define('LOOKUPSERVER_ERROR_VERBOSE', true);
+	// replication logfile
+	'REPLICATION_LOG' => '/tmp/lookup_replication.log',
 
-// logfile
-define('LOOKUPSERVER_LOG', '/var/log/nextcloud/lookup.log');
+	// max user search page. limit the maximum number of pages to avoid scraping.
+	'MAX_SEARCH_PAGE' => 10,
 
-// replication logfile
-define('LOOKUPSERVER_REPLICATION_LOG', '/var/log/nextcloud/lookup_replication.log');
+	// max requests per IP and 10min.
+	'MAX_REQUESTS' => 10000,
 
-// max user search page. limit the maximum number of pages to avoid scraping.
-define('LOOKUPSERVER_MAX_SEARCH_PAGE', 10);
+	// credential to read the replication log. IMPORTANT!! SET TO SOMETHING SECURE!!
+	'REPLICATION_AUTH' => 'foobar',
 
-// max requests per IP and 10min.
-define('LOOKUPSERVER_MAX_REQUESTS', 10000);
+	// credential to read the slave replication log. Replication slaves are read only and don't get the authkey. IMPORTANT!! SET TO SOMETHING SECURE!!
+	'SLAVEREPLICATION_AUTH' => 'slavefoobar',
 
-// credential to read the replication log. IMPORTANT!! SET TO SOMETHING SECURE!!
-define('LOOKUPSERVER_REPLICATION_AUTH', 'foobar');
+	// the list of remote replication servers that should be queried in the cronjob
+	'REPLICATION_HOSTS' => [
+		'https://lookup:slavefoobar@example.com'
+	],
 
-// credential to read the slave replication log. Replication slaves are read only and don't get the authkey. IMPORTANT!! SET TO SOMETHING SECURE!!
-define('LOOKUPSERVER_SLAVEREPLICATION_AUTH', 'slavefoobar');
+	// replication interval. The number of seconds into the past that should be used when fetching the replication log from a remote server. Should be a bit higher then the cronjob intervall
+	'REPLICATION_INTERVAL' => 900, // 15min
 
-// the list of remote replication servers that should be queried in the cronjob
-$LOOKUPSERVER_REPLICATION_HOSTS = ARRAY ('https://lookup:slavefoobar@example.com');
+	// ip black list. usefull to block spammers.
+	'IP_BLACKLIST' => [
+		'333.444.555.',
+		'666.777.888.',
+	],
 
-// replication interval. The number of seconds into the past that should be used when fetching the replication log from a remote server. Should be a bit higher then the cronjob intervall
-define('LOOKUPSERVER_REPLICATION_INTERVAL', 900); // 15min
+	// spam black list. usefull to block spammers.
+	'SPAM_BLACKLIST' => [
+	],
 
-// ip black list. usefull to block spammers.
-$LOOKUPSERVER_IP_BLACKLIST = array ('333.444.555.','666.777.888.');
+	// Email sender address
+	'EMAIL_SENDER' => 'admin@example.com',
 
-// spam black list. usefull to block spammers.
-$LOOKUPSERVER_SPAM_BLACKLIST = array ();
+	// Public Server Url
+	'PUBLIC_URL' => 'http://dev/nextcloud/lookup-server',
+];
 
-// Email sender address
-define('LOOKUPSERVER_EMAIL_SENDER', 'admin@example.com');
-
-// Public Server Url
-define('LOOKUPSERVER_PUBLIC_URL', 'http://dev/nextcloud/lookup-server'); 
