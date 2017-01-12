@@ -19,3 +19,6 @@ $container['EmailValidator'] = function($c) {
 		$c->settings['emailfrom']
 	);
 };
+$container['Status'] = function($c) {
+	return new \LookupServer\Status();
+};
