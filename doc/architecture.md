@@ -1,49 +1,118 @@
 # Lookup-Server architecture
 
 ## Overview
-Lookup-Servers can be configured on the Nextcloud Admin page. By default some are provided by default but they can be removed and custom Lookup-Servers can be added. Lookup-Servers work as public telephone book for Nextcloud users. Nextcloud users can optionally choose to publish some of their personal data like name, city, email and more on a Lookup-Server. This has the benefit that they can be found by other Nextcloud users to simplify for example sharing.
+Lookup-Servers can be configured on the Nextcloud Admin page. By default some
+are provided by default but they can be removed and custom Lookup-Servers can
+be added. Lookup-Servers work as public telephone book for Nextcloud users.
+Nextcloud users can optionally choose to publish some of their personal data
+like name, city, email and more on a Lookup-Server. This has the benefit that
+they can be found by other Nextcloud users to simplify for example sharing.
 
 ## Security
-Communication with Lookup-Servers provide should be SSL encrypted and they provide basic authentication via key for managing the personal data. Additionally Lookup-Servers provide some protection against user data scraping. But the overall idea is that all information that a user chooses to publish on a Lookup-Server is considered public and and is published optionally to be found by others. When a user decided to publish their own information an authentication key is set. The record can later be changed or deleted using this authkey.
+Communication with Lookup-Servers provide should be SSL encrypted and they 
+provide basic authentication via public key signing of the personal data.
+Additionally Lookup-Servers provide some protection against user data
+scraping. But the overall idea is that all information that a user chooses
+to publish on a Lookup-Server is considered public and and is published
+optionally to be found by others. When a user decided to publish its own
+data a public key is obtained from its Nextcloud instance (deducted from
+their federated cloud id). This public key is used to verify
+the signature of the send data.
+
+### Key requirements
+The length of the key must be at least 2048 bits. And the digest algorithm
+is `sha512`. The signature algorithm is also `sha512`.
 
 
 ## REST
-Communication between Nextcloud servers and Lookup-Servers happens via REST calls. The following REST calls exists:
+Communication between Nextcloud servers and Lookup-Servers happens via REST 
+calls. The following REST calls exists:
 
 ### Create user
-This can be used by a user to create a record and initially publish their own information.
-Example:
-curl -X POST -d key=myauthkey -d federationid=myfedid -d name=myname -d email=myemail -d organisation=myuniversity -d country=DE -d city=Stuttgart -d picture=binarypicture -d vcard=vcarddata http://dev/nextcloud/lookup-server/server/
+This can be used by a user to create a record and initially publish their own
+information.
 
-### Get user
-This can be used to read the own record using the own authkey.
-Example:
-curl -X GET http://dev/nextcloud/lookup-server/server/?key=myauthkey
+Endpoint: http://dev/nextcloud/lookup-server/server/
+Method: POST
+Data: JSON blob 
+
+```
+{
+  'message' : {
+    'data' : {
+      'federationId' : 'foo@cloud.bar.com',
+      'name' : 'Foo Bar',
+      'email' : 'foo@bar.com',
+      'address' : 'Foo Road 1',
+      'website' : 'example.com',
+      'twitter' : '@foo',
+      'phone' : '+1234567890'
+    },
+    'type' : 'lookupserver',
+    'timestamp' : 1337,
+    'signer' : 'foo@cloud.bar.com'
+  },
+  'signature' : '0ABCDDEE....'
+}
+```
 
 ### Update user
-This can be used by a user to update the own record. Remove some infromation and publish new.
-Example:
-curl -X PUT -d key=myauthkey -d federationid=myfedid -d name=myname -d email=myemail -d organisation=myuniversity -d country=DE -d city=Stuttgart -d picture=binarypicture -d vcard=vcarddata http://dev/nextcloud/lookup-server/server/
+Updating a record is the same as publishing a new record. Unchanged fields will
+not be touched. New fields will be added (and if possible verified). And fields
+no longer in the update request will be removed.
+
+Endpoint: http://dev/nextcloud/lookup-server/server/
+Method: POST
+Data: JSON blob 
+
+```
+{
+  'message' : {
+    'data' : {
+      'federationId' : 'foo@cloud.bar.com',
+      'name' : 'Foo Bar',
+      'email' : 'foo@bar.com',
+      'address' : 'Foo Road 1',
+      'website' : 'example.com',
+      'twitter' : '@foo',
+      'phone' : '+1234567890'
+    },
+    'type' : 'lookupserver',
+    'timestamp' : 1337,
+    'signer' : 'foo@cloud.bar.com'
+  },
+  'signature' : '0ABCDDEE....'
+}
+```
 
 ### Delete user
-This can be used by users to delete the own record. Please note that the actual DB entry is not deleted for replication and syncing purposed between different servers. But the personal data is deleted.
-Example:
-curl -X DELETE http://dev/nextcloud/lookup-server/server/?key=myauthkey
+Deleting is simply removing all additional info.
+
+Endpoint: http://dev/nextcloud/lookup-server/server/
+Method: POST
+Data: JSON blob 
+
+```
+{
+  'message' : {
+    'data' : {
+      'federationId' : 'foo@cloud.bar.com',
+    },
+    'type' : 'lookupserver',
+    'timestamp' : 1337,
+    'signer' : 'foo@cloud.bar.com'
+  },
+  'signature' : '0ABCDDEE....'
+}
+```
+
+Note that a database entry will still remain on the lookup server. In order to
+properly propagat this.
 
 ### Search users
 This call can be used to search for a user in a fuzzy way
 Example:
-curl -X GET http://dev/nextcloud/lookup-server/server/?search=searchstring\&page=0
-
-### Search users by email
-This call can be used to search for a user by email. This has to be a perfect match.
-Example:
-curl -X GET http://dev/nextcloud/lookup-server/server/?email=searchstring
-
-### Search users by userid
-This call can be used to search for a user by userid. For example to update the vcard entry in the local addressbook. This has to be a perfect match.
-Example:
-curl -X GET http://dev/nextcloud/lookup-server/server/?userid=oc12345...
+curl -X GET http://dev/nextcloud/lookup-server/server/?search=searchstring
 
 ### Get replication log
 This call is used for master-master replication between different nodes.
@@ -51,41 +120,49 @@ Example:
 curl -X GET http://lookup:foobar@dev/nextcloud/lookup-server/server/replication.php/?timestamp=123456\&page=0  
 
 ## High availability
-Several Lookup-Server can do master-master replication and sync their data. This is useful to keep the data between different servers in sync.
-A user only need to publish, update or delete the record only one one server but the data will be available on different servers.
-The url of the other servers and the credentials of the own server needs to be configured in the config.php file.
-
+Several Lookup-Server can do master-master replication and sync their data. 
+This is useful to keep the data between different servers in sync. A user only
+need to publish, update or delete the record only one one server but the data
+will be available on different servers. The url of the other servers and the
+credentials of the own server needs to be configured in the config.php file.
 
 ## DB Structure
-* id - The primary key. This is specific to the current host and is not replicated. Internal only.
-* userid - A world wide unique public userid. This can be used by users to remember and identify other users.
-* authkey - The private secret that is needed to update or delete a record.
-* federationid - The public federation ID. visible to others.
-* name - The public name of a user.
-* email - The public email of a user.
-* emailstatus - The status of the email address. 1 means verified. Everything else means unverified and is the verification key that is needed to verify this email.
-* organisation - The organisation or company of a user. Can help to be found easier.
-* country - The country of a user in cleartext.
-* city - The city of a user
-* picture - The binary picture of the user.
-* vcard - The public vcard of a user.
-* created - The internal time stamp when this record was created.
-* changed - The internal time stamp when this record was created or changed.
-* localchange - This is 1 if the record was changed locally. It is 0 if this was changed on a remote server and copied over by replication.
-* karma - The karma of the user. See below for detailed explenation.
 
+### User table
+* id - The primary id of the table
+* federationId - The federationId of the user
+* timestamp - Time of the last update of the user
+
+The timestamp is stored to prevent replaying of old requests.
+
+### Store table
+* id - Primary id of the table
+* userId - Foreign Key to the User table
+* k - The key
+* v - The value
+
+This table stores all the key value pairs of published information.
+
+### emailValidation table
+* id - Primary id of the table
+* storeId - Foreign key to the Store table
+* token - Verification token for the email
+
+This table holds email verification data
 
 ## Karma
-The visibility of a user in the search call depends on the Karma of a user. There are the following Karma levels.
-* 0 - A newly created record where the email is not yet verified. This record is not visible in the search.
-* 1 - A record with a confirmed email. This record is visible via search.
-* -1 - This record was actively deleted by a user and is not visible in the search.
-* >1 - This record got additional verification and is better visible then standard accounts with Karma 1.
+The visibility of a user in the search call depends on the Karma of a user. 
+Karma is the number of verified fields. For example a user that has verified
+their email and twitter has a karma of 2.
+
+Only entries with a karma of at least 1 show up in search. The results are
+ordered by karma.
 
 
 ## Verification
 
 ### Email
-Every time a new user is registered or an existing user changes the email address the emailstatus is set to unverified. The Karma is then lowered to 0 and the user is not visible via search.
-An email is send to the email adress with an confirmation link. Once this link is clicked the email is verified, the emailstatus is set to 1 and the Karma is increased.
-
+Every time a new user is registered or an existing user changes the email
+address the emailstatus is set to unverified. A verification email is send to
+the new address. Once the link in that email is clicked the email address is
+set to verified again.
