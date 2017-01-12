@@ -1,6 +1,6 @@
 <?php
 
-require 'vendor/autoload.php';
+require __DIR__ . '/vendor/autoload.php';
 
 $settings = require __DIR__ . '/src/config.php';
 
@@ -19,5 +19,6 @@ $app->add($container->get('BruteForceMiddleware'));
 $app->get('/users', 'UserManager:search');
 $app->post('/users', 'UserManager:register');
 $app->get('/validate/email/{token}', 'EmailValidator:validate')->setName('validateEmail');
+$app->get('/status', 'Status:status');
 
 $app->run();

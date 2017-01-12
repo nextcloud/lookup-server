@@ -91,6 +91,7 @@ return array(
     'Interop\\Container\\Exception\\ContainerException' => $vendorDir . '/container-interop/container-interop/src/Interop/Container/Exception/ContainerException.php',
     'Interop\\Container\\Exception\\NotFoundException' => $vendorDir . '/container-interop/container-interop/src/Interop/Container/Exception/NotFoundException.php',
     'LookupServer\\BruteForceMiddleware' => $baseDir . '/lib/BruteForceMiddleware.php',
+    'LookupServer\\Status' => $baseDir . '/lib/Status.php',
     'LookupServer\\UserManager' => $baseDir . '/lib/UserManager.php',
     'LookupServer\\Validator\\Email' => $baseDir . '/lib/Validator/Email.php',
     'Pimple\\Container' => $vendorDir . '/pimple/pimple/src/Pimple/Container.php',
