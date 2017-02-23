@@ -3,7 +3,6 @@
 namespace LookupServer;
 
 use GuzzleHttp\Client;
-use GuzzleHttp\Exception\RequestException;
 use LookupServer\Validator\Email;
 use \Psr\Http\Message\ServerRequestInterface as Request;
 use \Psr\Http\Message\ResponseInterface as Response;
@@ -221,43 +220,14 @@ LIMIT 50');
 
 		$cloudId = $body['message']['data']['federationId'];
 
-		// Get fed id
-		list($user, $host) = $this->splitCloudId($cloudId);
-
-		// Retrieve public key && store
-		$ocsreq = new \GuzzleHttp\Psr7\Request(
-			'GET',
-			'https://'.$host . '/ocs/v2.php/identityproof/key/' . $user,
-			[
-				'OCS-APIREQUEST' => 'true',
-				'Accept' => 'application/json',
-			]);
-
-		$client = new Client();
 		try {
-			$ocsresponse = $client->send($ocsreq, ['timeout' => 10]);
-		} catch(RequestException $e) {
-			$response->withStatus(400);
-			return $response;
-		}
+            $verified = $this->verifyRequest($cloudId, $body['message'], $body['signature']);
+        }  catch(\Exception $e) {
+            $response->withStatus(400);
+            return $response;
+        }
 
-		$ocsresponse = json_decode($ocsresponse->getBody(), true);
-
-		if ($ocsresponse === null || !isset($ocsresponse['ocs']) ||
-			!isset($ocsresponse['ocs']['data']) || !isset($ocsresponse['ocs']['data']['public'])) {
-			$response->withStatus(400);
-			return $response;
-		}
-
-		$key = $ocsresponse['ocs']['data']['public'];
-
-		// verify message
-		$message = json_encode($body['message']);
-		$signature= base64_decode($body['signature']);
-
-		$res = openssl_verify($message, $signature, $key, OPENSSL_ALGO_SHA512);
-
-		if ($res === 1) {
+		if ($verified) {
 			$result = $this->insertOrUpdate($cloudId, $body['message']['data'], $body['message']['timestamp']);
 			if ($result === false) {
 				$response->withStatus(403);
@@ -270,7 +240,85 @@ LIMIT 50');
 		return $response;
 	}
 
-	/**
+    public function delete(Request $request, Response $response) {
+        $body = json_decode($request->getBody(), true);
+
+        if ($body === null || !isset($body['message']) || !isset($body['message']['data']) ||
+            !isset($body['message']['data']['federationId']) || !isset($body['signature']) ||
+            !isset($body['message']['timestamp'])) {
+            $response->withStatus(400);
+            return $response;
+        }
+
+        $cloudId = $body['message']['data']['federationId'];
+
+        try {
+            $verified = $this->verifyRequest($cloudId, $body['message'], $body['signature']);
+        }  catch(\Exception $e) {
+            $response->withStatus(400);
+            return $response;
+        }
+
+
+        if ($verified) {
+            $result = $this->deleteDBRecord($cloudId);
+            if ($result === false) {
+                $response->withStatus(404);
+            }
+        } else {
+            // ERROR OUT
+            $response->withStatus(403);
+        }
+
+        return $response;
+    }
+
+    /**
+     * check signature of incoming request
+     *
+     * @param string $cloudId
+     * @param string $message
+     * @param string $signature
+     * @return bool
+     * @throws \Exception
+     */
+    protected function verifyRequest($cloudId, $message, $signature) {
+        // Get fed id
+        list($user, $host) = $this->splitCloudId($cloudId);
+
+        // Retrieve public key && store
+        $ocsreq = new \GuzzleHttp\Psr7\Request(
+            'GET',
+            'http://'.$host . '/ocs/v2.php/identityproof/key/' . $user,
+            [
+                'OCS-APIREQUEST' => 'true',
+                'Accept' => 'application/json',
+            ]);
+
+        $client = new Client();
+        $ocsresponse = $client->send($ocsreq, ['timeout' => 10]);
+
+        $ocsresponse = json_decode($ocsresponse->getBody(), true);
+
+        if ($ocsresponse === null || !isset($ocsresponse['ocs']) ||
+            !isset($ocsresponse['ocs']['data']) || !isset($ocsresponse['ocs']['data']['public'])) {
+            throw new \BadMethodCallException();
+        }
+
+        $key = $ocsresponse['ocs']['data']['public'];
+
+        // verify message
+        $message = json_encode($message);
+        $signature= base64_decode($signature);
+
+        $res = openssl_verify($message, $signature, $key, OPENSSL_ALGO_SHA512);
+
+        return $res === 1;
+
+    }
+
+
+    /**
 	 * @param string $cloudId
 	 * @param string[] $data
 	 * @param int $timestamp
@@ -300,4 +348,33 @@ LIMIT 50');
 
 		return true;
 	}
+
+    /**
+     * Delete all personal data. We keep the basic user entry with the
+     * federated cloud ID in order to propagate the changes
+     *
+     * @param string $cloudId
+     * @return bool
+     */
+    private function deleteDBRecord($cloudId) {
+
+        $stmt = $this->db->prepare('SELECT * FROM users WHERE federationId = :federationId');
+        $stmt->bindParam(':federationId', $cloudId);
+        $stmt->execute();
+        $row = $stmt->fetch();
+        $stmt->closeCursor();
+
+        // If we can't find the user
+        if ($row === false) {
+            return false;
+        }
+
+        // delete user data
+        $stmt = $this->db->prepare('DELETE FROM store WHERE userId = :userId');
+        $stmt->bindParam(':userId', $row['id']);
+        $stmt->execute();
+        $stmt->closeCursor();
+
+        return true;
+    }
 }
