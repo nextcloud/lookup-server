@@ -32,7 +32,7 @@ calls. The following REST calls exists:
 This can be used by a user to create a record and initially publish their own
 information.
 
-Endpoint: http://dev/nextcloud/lookup-server/server/
+Endpoint: http://dev/nextcloud/lookup-server/server/users
 Method: POST
 Data: JSON blob 
 
@@ -61,7 +61,7 @@ Updating a record is the same as publishing a new record. Unchanged fields will
 not be touched. New fields will be added (and if possible verified). And fields
 no longer in the update request will be removed.
 
-Endpoint: http://dev/nextcloud/lookup-server/server/
+Endpoint: http://dev/nextcloud/lookup-server/server/users
 Method: POST
 Data: JSON blob 
 
@@ -88,8 +88,8 @@ Data: JSON blob
 ### Delete user
 Deleting is simply removing all additional info.
 
-Endpoint: http://dev/nextcloud/lookup-server/server/
-Method: POST
+Endpoint: http://dev/nextcloud/lookup-server/server/users
+Method:DELETE
 Data: JSON blob 
 
 ```
@@ -106,13 +106,13 @@ Data: JSON blob
 }
 ```
 
-Note that a database entry will still remain on the lookup server. In order to
-properly propagat this.
+Note the server will still keep the cloud id in order to properly propagate this.
+But all other personal data will be removed.
 
 ### Search users
 This call can be used to search for a user in a fuzzy way
 Example:
-curl -X GET http://dev/nextcloud/lookup-server/server/?search=searchstring
+curl -X GET http://dev/nextcloud/lookup-server/server/users?search=searchstring
 
 ### Get replication log
 This call is used for master-master replication between different nodes.
