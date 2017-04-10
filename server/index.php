@@ -22,4 +22,6 @@ $app->delete('/users', 'UserManager:delete');
 $app->get('/validate/email/{token}', 'EmailValidator:validate')->setName('validateEmail');
 $app->get('/status', 'Status:status');
 
+$app->get('/replication', 'Replication:export');
+
 $app->run();

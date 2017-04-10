@@ -4,7 +4,7 @@ require __DIR__ . '/../config/config.php';
 
 return [
 	'settings' => [
-		'displayErrorDetails' => false,
+		'displayErrorDetails' => true,
 		'addContentLengthHeader' => true,
 		'db' => [
 			'host' => $CONFIG['DB']['host'],
@@ -14,5 +14,6 @@ return [
 		],
 		'host' => $CONFIG['PUBLIC_URL'],
 		'emailfrom' => $CONFIG['EMAIL_SENDER'],
+		'replication_auth' => $CONFIG['REPLICATION_AUTH'],
 	]
 ];
