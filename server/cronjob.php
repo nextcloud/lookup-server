@@ -1,38 +1,20 @@
-#!/usr/bin/php
 <?php
 
-/**
-* Cronjob. Please call this script every 10min
-*
-* @author Frank Karlitschek
-* @copyright 2016 Frank Karlitschek frank@karlitschek.de
-*
-* This library is free software; you can redistribute it and/or
-* modify it under the terms of the GNU AFFERO GENERAL PUBLIC LICENSE
-* License as published by the Free Software Foundation; either
-* version 3 of the License, or any later version.
-*
-* This library is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU AFFERO GENERAL PUBLIC LICENSE for more details.
-*
-* You should have received a copy of the GNU Affero General Public
-* License along with this library.  If not, see <http://www.gnu.org/licenses/>.
-*
-*/
+require __DIR__ . '/vendor/autoload.php';
 
-// enable the full error reporting for easier debugging
-error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE | E_ALL);
+if (PHP_SAPI !== 'cli') {
+	return;
+}
 
-// include the main contribook lib
-require('vendor/autoload.php');
+$env = \Slim\Http\Environment::mock(['REQUEST_URI' => '/import']);
 
-// Cronjob
-$s = new \LookupServer\Server();
+$settings = require __DIR__ . '/src/config.php';
+$settings['environment'] = $env;
+$container = new \Slim\Container($settings);
+require __DIR__ . '/src/dependencies.php';
 
-// Cleanup the API Traffic Limit
-$s->cleanup();
+$app = new \Slim\App($container);
 
-// Import from other replication hosts
-$s->importReplication();
+$app->map(['GET'], '/import', 'Replication:import');
+$app->run();
+

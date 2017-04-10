@@ -15,5 +15,6 @@ return [
 		'host' => $CONFIG['PUBLIC_URL'],
 		'emailfrom' => $CONFIG['EMAIL_SENDER'],
 		'replication_auth' => $CONFIG['REPLICATION_AUTH'],
+		'replication_hosts' => $CONFIG['REPLICATION_HOSTS'],
 	]
 ];
