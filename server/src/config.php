@@ -4,7 +4,7 @@ require __DIR__ . '/../config/config.php';
 
 return [
 	'settings' => [
-		'displayErrorDetails' => true,
+		'displayErrorDetails' => false,
 		'addContentLengthHeader' => true,
 		'db' => [
 			'host' => $CONFIG['DB']['host'],
