@@ -34,11 +34,8 @@ $CONFIG = [
 
 	// the list of remote replication servers that should be queried in the cronjob
 	'REPLICATION_HOSTS' => [
-		'https://lookup:slavefoobar@example.com'
+		'https://lookup:slavefoobar@example.com/replication'
 	],
-
-	// replication interval. The number of seconds into the past that should be used when fetching the replication log from a remote server. Should be a bit higher then the cronjob intervall
-	'REPLICATION_INTERVAL' => 900, // 15min
 
 	// ip black list. usefull to block spammers.
 	'IP_BLACKLIST' => [
