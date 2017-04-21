@@ -28,6 +28,14 @@ class UserManager {
 			return $response;		}
 
 		$search = $params['search'];
+		$searchCloudId = $params['exactCloudId'];
+
+		if ($searchCloudId === '1') {
+			$user = $this->getExactCloudId($search);
+			$response->getBody()->write(json_encode($user));
+			return $response;
+		}
+
 		$stmt = $this->db->prepare('SELECT *
 FROM (
 	SELECT userId AS userId, SUM(valid) AS karma
@@ -59,6 +67,20 @@ LIMIT 50');
 		$response->getBody()->write(json_encode($users));
 		return $response;
 	}
+
+	private function getExactCloudId($cloudId) {
+	    $stmt = $this->db->prepare('SELECT id FROM users WHERE federationId = :id');
+	    $stmt->bindParam(':id', $cloudId);
+	    $stmt->execute();
+	    $data = $stmt->fetch();
+
+        if (!$data) {
+            return [];
+        }
+
+        return $this->getForUserId((int)$data['id']);
+
+    }
 
 	private function getForUserId($userId) {
 		$stmt = $this->db->prepare('SELECT * FROM users WHERE id = :id');
