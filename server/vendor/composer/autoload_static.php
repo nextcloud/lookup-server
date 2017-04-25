@@ -173,6 +173,7 @@ class ComposerStaticInit509ee4e79733fbe3199b97373b795eca
         'Interop\\Container\\Exception\\ContainerException' => __DIR__ . '/..' . '/container-interop/container-interop/src/Interop/Container/Exception/ContainerException.php',
         'Interop\\Container\\Exception\\NotFoundException' => __DIR__ . '/..' . '/container-interop/container-interop/src/Interop/Container/Exception/NotFoundException.php',
         'LookupServer\\BruteForceMiddleware' => __DIR__ . '/../..' . '/lib/BruteForceMiddleware.php',
+        'LookupServer\\Replication' => __DIR__ . '/../..' . '/lib/Replication.php',
         'LookupServer\\Status' => __DIR__ . '/../..' . '/lib/Status.php',
         'LookupServer\\UserManager' => __DIR__ . '/../..' . '/lib/UserManager.php',
         'LookupServer\\Validator\\Email' => __DIR__ . '/../..' . '/lib/Validator/Email.php',

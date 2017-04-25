@@ -117,7 +117,7 @@ curl -X GET http://dev/nextcloud/lookup-server/server/users?search=searchstring
 ### Get replication log
 This call is used for master-master replication between different nodes.
 Example:
-curl -X GET http://lookup:foobar@dev/nextcloud/lookup-server/server/replication.php/?timestamp=123456\&page=0  
+curl -X GET http://lookup:foobar@dev/nextcloud/lookup-server/replication?timestamp=123456\&page=0  
 
 ## High availability
 Several Lookup-Server can do master-master replication and sync their data. 

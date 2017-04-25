@@ -25,7 +25,8 @@ class UserManager {
 
 		if (!isset($params['search']) || $params['search'] === '') {
 			$response->withStatus(404);
-			return $response;		}
+			return $response;
+		}
 
 		$search = $params['search'];
 		$searchCloudId = $params['exactCloudId'];
