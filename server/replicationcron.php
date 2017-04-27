@@ -17,4 +17,3 @@ $app = new \Slim\App($container);
 
 $app->map(['GET'], '/import', 'Replication:import');
 $app->run();
-
