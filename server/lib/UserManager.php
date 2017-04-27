@@ -324,10 +324,35 @@ LIMIT 50');
 					break;
 			}
 			if ($success) {
-				// ToDo update verification status
-				$this->removeOpenVerificationRequest($verify);
+				$this->updateVerificationStatus($verify['storeId']);
+				$this->removeOpenVerificationRequest($verify['id']);
 			}
 		}
+	}
+
+	/**
+	 * if data could be verified successfully we update the information in the store table
+	 *
+	 * @param $storeId
+	 */
+	private function updateVerificationStatus($storeId) {
+		$stmt = $this->db->prepare('UPDATE store SET valid = 1 WHERE id = :storeId');
+		$stmt->bindParam('storeId', $storeId);
+		$stmt->execute();
+		$stmt->closeCursor();
+	}
+
+	/**
+	 * remove data from to verify table if verificartion was successful or max. number of tries reached.
+	 *
+	 * @param $id
+	 */
+	private function removeOpenVerificationRequest($id) {
+		return true; // Fixme... just for testing purpose.
+		$stmt = $this->db->prepare('DELETE FROM toVerify WHERE id = :id');
+		$stmt->bindParam(':id', $id);
+		$stmt->execute();
+		$stmt->closeCursor();
 	}
 
 	/**
@@ -363,13 +388,35 @@ LIMIT 50');
 	 * @return bool
 	 */
 	private function verifyWebpage($data) {
-		// ToDo get data from verify table (includes $cloudId, $location)
-		// ToDo get proof from webpage $location
-		// ToDo split $message & $signature
-		return false;
-		$result = $this->verifyRequest($cloudId, $message, $signature);
+		$url = $this->getValidUrl($data['location']);
+		$proof = @file_get_contents($url);
+		$result = false;
+		if ($proof) {
+			$userData = $this->getForUserId($data['userId']);
+			$cloudId = $userData['federationId'];
+			$proofSanitized = trim(preg_replace('/\s\s+/', ' ', $proof));
+			list($message, $signature) = $this->splitMessageSignature($proofSanitized);
+			$result = $this->verifyRequest($cloudId, $message, $signature);
+		}
 
 		return $result;
+	}
+
+	private function getValidUrl($url) {
+		$url = trim($url);
+		$url = rtrim($url, '/');
+		if (strpos($url, 'http://') !== 0 && strpos($url, 'https://') !== 0) {
+			$url = 'http://' . $url;
+		}
+
+		return $url . '/.well-known/CloudIdVerificationCode.txt';
+	}
+
+	private function splitMessageSignature($proof) {
+		$signature = substr($proof, -344);
+		$message = substr($proof, 0, -344);
+
+		return [trim($message), trim($signature)];
 	}
 
 	/**
