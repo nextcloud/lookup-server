@@ -34,15 +34,20 @@ class Twitter {
 	/** @var SignatureHandler */
 	private $signatureHandler;
 
+	/** @var \PDO */
+	private $db;
+
 	/**
 	 * Twitter constructor.
 	 *
 	 * @param TwitterOAuth $twitterOAuth
 	 * @param SignatureHandler $signatureHandler
+	 * @param \PDO $db
 	 */
-	public function __construct(TwitterOAuth $twitterOAuth, SignatureHandler $signatureHandler) {
+	public function __construct(TwitterOAuth $twitterOAuth, SignatureHandler $signatureHandler, \PDO $db) {
 		$this->twitterOAuth = $twitterOAuth;
 		$this->signatureHandler = $signatureHandler;
+		$this->db = $db;
 	}
 
 	/**
@@ -63,18 +68,20 @@ class Twitter {
 
 		try {
 			$userName = substr($twitterHandle, 1);
-			list($id, $text) = $this->getTweet($userName);
+			list($tweetId, $text) = $this->getTweet($userName);
 			if ($text !== null) {
 				$cloudId = $userData['federationId'];
-				list($message, $signature) = $this->splitMessageSignature($text);
+				list($message, $md5signature) = $this->splitMessageSignature($text);
+				$signature = $userData['twitter_signature']['value'];
 				$result = $this->signatureHandler->verify($cloudId, $message, $signature);
+				$result = $result && md5($signature) === $md5signature;
 			}
 		} catch (\Exception $e) {
 			// do nothing, just return false;
 		}
 
 		if ($result === true) {
-			$this->storeReference($userData, $id);
+			$this->storeReference((int)$verificationData['userId'], $tweetId);
 		}
 
 		return $result;
@@ -87,12 +94,14 @@ class Twitter {
 	 * @return array
 	 */
 	private function getTweet($userName) {
-		$search = 'from:' . $userName . ' What I am searching for';
-		$statuses = $this->twitterOAuth->get('"search/tweets', ['q' => $search]);
-		if (isset($statuses[0])) {
-			$id = $statuses[0]->id;
-			$text = $statuses[0]->text;
-		} else {
+
+		try {
+			$search = 'from:' . $userName . ' Use my Federated Cloud ID to share with me';
+			$statuses = $this->twitterOAuth->get('search/tweets', ['q' => $search]);
+
+			$id = $statuses->statuses[0]->id;
+			$text = $statuses->statuses[0]->text;
+		} catch (\Exception $e) {
 			return [null, null];
 		}
 
@@ -117,8 +126,8 @@ class Twitter {
 	 * @return array
 	 */
 	private function splitMessageSignature($proof) {
-		$signature = substr($proof, -344);
-		$message = substr($proof, 0, -344);
+		$signature = substr($proof, -32);
+		$message = substr($proof, 0, -32);
 
 		return [trim($message), trim($signature)];
 	}
@@ -126,11 +135,27 @@ class Twitter {
 	/**
 	 * store reference to tweet
 	 *
-	 * @param $userData
+	 * @param $userId
 	 * @param $tweetId
 	 */
-	private function storeReference($userData, $tweetId) {
+	private function storeReference($userId, $tweetId) {
 
+		$key = 'tweet_id';
+
+		// delete old value, if exists
+		$stmt = $this->db->prepare('DELETE FROM store WHERE userId = :userId AND k = :k');
+		$stmt->bindParam(':userId', $userId, \PDO::PARAM_INT);
+		$stmt->bindParam(':k', $key, \PDO::PARAM_STR);
+		$stmt->execute();
+		$stmt->closeCursor();
+
+		// add new value
+		$stmt = $this->db->prepare('INSERT INTO store (userId, k, v) VALUES (:userId, :k, :v)');
+		$stmt->bindParam(':userId', $userId, \PDO::PARAM_INT);
+		$stmt->bindParam(':k', $key, \PDO::PARAM_STR);
+		$stmt->bindParam(':v', $tweetId, \PDO::PARAM_STR);
+		$stmt->execute();
+		$stmt->closeCursor();
 	}
 
 }

@@ -140,20 +140,6 @@ LIMIT 50');
 	}
 
 	/**
-	 * Split a cloud id in a user and host post
-	 *
-	 * @param $cloudId
-	 * @return string[]
-	 */
-	private function splitCloudId($cloudId) {
-		$loc = strrpos($cloudId, '@');
-
-		$user = substr($cloudId, 0, $loc);
-		$host = substr($cloudId, $loc+1);
-		return [$user, $host];
-	}
-
-	/**
 	 * @param string $cloudId
 	 * @param string[] $data
 	 * @param int $timestamp
@@ -166,7 +152,7 @@ LIMIT 50');
 		$id = $this->db->lastInsertId();
 		$stmt->closeCursor();
 
-		$fields = ['name', 'email', 'address', 'website', 'twitter', 'phone'];
+		$fields = ['name', 'email', 'address', 'website', 'twitter', 'phone', 'twitter_signature', 'website_signature'];
 
 		foreach ($fields as $field) {
 			if (!isset($data[$field]) || $data[$field] === '') {
@@ -198,7 +184,7 @@ LIMIT 50');
 		$stmt->bindParam(':timestamp', $timestamp, \PDO::PARAM_INT);
 		$stmt->execute();
 		$stmt->closeCursor();
-		$fields = ['name', 'email', 'address', 'website', 'twitter', 'phone'];
+		$fields = ['name', 'email', 'address', 'website', 'twitter', 'phone', 'twitter_signature', 'website_signature'];
 
 		$stmt = $this->db->prepare('SELECT * FROM store WHERE userId = :userId');
 		$stmt->bindParam(':userId', $id, \PDO::PARAM_INT);
@@ -229,7 +215,6 @@ LIMIT 50');
 				$stmt->bindParam(':v', $data[$key]);
 				$stmt->execute();
 				$stmt->closeCursor();
-
 				if ($key === 'email') {
 					$this->emailValidator->emailUpdated($data[$key], $row['id']);
 				}
@@ -259,7 +244,12 @@ LIMIT 50');
 	}
 
 	private function needToVerify($userId, $storeId, $data, $key) {
-		if (isset($data['verificationStatus'][$key]) && $data['verificationStatus'][$key] === '1') {
+		$stmt = $this->db->prepare('SELECT * FROM toVerify WHERE  storeId = :storeId');
+		$stmt->bindParam(':storeId', $storeId, \PDO::PARAM_INT);
+		$stmt->execute();
+		$alreadyExists = $stmt->fetch();
+
+		if ($alreadyExists === false && isset($data['verificationStatus'][$key]) && $data['verificationStatus'][$key] === '1') {
 			$tries = 0;
 			$stmt = $this->db->prepare('INSERT INTO toVerify (userId, storeId, property, location, tries) VALUES (:userId, :storeId, :property, :location, :tries)');
 			$stmt->bindParam(':userId', $userId, \PDO::PARAM_INT);
@@ -268,6 +258,7 @@ LIMIT 50');
 			$stmt->bindParam(':location', $data[$key]);
 			$stmt->bindParam(':tries', $tries, \PDO::PARAM_INT);
 			$stmt->execute();
+			$stmt->closeCursor();
 		}
 	}
 
@@ -376,7 +367,6 @@ LIMIT 50');
 	 * @param $id
 	 */
 	private function removeOpenVerificationRequest($id) {
-		return true; // Fixme... just for testing purpose.
 		$stmt = $this->db->prepare('DELETE FROM toVerify WHERE id = :id');
 		$stmt->bindParam(':id', $id);
 		$stmt->execute();
@@ -397,28 +387,12 @@ LIMIT 50');
 	}
 
 	/**
-	 * @param array $data
-	 * @return bool
-	 */
-	private function verifyTwitter($data) {
-		// ToDo get data from verify table (includes $cloudId, $location)
-		// ToDo get proof from twitter user $location
-		// ToDo split $message & $signature
-		// ToDo "verifyRequest" needs to be able to handle the shortened md5 signature from twitter
-		$result = $this->signatureHandler->verify($cloudId, $message, $signature);
-
-		return result;
-
-	}
-
-	/**
 	 * @param string $cloudId
 	 * @param string[] $data
 	 * @param int $timestamp
 	 * @return bool
 	 */
 	private function insertOrUpdate($cloudId, $data, $timestamp) {
-
 		$stmt = $this->db->prepare('SELECT * FROM users WHERE federationId = :federationId');
 		$stmt->bindParam(':federationId', $cloudId);
 		$stmt->execute();

@@ -36,7 +36,7 @@ $container['WebsiteValidator'] = function($c) {
 	return new \LookupServer\Validator\Website($c->SignatureHandler);
 };
 $container['TwitterValidator'] = function($c) {
-	return new \LookupServer\Validator\Twitter($c->TwitterOAuth, $c->SignatureHandler);
+	return new \LookupServer\Validator\Twitter($c->TwitterOAuth, $c->SignatureHandler, $c->db);
 };
 $container['Status'] = function($c) {
 	return new \LookupServer\Status();
