@@ -21,6 +21,7 @@ class ComposerStaticInit509ee4e79733fbe3199b97373b795eca
         'P' => 
         array (
             'Psr\\Http\\Message\\' => 17,
+            'Psr\\Container\\' => 14,
         ),
         'L' => 
         array (
@@ -40,6 +41,10 @@ class ComposerStaticInit509ee4e79733fbe3199b97373b795eca
         array (
             'FastRoute\\' => 10,
         ),
+        'A' => 
+        array (
+            'Abraham\\TwitterOAuth\\' => 21,
+        ),
     );
 
     public static $prefixDirsPsr4 = array (
@@ -50,6 +55,10 @@ class ComposerStaticInit509ee4e79733fbe3199b97373b795eca
         'Psr\\Http\\Message\\' => 
         array (
             0 => __DIR__ . '/..' . '/psr/http-message/src',
+        ),
+        'Psr\\Container\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/psr/container/src',
         ),
         'LookupServer\\' => 
         array (
@@ -75,6 +84,10 @@ class ComposerStaticInit509ee4e79733fbe3199b97373b795eca
         array (
             0 => __DIR__ . '/..' . '/nikic/fast-route/src',
         ),
+        'Abraham\\TwitterOAuth\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/abraham/twitteroauth/src',
+        ),
     );
 
     public static $prefixesPsr0 = array (
@@ -88,6 +101,17 @@ class ComposerStaticInit509ee4e79733fbe3199b97373b795eca
     );
 
     public static $classMap = array (
+        'Abraham\\TwitterOAuth\\Config' => __DIR__ . '/..' . '/abraham/twitteroauth/src/Config.php',
+        'Abraham\\TwitterOAuth\\Consumer' => __DIR__ . '/..' . '/abraham/twitteroauth/src/Consumer.php',
+        'Abraham\\TwitterOAuth\\HmacSha1' => __DIR__ . '/..' . '/abraham/twitteroauth/src/HmacSha1.php',
+        'Abraham\\TwitterOAuth\\Request' => __DIR__ . '/..' . '/abraham/twitteroauth/src/Request.php',
+        'Abraham\\TwitterOAuth\\Response' => __DIR__ . '/..' . '/abraham/twitteroauth/src/Response.php',
+        'Abraham\\TwitterOAuth\\SignatureMethod' => __DIR__ . '/..' . '/abraham/twitteroauth/src/SignatureMethod.php',
+        'Abraham\\TwitterOAuth\\Token' => __DIR__ . '/..' . '/abraham/twitteroauth/src/Token.php',
+        'Abraham\\TwitterOAuth\\TwitterOAuth' => __DIR__ . '/..' . '/abraham/twitteroauth/src/TwitterOAuth.php',
+        'Abraham\\TwitterOAuth\\TwitterOAuthException' => __DIR__ . '/..' . '/abraham/twitteroauth/src/TwitterOAuthException.php',
+        'Abraham\\TwitterOAuth\\Util' => __DIR__ . '/..' . '/abraham/twitteroauth/src/Util.php',
+        'Abraham\\TwitterOAuth\\Util\\JsonDecoder' => __DIR__ . '/..' . '/abraham/twitteroauth/src/Util/JsonDecoder.php',
         'FastRoute\\BadRouteException' => __DIR__ . '/..' . '/nikic/fast-route/src/BadRouteException.php',
         'FastRoute\\DataGenerator' => __DIR__ . '/..' . '/nikic/fast-route/src/DataGenerator.php',
         'FastRoute\\DataGenerator\\CharCountBased' => __DIR__ . '/..' . '/nikic/fast-route/src/DataGenerator/CharCountBased.php',
@@ -136,6 +160,7 @@ class ComposerStaticInit509ee4e79733fbe3199b97373b795eca
         'GuzzleHttp\\PrepareBodyMiddleware' => __DIR__ . '/..' . '/guzzlehttp/guzzle/src/PrepareBodyMiddleware.php',
         'GuzzleHttp\\Promise\\AggregateException' => __DIR__ . '/..' . '/guzzlehttp/promises/src/AggregateException.php',
         'GuzzleHttp\\Promise\\CancellationException' => __DIR__ . '/..' . '/guzzlehttp/promises/src/CancellationException.php',
+        'GuzzleHttp\\Promise\\Coroutine' => __DIR__ . '/..' . '/guzzlehttp/promises/src/Coroutine.php',
         'GuzzleHttp\\Promise\\EachPromise' => __DIR__ . '/..' . '/guzzlehttp/promises/src/EachPromise.php',
         'GuzzleHttp\\Promise\\FulfilledPromise' => __DIR__ . '/..' . '/guzzlehttp/promises/src/FulfilledPromise.php',
         'GuzzleHttp\\Promise\\Promise' => __DIR__ . '/..' . '/guzzlehttp/promises/src/Promise.php',
@@ -144,6 +169,7 @@ class ComposerStaticInit509ee4e79733fbe3199b97373b795eca
         'GuzzleHttp\\Promise\\RejectedPromise' => __DIR__ . '/..' . '/guzzlehttp/promises/src/RejectedPromise.php',
         'GuzzleHttp\\Promise\\RejectionException' => __DIR__ . '/..' . '/guzzlehttp/promises/src/RejectionException.php',
         'GuzzleHttp\\Promise\\TaskQueue' => __DIR__ . '/..' . '/guzzlehttp/promises/src/TaskQueue.php',
+        'GuzzleHttp\\Promise\\TaskQueueInterface' => __DIR__ . '/..' . '/guzzlehttp/promises/src/TaskQueueInterface.php',
         'GuzzleHttp\\Psr7\\AppendStream' => __DIR__ . '/..' . '/guzzlehttp/psr7/src/AppendStream.php',
         'GuzzleHttp\\Psr7\\BufferStream' => __DIR__ . '/..' . '/guzzlehttp/psr7/src/BufferStream.php',
         'GuzzleHttp\\Psr7\\CachingStream' => __DIR__ . '/..' . '/guzzlehttp/psr7/src/CachingStream.php',
@@ -164,6 +190,8 @@ class ComposerStaticInit509ee4e79733fbe3199b97373b795eca
         'GuzzleHttp\\Psr7\\StreamWrapper' => __DIR__ . '/..' . '/guzzlehttp/psr7/src/StreamWrapper.php',
         'GuzzleHttp\\Psr7\\UploadedFile' => __DIR__ . '/..' . '/guzzlehttp/psr7/src/UploadedFile.php',
         'GuzzleHttp\\Psr7\\Uri' => __DIR__ . '/..' . '/guzzlehttp/psr7/src/Uri.php',
+        'GuzzleHttp\\Psr7\\UriNormalizer' => __DIR__ . '/..' . '/guzzlehttp/psr7/src/UriNormalizer.php',
+        'GuzzleHttp\\Psr7\\UriResolver' => __DIR__ . '/..' . '/guzzlehttp/psr7/src/UriResolver.php',
         'GuzzleHttp\\RedirectMiddleware' => __DIR__ . '/..' . '/guzzlehttp/guzzle/src/RedirectMiddleware.php',
         'GuzzleHttp\\RequestOptions' => __DIR__ . '/..' . '/guzzlehttp/guzzle/src/RequestOptions.php',
         'GuzzleHttp\\RetryMiddleware' => __DIR__ . '/..' . '/guzzlehttp/guzzle/src/RetryMiddleware.php',
@@ -185,6 +213,9 @@ class ComposerStaticInit509ee4e79733fbe3199b97373b795eca
         'Pimple\\Tests\\Fixtures\\Service' => __DIR__ . '/..' . '/pimple/pimple/src/Pimple/Tests/Fixtures/Service.php',
         'Pimple\\Tests\\PimpleServiceProviderInterfaceTest' => __DIR__ . '/..' . '/pimple/pimple/src/Pimple/Tests/PimpleServiceProviderInterfaceTest.php',
         'Pimple\\Tests\\PimpleTest' => __DIR__ . '/..' . '/pimple/pimple/src/Pimple/Tests/PimpleTest.php',
+        'Psr\\Container\\ContainerExceptionInterface' => __DIR__ . '/..' . '/psr/container/src/ContainerExceptionInterface.php',
+        'Psr\\Container\\ContainerInterface' => __DIR__ . '/..' . '/psr/container/src/ContainerInterface.php',
+        'Psr\\Container\\NotFoundExceptionInterface' => __DIR__ . '/..' . '/psr/container/src/NotFoundExceptionInterface.php',
         'Psr\\Http\\Message\\MessageInterface' => __DIR__ . '/..' . '/psr/http-message/src/MessageInterface.php',
         'Psr\\Http\\Message\\RequestInterface' => __DIR__ . '/..' . '/psr/http-message/src/RequestInterface.php',
         'Psr\\Http\\Message\\ResponseInterface' => __DIR__ . '/..' . '/psr/http-message/src/ResponseInterface.php',
@@ -201,6 +232,7 @@ class ComposerStaticInit509ee4e79733fbe3199b97373b795eca
         'Slim\\DeferredCallable' => __DIR__ . '/..' . '/slim/slim/Slim/DeferredCallable.php',
         'Slim\\Exception\\ContainerException' => __DIR__ . '/..' . '/slim/slim/Slim/Exception/ContainerException.php',
         'Slim\\Exception\\ContainerValueNotFoundException' => __DIR__ . '/..' . '/slim/slim/Slim/Exception/ContainerValueNotFoundException.php',
+        'Slim\\Exception\\InvalidMethodException' => __DIR__ . '/..' . '/slim/slim/Slim/Exception/InvalidMethodException.php',
         'Slim\\Exception\\MethodNotAllowedException' => __DIR__ . '/..' . '/slim/slim/Slim/Exception/MethodNotAllowedException.php',
         'Slim\\Exception\\NotFoundException' => __DIR__ . '/..' . '/slim/slim/Slim/Exception/NotFoundException.php',
         'Slim\\Exception\\SlimException' => __DIR__ . '/..' . '/slim/slim/Slim/Exception/SlimException.php',
