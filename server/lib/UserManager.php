@@ -2,8 +2,8 @@
 
 namespace LookupServer;
 
-use GuzzleHttp\Client;
 use LookupServer\Validator\Email;
+use LookupServer\Validator\Website;
 use \Psr\Http\Message\ServerRequestInterface as Request;
 use \Psr\Http\Message\ResponseInterface as Response;
 
@@ -15,9 +15,28 @@ class UserManager {
 	/** @var Email */
 	private $emailValidator;
 
-	public function __construct(\PDO $db, Email $emailValidator) {
+	/** @var  Website */
+	private $websiteValidator;
+
+	/** @var SignatureHandler */
+	private $signatureHandler;
+
+	/**
+	 * UserManager constructor.
+	 *
+	 * @param \PDO $db
+	 * @param Email $emailValidator
+	 * @param Website $websiteValidator
+	 * @param SignatureHandler $signatureHandler
+	 */
+	public function __construct(\PDO $db,
+								Email $emailValidator,
+								Website $websiteValidator,
+								SignatureHandler $signatureHandler) {
 		$this->db = $db;
 		$this->emailValidator = $emailValidator;
+		$this->websiteValidator = $websiteValidator;
+		$this->signatureHandler = $signatureHandler;
 	}
 
 	public function search(Request $request, Response $response) {
@@ -258,7 +277,7 @@ LIMIT 50');
 		$cloudId = $body['message']['data']['federationId'];
 
 		try {
-			$verified = $this->verifyRequest($cloudId, $body['message'], $body['signature']);
+			$verified = $this->signatureHandler->verify($cloudId, $body['message'], $body['signature']);
 		}  catch(\Exception $e) {
 			$response->withStatus(400);
 			return $response;
@@ -290,7 +309,7 @@ LIMIT 50');
 		$cloudId = $body['message']['data']['federationId'];
 
 		try {
-			$verified = $this->verifyRequest($cloudId, $body['message'], $body['signature']);
+			$verified = $this->signatureHandler->verify($cloudId, $body['message'], $body['signature']);
 		}  catch(\Exception $e) {
 			$response->withStatus(400);
 			return $response;
@@ -312,20 +331,21 @@ LIMIT 50');
 
 	public function verify(Request $request, Response $response) {
 		$verificationRequests = $this->getOpenVerificationRequests();
-		foreach ($verificationRequests as $verify) {
+		foreach ($verificationRequests as $verificationData) {
 			$success = false;
-			switch ($verify['property']) {
+			switch ($verificationData['property']) {
 				case 'twitter':
 					//ToDo try to Verify Twitter account
 					$success = $this->verifyTwitter();
 					break;
 				case 'website':
-					$success = $this->verifyWebpage($verify);
+					$userData = $this->getForUserId($verificationData['userId']);
+					$success = $this->websiteValidator->verify($verificationData, $userData);
 					break;
 			}
 			if ($success) {
-				$this->updateVerificationStatus($verify['storeId']);
-				$this->removeOpenVerificationRequest($verify['id']);
+				$this->updateVerificationStatus($verificationData['storeId']);
+				$this->removeOpenVerificationRequest($verificationData['id']);
 			}
 		}
 	}
@@ -377,92 +397,11 @@ LIMIT 50');
 		// ToDo get proof from twitter user $location
 		// ToDo split $message & $signature
 		// ToDo "verifyRequest" needs to be able to handle the shortened md5 signature from twitter
-		$result = $this->verifyRequest($cloudId, $message, $signature);
+		$result = $this->signatureHandler->verify($cloudId, $message, $signature);
 
 		return result;
 
 	}
-
-	/**
-	 * @param array $data
-	 * @return bool
-	 */
-	private function verifyWebpage($data) {
-		$url = $this->getValidUrl($data['location']);
-		$proof = @file_get_contents($url);
-		$result = false;
-		if ($proof) {
-			$userData = $this->getForUserId($data['userId']);
-			$cloudId = $userData['federationId'];
-			$proofSanitized = trim(preg_replace('/\s\s+/', ' ', $proof));
-			list($message, $signature) = $this->splitMessageSignature($proofSanitized);
-			$result = $this->verifyRequest($cloudId, $message, $signature);
-		}
-
-		return $result;
-	}
-
-	private function getValidUrl($url) {
-		$url = trim($url);
-		$url = rtrim($url, '/');
-		if (strpos($url, 'http://') !== 0 && strpos($url, 'https://') !== 0) {
-			$url = 'http://' . $url;
-		}
-
-		return $url . '/.well-known/CloudIdVerificationCode.txt';
-	}
-
-	private function splitMessageSignature($proof) {
-		$signature = substr($proof, -344);
-		$message = substr($proof, 0, -344);
-
-		return [trim($message), trim($signature)];
-	}
-
-	/**
-	 * check signature of incoming request
-	 *
-	 * @param string $cloudId
-	 * @param string $message
-	 * @param string $signature
-	 * @return bool
-	 * @throws \Exception
-	 */
-	protected function verifyRequest($cloudId, $message, $signature) {
-		// Get fed id
-		list($user, $host) = $this->splitCloudId($cloudId);
-
-		// Retrieve public key && store
-		$ocsreq = new \GuzzleHttp\Psr7\Request(
-			'GET',
-			'http://'.$host . '/ocs/v2.php/identityproof/key/' . $user,
-			[
-				'OCS-APIREQUEST' => 'true',
-				'Accept' => 'application/json',
-			]);
-
-		$client = new Client();
-		$ocsresponse = $client->send($ocsreq, ['timeout' => 10]);
-
-		$ocsresponse = json_decode($ocsresponse->getBody(), true);
-
-		if ($ocsresponse === null || !isset($ocsresponse['ocs']) ||
-			!isset($ocsresponse['ocs']['data']) || !isset($ocsresponse['ocs']['data']['public'])) {
-			throw new \BadMethodCallException();
-		}
-
-		$key = $ocsresponse['ocs']['data']['public'];
-
-		// verify message
-		$message = json_encode($message);
-		$signature= base64_decode($signature);
-
-		$res = openssl_verify($message, $signature, $key, OPENSSL_ALGO_SHA512);
-
-		return $res === 1;
-
-	}
-
 
 	/**
 	 * @param string $cloudId
