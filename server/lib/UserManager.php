@@ -3,6 +3,7 @@
 namespace LookupServer;
 
 use LookupServer\Validator\Email;
+use LookupServer\Validator\Twitter;
 use LookupServer\Validator\Website;
 use \Psr\Http\Message\ServerRequestInterface as Request;
 use \Psr\Http\Message\ResponseInterface as Response;
@@ -18,6 +19,9 @@ class UserManager {
 	/** @var  Website */
 	private $websiteValidator;
 
+	/** @var Twitter */
+	private $twitterValidator;
+
 	/** @var SignatureHandler */
 	private $signatureHandler;
 
@@ -27,15 +31,18 @@ class UserManager {
 	 * @param \PDO $db
 	 * @param Email $emailValidator
 	 * @param Website $websiteValidator
+	 * @param Twitter $twitterValidator
 	 * @param SignatureHandler $signatureHandler
 	 */
 	public function __construct(\PDO $db,
 								Email $emailValidator,
 								Website $websiteValidator,
+								Twitter $twitterValidator,
 								SignatureHandler $signatureHandler) {
 		$this->db = $db;
 		$this->emailValidator = $emailValidator;
 		$this->websiteValidator = $websiteValidator;
+		$this->twitterValidator = $twitterValidator;
 		$this->signatureHandler = $signatureHandler;
 	}
 
@@ -336,7 +343,8 @@ LIMIT 50');
 			switch ($verificationData['property']) {
 				case 'twitter':
 					//ToDo try to Verify Twitter account
-					$success = $this->verifyTwitter();
+					$userData = $this->getForUserId($verificationData['userId']);
+					$success = $this->twitterValidator->verify($verificationData, $userData);
 					break;
 				case 'website':
 					$userData = $this->getForUserId($verificationData['userId']);

@@ -206,6 +206,7 @@ class ComposerStaticInit509ee4e79733fbe3199b97373b795eca
         'LookupServer\\Status' => __DIR__ . '/../..' . '/lib/Status.php',
         'LookupServer\\UserManager' => __DIR__ . '/../..' . '/lib/UserManager.php',
         'LookupServer\\Validator\\Email' => __DIR__ . '/../..' . '/lib/Validator/Email.php',
+        'LookupServer\\Validator\\Twitter' => __DIR__ . '/../..' . '/lib/Validator/Twitter.php',
         'LookupServer\\Validator\\Website' => __DIR__ . '/../..' . '/lib/Validator/Website.php',
         'Pimple\\Container' => __DIR__ . '/..' . '/pimple/pimple/src/Pimple/Container.php',
         'Pimple\\ServiceProviderInterface' => __DIR__ . '/..' . '/pimple/pimple/src/Pimple/ServiceProviderInterface.php',

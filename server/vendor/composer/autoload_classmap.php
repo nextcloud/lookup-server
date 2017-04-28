@@ -111,6 +111,7 @@ return array(
     'LookupServer\\Status' => $baseDir . '/lib/Status.php',
     'LookupServer\\UserManager' => $baseDir . '/lib/UserManager.php',
     'LookupServer\\Validator\\Email' => $baseDir . '/lib/Validator/Email.php',
+    'LookupServer\\Validator\\Twitter' => $baseDir . '/lib/Validator/Twitter.php',
     'LookupServer\\Validator\\Website' => $baseDir . '/lib/Validator/Website.php',
     'Pimple\\Container' => $vendorDir . '/pimple/pimple/src/Pimple/Container.php',
     'Pimple\\ServiceProviderInterface' => $vendorDir . '/pimple/pimple/src/Pimple/ServiceProviderInterface.php',
