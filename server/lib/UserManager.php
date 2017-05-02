@@ -207,6 +207,8 @@ LIMIT 50');
 				$stmt->bindParam(':id', $row['id']);
 				$stmt->execute();
 				$stmt->closeCursor();
+				// remove verification request if correspondig data was deleted
+				$this->removeOpenVerificationRequestByStoreId($row['id']);
 			} else {
 				// Key present check if we need to update
 				if ($data[$key] === $value) {
@@ -221,6 +223,8 @@ LIMIT 50');
 				if ($key === 'email') {
 					$this->emailValidator->emailUpdated($data[$key], $row['id']);
 				}
+				// remove verification request from old data
+				$this->removeOpenVerificationRequestByStoreId($row['id']);
 			}
 		}
 
@@ -388,7 +392,7 @@ LIMIT 50');
 	}
 
 	/**
-	 * remove data from to verify table if verificartion was successful or max. number of tries reached.
+	 * remove data from to verify table if verification was successful or max. number of tries reached.
 	 *
 	 * @param $id
 	 */
@@ -398,6 +402,19 @@ LIMIT 50');
 		$stmt->execute();
 		$stmt->closeCursor();
 	}
+
+	/**
+	 * remove data from to verify table if the user data was removed or changed
+	 *
+	 * @param $storeId
+	 */
+	private function removeOpenVerificationRequestByStoreId($storeId) {
+		$stmt = $this->db->prepare('DELETE FROM toVerify WHERE storeId = :storeId');
+		$stmt->bindParam(':storeId', $storeId);
+		$stmt->execute();
+		$stmt->closeCursor();
+	}
+
 
 	/**
 	 * get open verification Requests
