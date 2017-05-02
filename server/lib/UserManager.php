@@ -25,6 +25,9 @@ class UserManager {
 	/** @var SignatureHandler */
 	private $signatureHandler;
 
+	/** @var int try max. 10 times to verify a account */
+	private $maxVerifyTries = 10;
+
 	/**
 	 * UserManager constructor.
 	 *
@@ -333,7 +336,6 @@ LIMIT 50');
 			$success = false;
 			switch ($verificationData['property']) {
 				case 'twitter':
-					//ToDo try to Verify Twitter account
 					$userData = $this->getForUserId($verificationData['userId']);
 					$success = $this->twitterValidator->verify($verificationData, $userData);
 					break;
@@ -345,8 +347,32 @@ LIMIT 50');
 			if ($success) {
 				$this->updateVerificationStatus($verificationData['storeId']);
 				$this->removeOpenVerificationRequest($verificationData['id']);
+			} else {
+				$this->incMaxTries($verificationData);
 			}
 		}
+	}
+
+	/**
+	 * increase number of max tries to verify account data
+	 *
+	 * @param $verificationData
+	 */
+	private function incMaxTries($verificationData) {
+		$tries = (int)$verificationData['tries'];
+		$tries++;
+
+		// max number of tries reached, remove verification request and return
+		if ($tries > $this->maxVerifyTries) {
+			$this->removeOpenVerificationRequest($verificationData['id']);
+			return;
+		}
+
+		$stmt = $this->db->prepare('UPDATE toVerify SET tries = :tries WHERE id = :id');
+		$stmt->bindParam('id', $verificationData['id']);
+		$stmt->bindParam('tries', $tries);
+		$stmt->execute();
+		$stmt->closeCursor();
 	}
 
 	/**
