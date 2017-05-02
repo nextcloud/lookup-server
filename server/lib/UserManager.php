@@ -2,8 +2,9 @@
 
 namespace LookupServer;
 
-use GuzzleHttp\Client;
 use LookupServer\Validator\Email;
+use LookupServer\Validator\Twitter;
+use LookupServer\Validator\Website;
 use \Psr\Http\Message\ServerRequestInterface as Request;
 use \Psr\Http\Message\ResponseInterface as Response;
 
@@ -15,9 +16,37 @@ class UserManager {
 	/** @var Email */
 	private $emailValidator;
 
-	public function __construct(\PDO $db, Email $emailValidator) {
+	/** @var  Website */
+	private $websiteValidator;
+
+	/** @var Twitter */
+	private $twitterValidator;
+
+	/** @var SignatureHandler */
+	private $signatureHandler;
+
+	/** @var int try max. 10 times to verify a account */
+	private $maxVerifyTries = 10;
+
+	/**
+	 * UserManager constructor.
+	 *
+	 * @param \PDO $db
+	 * @param Email $emailValidator
+	 * @param Website $websiteValidator
+	 * @param Twitter $twitterValidator
+	 * @param SignatureHandler $signatureHandler
+	 */
+	public function __construct(\PDO $db,
+								Email $emailValidator,
+								Website $websiteValidator,
+								Twitter $twitterValidator,
+								SignatureHandler $signatureHandler) {
 		$this->db = $db;
 		$this->emailValidator = $emailValidator;
+		$this->websiteValidator = $websiteValidator;
+		$this->twitterValidator = $twitterValidator;
+		$this->signatureHandler = $signatureHandler;
 	}
 
 	public function search(Request $request, Response $response) {
@@ -70,18 +99,18 @@ LIMIT 50');
 	}
 
 	private function getExactCloudId($cloudId) {
-	    $stmt = $this->db->prepare('SELECT id FROM users WHERE federationId = :id');
-	    $stmt->bindParam(':id', $cloudId);
-	    $stmt->execute();
-	    $data = $stmt->fetch();
+		$stmt = $this->db->prepare('SELECT id FROM users WHERE federationId = :id');
+		$stmt->bindParam(':id', $cloudId);
+		$stmt->execute();
+		$data = $stmt->fetch();
 
-        if (!$data) {
-            return [];
-        }
+		if (!$data) {
+			return [];
+		}
 
-        return $this->getForUserId((int)$data['id']);
+		return $this->getForUserId((int)$data['id']);
 
-    }
+	}
 
 	private function getForUserId($userId) {
 		$stmt = $this->db->prepare('SELECT * FROM users WHERE id = :id');
@@ -114,20 +143,6 @@ LIMIT 50');
 	}
 
 	/**
-	 * Split a cloud id in a user and host post
-	 *
-	 * @param $cloudId
-	 * @return string[]
-	 */
-	private function splitCloudId($cloudId) {
-		$loc = strrpos($cloudId, '@');
-
-		$user = substr($cloudId, 0, $loc);
-		$host = substr($cloudId, $loc+1);
-		return [$user, $host];
-	}
-
-	/**
 	 * @param string $cloudId
 	 * @param string[] $data
 	 * @param int $timestamp
@@ -140,7 +155,7 @@ LIMIT 50');
 		$id = $this->db->lastInsertId();
 		$stmt->closeCursor();
 
-		$fields = ['name', 'email', 'address', 'website', 'twitter', 'phone'];
+		$fields = ['name', 'email', 'address', 'website', 'twitter', 'phone', 'twitter_signature', 'website_signature'];
 
 		foreach ($fields as $field) {
 			if (!isset($data[$field]) || $data[$field] === '') {
@@ -172,15 +187,13 @@ LIMIT 50');
 		$stmt->bindParam(':timestamp', $timestamp, \PDO::PARAM_INT);
 		$stmt->execute();
 		$stmt->closeCursor();
-
-		$fields = ['name', 'email', 'address', 'website', 'twitter', 'phone'];
+		$fields = ['name', 'email', 'address', 'website', 'twitter', 'phone', 'twitter_signature', 'website_signature'];
 
 		$stmt = $this->db->prepare('SELECT * FROM store WHERE userId = :userId');
 		$stmt->bindParam(':userId', $id, \PDO::PARAM_INT);
 		$stmt->execute();
 		$rows = $stmt->fetchAll();
 		$stmt->closeCursor();
-
 		foreach ($rows as $row) {
 			$key = $row['k'];
 			$value = $row['v'];
@@ -194,9 +207,12 @@ LIMIT 50');
 				$stmt->bindParam(':id', $row['id']);
 				$stmt->execute();
 				$stmt->closeCursor();
+				// remove verification request if correspondig data was deleted
+				$this->removeOpenVerificationRequestByStoreId($row['id']);
 			} else {
 				// Key present check if we need to update
 				if ($data[$key] === $value) {
+					$this->needToVerify($id, $row['id'], $data, $key);
 					continue;
 				}
 				$stmt = $this->db->prepare('UPDATE store SET v = :v, valid = 0 WHERE id = :id');
@@ -204,10 +220,11 @@ LIMIT 50');
 				$stmt->bindParam(':v', $data[$key]);
 				$stmt->execute();
 				$stmt->closeCursor();
-
 				if ($key === 'email') {
 					$this->emailValidator->emailUpdated($data[$key], $row['id']);
 				}
+				// remove verification request from old data
+				$this->removeOpenVerificationRequestByStoreId($row['id']);
 			}
 		}
 
@@ -227,7 +244,28 @@ LIMIT 50');
 			$storeId = $this->db->lastInsertId();
 			$stmt->closeCursor();
 
-			$this->emailValidator->emailUpdated($data[$field], $storeId);
+			if ($field === 'email') {
+				$this->emailValidator->emailUpdated($data[$field], $storeId);
+			}
+		}
+	}
+
+	private function needToVerify($userId, $storeId, $data, $key) {
+		$stmt = $this->db->prepare('SELECT * FROM toVerify WHERE  storeId = :storeId');
+		$stmt->bindParam(':storeId', $storeId, \PDO::PARAM_INT);
+		$stmt->execute();
+		$alreadyExists = $stmt->fetch();
+
+		if ($alreadyExists === false && isset($data['verificationStatus'][$key]) && $data['verificationStatus'][$key] === '1') {
+			$tries = 0;
+			$stmt = $this->db->prepare('INSERT INTO toVerify (userId, storeId, property, location, tries) VALUES (:userId, :storeId, :property, :location, :tries)');
+			$stmt->bindParam(':userId', $userId, \PDO::PARAM_INT);
+			$stmt->bindParam(':storeId', $storeId, \PDO::PARAM_INT);
+			$stmt->bindParam(':property', $key);
+			$stmt->bindParam(':location', $data[$key]);
+			$stmt->bindParam(':tries', $tries, \PDO::PARAM_INT);
+			$stmt->execute();
+			$stmt->closeCursor();
 		}
 	}
 
@@ -244,11 +282,11 @@ LIMIT 50');
 		$cloudId = $body['message']['data']['federationId'];
 
 		try {
-            $verified = $this->verifyRequest($cloudId, $body['message'], $body['signature']);
-        }  catch(\Exception $e) {
-            $response->withStatus(400);
-            return $response;
-        }
+			$verified = $this->signatureHandler->verify($cloudId, $body['message'], $body['signature']);
+		}  catch(\Exception $e) {
+			$response->withStatus(400);
+			return $response;
+		}
 
 		if ($verified) {
 			$result = $this->insertOrUpdate($cloudId, $body['message']['data'], $body['message']['timestamp']);
@@ -263,92 +301,141 @@ LIMIT 50');
 		return $response;
 	}
 
-    public function delete(Request $request, Response $response) {
-        $body = json_decode($request->getBody(), true);
+	public function delete(Request $request, Response $response) {
+		$body = json_decode($request->getBody(), true);
 
-        if ($body === null || !isset($body['message']) || !isset($body['message']['data']) ||
-            !isset($body['message']['data']['federationId']) || !isset($body['signature']) ||
-            !isset($body['message']['timestamp'])) {
-            $response->withStatus(400);
-            return $response;
-        }
+		if ($body === null || !isset($body['message']) || !isset($body['message']['data']) ||
+			!isset($body['message']['data']['federationId']) || !isset($body['signature']) ||
+			!isset($body['message']['timestamp'])) {
+			$response->withStatus(400);
+			return $response;
+		}
 
-        $cloudId = $body['message']['data']['federationId'];
+		$cloudId = $body['message']['data']['federationId'];
 
-        try {
-            $verified = $this->verifyRequest($cloudId, $body['message'], $body['signature']);
-        }  catch(\Exception $e) {
-            $response->withStatus(400);
-            return $response;
-        }
-
-
-        if ($verified) {
-            $result = $this->deleteDBRecord($cloudId);
-            if ($result === false) {
-                $response->withStatus(404);
-            }
-        } else {
-            // ERROR OUT
-            $response->withStatus(403);
-        }
-
-        return $response;
-    }
-
-    /**
-     * check signature of incoming request
-     *
-     * @param string $cloudId
-     * @param string $message
-     * @param string $signature
-     * @return bool
-     * @throws \Exception
-     */
-    protected function verifyRequest($cloudId, $message, $signature) {
-        // Get fed id
-        list($user, $host) = $this->splitCloudId($cloudId);
-
-        // Retrieve public key && store
-        $ocsreq = new \GuzzleHttp\Psr7\Request(
-            'GET',
-            'http://'.$host . '/ocs/v2.php/identityproof/key/' . $user,
-            [
-                'OCS-APIREQUEST' => 'true',
-                'Accept' => 'application/json',
-            ]);
-
-        $client = new Client();
-        $ocsresponse = $client->send($ocsreq, ['timeout' => 10]);
-
-        $ocsresponse = json_decode($ocsresponse->getBody(), true);
-
-        if ($ocsresponse === null || !isset($ocsresponse['ocs']) ||
-            !isset($ocsresponse['ocs']['data']) || !isset($ocsresponse['ocs']['data']['public'])) {
-            throw new \BadMethodCallException();
-        }
-
-        $key = $ocsresponse['ocs']['data']['public'];
-
-        // verify message
-        $message = json_encode($message);
-        $signature= base64_decode($signature);
-
-        $res = openssl_verify($message, $signature, $key, OPENSSL_ALGO_SHA512);
-
-        return $res === 1;
-
-    }
+		try {
+			$verified = $this->signatureHandler->verify($cloudId, $body['message'], $body['signature']);
+		}  catch(\Exception $e) {
+			$response->withStatus(400);
+			return $response;
+		}
 
 
-    /**
+		if ($verified) {
+			$result = $this->deleteDBRecord($cloudId);
+			if ($result === false) {
+				$response->withStatus(404);
+			}
+		} else {
+			// ERROR OUT
+			$response->withStatus(403);
+		}
+
+		return $response;
+	}
+
+	public function verify(Request $request, Response $response) {
+		$verificationRequests = $this->getOpenVerificationRequests();
+		foreach ($verificationRequests as $verificationData) {
+			$success = false;
+			switch ($verificationData['property']) {
+				case 'twitter':
+					$userData = $this->getForUserId($verificationData['userId']);
+					$success = $this->twitterValidator->verify($verificationData, $userData);
+					break;
+				case 'website':
+					$userData = $this->getForUserId($verificationData['userId']);
+					$success = $this->websiteValidator->verify($verificationData, $userData);
+					break;
+			}
+			if ($success) {
+				$this->updateVerificationStatus($verificationData['storeId']);
+				$this->removeOpenVerificationRequest($verificationData['id']);
+			} else {
+				$this->incMaxTries($verificationData);
+			}
+		}
+	}
+
+	/**
+	 * increase number of max tries to verify account data
+	 *
+	 * @param $verificationData
+	 */
+	private function incMaxTries($verificationData) {
+		$tries = (int)$verificationData['tries'];
+		$tries++;
+
+		// max number of tries reached, remove verification request and return
+		if ($tries > $this->maxVerifyTries) {
+			$this->removeOpenVerificationRequest($verificationData['id']);
+			return;
+		}
+
+		$stmt = $this->db->prepare('UPDATE toVerify SET tries = :tries WHERE id = :id');
+		$stmt->bindParam('id', $verificationData['id']);
+		$stmt->bindParam('tries', $tries);
+		$stmt->execute();
+		$stmt->closeCursor();
+	}
+
+	/**
+	 * if data could be verified successfully we update the information in the store table
+	 *
+	 * @param $storeId
+	 */
+	private function updateVerificationStatus($storeId) {
+		$stmt = $this->db->prepare('UPDATE store SET valid = 1 WHERE id = :storeId');
+		$stmt->bindParam('storeId', $storeId);
+		$stmt->execute();
+		$stmt->closeCursor();
+	}
+
+	/**
+	 * remove data from to verify table if verification was successful or max. number of tries reached.
+	 *
+	 * @param $id
+	 */
+	private function removeOpenVerificationRequest($id) {
+		$stmt = $this->db->prepare('DELETE FROM toVerify WHERE id = :id');
+		$stmt->bindParam(':id', $id);
+		$stmt->execute();
+		$stmt->closeCursor();
+	}
+
+	/**
+	 * remove data from to verify table if the user data was removed or changed
+	 *
+	 * @param $storeId
+	 */
+	private function removeOpenVerificationRequestByStoreId($storeId) {
+		$stmt = $this->db->prepare('DELETE FROM toVerify WHERE storeId = :storeId');
+		$stmt->bindParam(':storeId', $storeId);
+		$stmt->execute();
+		$stmt->closeCursor();
+	}
+
+
+	/**
+	 * get open verification Requests
+	 *
+	 * @return array
+	 */
+	private function getOpenVerificationRequests() {
+		$stmt = $this->db->prepare('SELECT * FROM toVerify LIMIT 10');
+		$stmt->execute();
+		$result = $stmt->fetchAll();
+		$stmt->closeCursor();
+		return $result;
+	}
+
+	/**
 	 * @param string $cloudId
 	 * @param string[] $data
 	 * @param int $timestamp
 	 * @return bool
 	 */
 	private function insertOrUpdate($cloudId, $data, $timestamp) {
-
 		$stmt = $this->db->prepare('SELECT * FROM users WHERE federationId = :federationId');
 		$stmt->bindParam(':federationId', $cloudId);
 		$stmt->execute();
@@ -372,32 +459,32 @@ LIMIT 50');
 		return true;
 	}
 
-    /**
-     * Delete all personal data. We keep the basic user entry with the
-     * federated cloud ID in order to propagate the changes
-     *
-     * @param string $cloudId
-     * @return bool
-     */
-    private function deleteDBRecord($cloudId) {
+	/**
+	 * Delete all personal data. We keep the basic user entry with the
+	 * federated cloud ID in order to propagate the changes
+	 *
+	 * @param string $cloudId
+	 * @return bool
+	 */
+	private function deleteDBRecord($cloudId) {
 
-        $stmt = $this->db->prepare('SELECT * FROM users WHERE federationId = :federationId');
-        $stmt->bindParam(':federationId', $cloudId);
-        $stmt->execute();
-        $row = $stmt->fetch();
-        $stmt->closeCursor();
+		$stmt = $this->db->prepare('SELECT * FROM users WHERE federationId = :federationId');
+		$stmt->bindParam(':federationId', $cloudId);
+		$stmt->execute();
+		$row = $stmt->fetch();
+		$stmt->closeCursor();
 
-        // If we can't find the user
-        if ($row === false) {
-            return false;
-        }
+		// If we can't find the user
+		if ($row === false) {
+			return false;
+		}
 
-        // delete user data
-        $stmt = $this->db->prepare('DELETE FROM store WHERE userId = :userId');
-        $stmt->bindParam(':userId', $row['id']);
-        $stmt->execute();
-        $stmt->closeCursor();
+		// delete user data
+		$stmt = $this->db->prepare('DELETE FROM store WHERE userId = :userId');
+		$stmt->bindParam(':userId', $row['id']);
+		$stmt->execute();
+		$stmt->closeCursor();
 
-        return true;
-    }
+		return true;
+	}
 }

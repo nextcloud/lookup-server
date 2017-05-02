@@ -52,5 +52,13 @@ $CONFIG = [
 
 	// Public Server Url
 	'PUBLIC_URL' => 'http://dev/nextcloud/lookup-server',
+
+    // twitter oauth credentials, needed to perform twitter verification
+	'TWITTER' => [
+		'CONSUMER_KEY' => '',
+		'CONSUMER_SECRET' => '',
+		'ACCESS_TOKEN' => '',
+		'ACCESS_TOKEN_SECRET' => '',
+	]
 ];
 

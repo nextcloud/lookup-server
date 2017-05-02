@@ -16,5 +16,11 @@ return [
 		'emailfrom' => $CONFIG['EMAIL_SENDER'],
 		'replication_auth' => $CONFIG['REPLICATION_AUTH'],
 		'replication_hosts' => $CONFIG['REPLICATION_HOSTS'],
+		'twitter' => [
+			'consumer_key' => $CONFIG['TWITTER']['CONSUMER_KEY'],
+			'consumer_secret' => $CONFIG['TWITTER']['CONSUMER_SECRET'],
+			'access_token' => $CONFIG['TWITTER']['ACCESS_TOKEN'],
+			'access_token_secret' => $CONFIG['TWITTER']['ACCESS_TOKEN_SECRET'],
+		],
 	]
 ];
