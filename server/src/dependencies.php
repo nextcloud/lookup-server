@@ -9,7 +9,7 @@ $container['db'] = function($c) {
 	return $pdo;
 };
 $container['UserManager'] = function($c) {
-	return new \LookupServer\UserManager($c->db, $c->EmailValidator, $c->WebsiteValidator, $c->TwitterValidator, $c->SignatureHandler);
+	return new \LookupServer\UserManager($c->db, $c->EmailValidator, $c->WebsiteValidator, $c->TwitterValidator, $c->SignatureHandler, $c['settings']['global_scale']);
 };
 $container['SignatureHandler'] = function($c) {
 	return new \LookupServer\SignatureHandler();

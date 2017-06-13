@@ -53,6 +53,9 @@ $CONFIG = [
 	// Public Server Url
 	'PUBLIC_URL' => 'http://dev/nextcloud/lookup-server',
 
+	// does the lookup server run in a global scale setup
+	'GLOBAL_SCALE' => false,
+
     // twitter oauth credentials, needed to perform twitter verification
 	'TWITTER' => [
 		'CONSUMER_KEY' => '',

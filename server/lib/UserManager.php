@@ -28,6 +28,9 @@ class UserManager {
 	/** @var int try max. 10 times to verify a account */
 	private $maxVerifyTries = 10;
 
+	/** @var  bool */
+	private $globalScaleMode;
+
 	/**
 	 * UserManager constructor.
 	 *
@@ -36,17 +39,20 @@ class UserManager {
 	 * @param Website $websiteValidator
 	 * @param Twitter $twitterValidator
 	 * @param SignatureHandler $signatureHandler
+	 * @param bool globalScaleMode
 	 */
 	public function __construct(\PDO $db,
 								Email $emailValidator,
 								Website $websiteValidator,
 								Twitter $twitterValidator,
-								SignatureHandler $signatureHandler) {
+								SignatureHandler $signatureHandler,
+								$globalScaleMode) {
 		$this->db = $db;
 		$this->emailValidator = $emailValidator;
 		$this->websiteValidator = $websiteValidator;
 		$this->twitterValidator = $twitterValidator;
 		$this->signatureHandler = $signatureHandler;
+		$this->globalScaleMode = $globalScaleMode;
 	}
 
 	public function search(Request $request, Response $response) {
@@ -66,6 +72,24 @@ class UserManager {
 			return $response;
 		}
 
+		if ($this->globalScaleMode === true) {
+			// in a global scale setup we ignore the karma
+			$users = $this->searchNoKarma();
+		} else {
+			$users = $this->searchKarma();
+		}
+
+		$response->getBody()->write(json_encode($users));
+		return $response;
+	}
+
+	/**
+	 * return all results with karma >= 1
+	 *
+	 * @param $search
+	 * @return array
+	 */
+	private function searchKarma($search) {
 		$stmt = $this->db->prepare('SELECT *
 FROM (
 	SELECT userId AS userId, SUM(valid) AS karma
@@ -94,8 +118,41 @@ LIMIT 50');
 		}
 		$stmt->closeCursor();
 
-		$response->getBody()->write(json_encode($users));
-		return $response;
+		return $users;
+	}
+
+
+	/**
+	 * return all results, ignoring the karma
+	 *
+	 * @param $search
+	 * @return array
+	 */
+	private function searchNoKarma($search) {
+		$stmt = $this->db->prepare('SELECT *
+FROM `store`
+	WHERE userId IN (
+		SELECT DISTINCT userId
+		FROM `store`
+		WHERE v LIKE :search
+	)
+	GROUP BY userId
+    LIMIT 50');
+		$search = '%' . $search . '%';
+		$stmt->bindParam(':search', $search, \PDO::PARAM_STR);
+		$stmt->execute();
+
+		/*
+		 * TODO: Better fuzzy search?
+		 */
+
+		$users = [];
+		while($data = $stmt->fetch()) {
+			$users[] = $this->getForUserId((int)$data['userId']);
+		}
+		$stmt->closeCursor();
+
+		return $users;
 	}
 
 	private function getExactCloudId($cloudId) {
