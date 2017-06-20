@@ -64,16 +64,17 @@ class UserManager {
 		}
 
 		$search = $params['search'];
-		$searchCloudId = $params['exactCloudId'];
+		$searchCloudId = isset($params['exactCloudId']) ? $params['exactCloudId'] : '0';
+		$gssSearch = isset($params['gss']) ? $params['gss'] : '0';
 
 		if ($searchCloudId === '1') {
-			$user = $this->getExactCloudId($search);
-			$response->getBody()->write(json_encode($user));
-			return $response;
-		}
-
-		if ($this->globalScaleMode === true) {
+			$users = $this->getExactCloudId($search);
+		} else if ($gssSearch === '1') {
+			 // lookup request from a global site selector to login the user
+			$users = $this->gssLookup($search);
+		} else if ($this->globalScaleMode === true) {
 			// in a global scale setup we ignore the karma
+			// this is used to find people you want to share with
 			$users = $this->searchNoKarma();
 		} else {
 			$users = $this->searchKarma();
@@ -84,6 +85,7 @@ class UserManager {
 	}
 
 	/**
+	 * search user, for example to share with them
 	 * return all results with karma >= 1
 	 *
 	 * @param $search
@@ -123,7 +125,10 @@ LIMIT 50');
 
 
 	/**
+	 * search user, for example to share with them
 	 * return all results, ignoring the karma
+	 * in a global scale setup we assume that all
+	 * entries are trustworthy
 	 *
 	 * @param $search
 	 * @return array
@@ -154,6 +159,31 @@ FROM `store`
 
 		return $users;
 	}
+
+	/**
+	 * find the user who want to login in a global scale setup
+	 * we return the first exact match
+	 *
+	 * @param $search
+	 * @return array
+	 */
+	private function gssLookup($search) {
+		$stmt = $this->db->prepare('SELECT * FROM `store` WHERE v = :search LIMIT 1');
+		$stmt->bindParam(':search', $search, \PDO::PARAM_STR);
+		$stmt->execute();
+
+		$data = $stmt->fetch();
+		$stmt->closeCursor();
+
+		$user = [];
+
+		if (isset($data['userId'])) {
+			$user = $this->getForUserId((int)$data['userId']);
+		}
+
+		return $user;
+	}
+
 
 	private function getExactCloudId($cloudId) {
 		$stmt = $this->db->prepare('SELECT id FROM users WHERE federationId = :id');
