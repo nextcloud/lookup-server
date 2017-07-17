@@ -64,32 +64,62 @@ class UserManager {
 		}
 
 		$search = $params['search'];
-		$searchCloudId = $params['exactCloudId'];
+		// search for a specific federated cloud ID
+		$searchCloudId = isset($params['exactCloudId']) ? $params['exactCloudId'] === '1' : '0';
+		// return unique exact match, e.g. the user with a specific email address
+		$exactMatch = isset($params['exact']) ? $params['exact'] === '1' : false;
 
-		if ($searchCloudId === '1') {
-			$user = $this->getExactCloudId($search);
-			$response->getBody()->write(json_encode($user));
-			return $response;
+		// parameters allow you to specify which keys should be checked for a search query
+		// by default we check all keys, this way you can for example search for email addresses only
+		$parameters = [];
+		if ($exactMatch === true) {
+			$keys = isset($params['keys']) ? $params['keys'] : '{}';
+			$keysDecoded = json_decode($keys, false, 2);
+			if (is_array($keysDecoded)) {
+				$parameters = $keysDecoded;
+			}
 		}
 
-		if ($this->globalScaleMode === true) {
+		if ($searchCloudId === true) {
+			$users = $this->getExactCloudId($search);
+		} else if ($this->globalScaleMode === true) {
 			// in a global scale setup we ignore the karma
-			$users = $this->searchNoKarma();
+			// the lookup server is populated by the admin and we know
+			// that it contain only valid user information
+			$users = $this->performSearch($search, $exactMatch, $parameters, 0);
 		} else {
-			$users = $this->searchKarma();
+			// in a general setup we only return users who validated at least one personal date
+			$users = $this->performSearch($search, $exactMatch, $parameters, 1);
+		}
+
+		// if we look for a exact match we return only this one result, not a list of one element
+		if($exactMatch && !empty($users)) {
+			$users = $users[0];
 		}
 
 		$response->getBody()->write(json_encode($users));
 		return $response;
 	}
 
+
+
 	/**
+	 * search user, for example to share with them
 	 * return all results with karma >= 1
 	 *
-	 * @param $search
+	 * @param string $search
+	 * @param bool $exactMatch
+	 * @param array $parameters
+	 * @param int $minKarma
 	 * @return array
 	 */
-	private function searchKarma($search) {
+	private function performSearch($search, $exactMatch, $parameters, $minKarma) {
+
+		$operator = $exactMatch ? ' = ' : ' LIKE ';
+		$limit = $exactMatch ? ' 1 ' : ' 50 ';
+		$constraint = empty($parameters) ? '' : ' AND k IN (\'' . implode( '\', \'', $parameters ) . '\') ';
+
+
 		$stmt = $this->db->prepare('SELECT *
 FROM (
 	SELECT userId AS userId, SUM(valid) AS karma
@@ -97,15 +127,17 @@ FROM (
 	WHERE userId IN (
 		SELECT DISTINCT userId
 		FROM `store`
-		WHERE v LIKE :search
+		WHERE v ' . $operator . ' :search ' . $constraint .'
 	)
 	GROUP BY userId
 ) AS tmp
-WHERE karma > 0
+WHERE karma >= ' . $minKarma . '
 ORDER BY karma
-LIMIT 50');
-		$search = '%' . $search . '%';
+LIMIT ' . $limit);
+
+		$search = $exactMatch ? $search : '%' . $search . '%';
 		$stmt->bindParam(':search', $search, \PDO::PARAM_STR);
+
 		$stmt->execute();
 
 		/*
@@ -121,39 +153,6 @@ LIMIT 50');
 		return $users;
 	}
 
-
-	/**
-	 * return all results, ignoring the karma
-	 *
-	 * @param $search
-	 * @return array
-	 */
-	private function searchNoKarma($search) {
-		$stmt = $this->db->prepare('SELECT *
-FROM `store`
-	WHERE userId IN (
-		SELECT DISTINCT userId
-		FROM `store`
-		WHERE v LIKE :search
-	)
-	GROUP BY userId
-    LIMIT 50');
-		$search = '%' . $search . '%';
-		$stmt->bindParam(':search', $search, \PDO::PARAM_STR);
-		$stmt->execute();
-
-		/*
-		 * TODO: Better fuzzy search?
-		 */
-
-		$users = [];
-		while($data = $stmt->fetch()) {
-			$users[] = $this->getForUserId((int)$data['userId']);
-		}
-		$stmt->closeCursor();
-
-		return $users;
-	}
 
 	private function getExactCloudId($cloudId) {
 		$stmt = $this->db->prepare('SELECT id FROM users WHERE federationId = :id');

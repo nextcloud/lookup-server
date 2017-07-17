@@ -113,6 +113,15 @@ This call can be used to search for a user in a fuzzy way
 Example:
 curl -X GET http://dev/nextcloud/lookup-server/server/users?search=searchstring
 
+Add a additional parameter to search for an exact match, for example:
+curl -X GET http://dev/nextcloud/lookup-server/server/users?search=searchstring&exact=1
+
+If you want to limit the exact search to a specific parameter, e.g the email address you can do following:
+curl -X GET http://dev/nextcloud/lookup-server/server/users?search=searchstring&exact=1&keys=["email"]
+
+To get the verification result of a users Twitter account or email address we can search for a specific users cloud ID:
+curl -X GET http://dev/nextcloud/lookup-server/server/users?search=<federated-cloud-id>&exactCloudId=1
+
 ### Get replication log
 This call is used for master-master replication between different nodes.
 Example:
