@@ -56,6 +56,9 @@ $CONFIG = [
 	// does the lookup server run in a global scale setup
 	'GLOBAL_SCALE' => false,
 
+	// auth token
+	'AUTH_KEY' => 'secure key, same as the jwt key used on the global site selector and all clients',
+
     // twitter oauth credentials, needed to perform twitter verification
 	'TWITTER' => [
 		'CONSUMER_KEY' => '',
