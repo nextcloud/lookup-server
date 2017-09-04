@@ -31,6 +31,9 @@ class UserManager {
 	/** @var  bool */
 	private $globalScaleMode;
 
+	/** @var string */
+	private $authKey;
+
 	/**
 	 * UserManager constructor.
 	 *
@@ -39,20 +42,23 @@ class UserManager {
 	 * @param Website $websiteValidator
 	 * @param Twitter $twitterValidator
 	 * @param SignatureHandler $signatureHandler
-	 * @param bool globalScaleMode
+	 * @param bool $globalScaleMode
+	 * @param string $authKey
 	 */
 	public function __construct(\PDO $db,
 								Email $emailValidator,
 								Website $websiteValidator,
 								Twitter $twitterValidator,
 								SignatureHandler $signatureHandler,
-								$globalScaleMode) {
+								$globalScaleMode,
+								$authKey) {
 		$this->db = $db;
 		$this->emailValidator = $emailValidator;
 		$this->websiteValidator = $websiteValidator;
 		$this->twitterValidator = $twitterValidator;
 		$this->signatureHandler = $signatureHandler;
 		$this->globalScaleMode = $globalScaleMode;
+		$this->authKey = $authKey;
 	}
 
 	public function search(Request $request, Response $response) {
@@ -226,7 +232,7 @@ LIMIT ' . $limit);
 			$storeId = $this->db->lastInsertId();
 			$stmt->closeCursor();
 
-			if ($field === 'email') {
+			if ($field === 'email' && $this->globalScaleMode === false) {
 				$this->emailValidator->emailUpdated($data[$field], $storeId);
 			}
 		}
@@ -276,7 +282,7 @@ LIMIT ' . $limit);
 				$stmt->bindParam(':v', $data[$key]);
 				$stmt->execute();
 				$stmt->closeCursor();
-				if ($key === 'email') {
+				if ($key === 'email' && $this->globalScaleMode === false) {
 					$this->emailValidator->emailUpdated($data[$key], $row['id']);
 				}
 				// remove verification request from old data
@@ -355,6 +361,35 @@ LIMIT ' . $limit);
 		}
 
 		return $response;
+	}
+
+	/**
+	 * let server auto register users, used in the global scale scenario
+	 *
+	 * @param Request $request
+	 * @param Response $response
+	 * @return Response
+	 */
+	public function batchRegister(Request $request, Response $response) {
+
+		$body = json_decode($request->getBody(), true);
+
+		if ($body === null || !isset($body['authKey']) || !isset($body['users'])) {
+			$response->withStatus(400);
+			return $response;
+		}
+
+		if ($body['authKey'] !== $this->authKey) {
+			$response->withStatus(400);
+			return $response;
+		}
+
+		foreach ($body['users'] as $cloudId => $data) {
+			$this->insertOrUpdate($cloudId, $data, time());
+		}
+
+		return $response;
+
 	}
 
 	public function delete(Request $request, Response $response) {

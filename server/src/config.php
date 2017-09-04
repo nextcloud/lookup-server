@@ -17,6 +17,7 @@ return [
 		'replication_auth' => $CONFIG['REPLICATION_AUTH'],
 		'replication_hosts' => $CONFIG['REPLICATION_HOSTS'],
 		'global_scale' => $CONFIG['GLOBAL_SCALE'],
+		'auth_key' => $CONFIG['AUTH_KEY'],
 		'twitter' => [
 			'consumer_key' => $CONFIG['TWITTER']['CONSUMER_KEY'],
 			'consumer_secret' => $CONFIG['TWITTER']['CONSUMER_SECRET'],
