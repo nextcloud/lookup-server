@@ -364,7 +364,7 @@ LIMIT ' . $limit);
 	}
 
 	/**
-	 * let server auto register users, used in the global scale scenario
+	 * let Nextcloud servers auto register users, used in the global scale scenario
 	 *
 	 * @param Request $request
 	 * @param Response $response
@@ -380,7 +380,7 @@ LIMIT ' . $limit);
 		}
 
 		if ($body['authKey'] !== $this->authKey) {
-			$response->withStatus(400);
+			$response->withStatus(403);
 			return $response;
 		}
 
@@ -391,6 +391,36 @@ LIMIT ' . $limit);
 		return $response;
 
 	}
+
+	/**
+	 * let Nextcloud servers remove users from the lookup server, used in the global scale scenario
+	 *
+	 * @param Request $request
+	 * @param Response $response
+	 * @return Response
+	 */
+	public function batchDelete(Request $request, Response $response) {
+
+		$body = json_decode($request->getBody(), true);
+
+		if ($body === null || !isset($body['authKey']) || !isset($body['users'])) {
+			$response->withStatus(400);
+			return $response;
+		}
+
+		if ($body['authKey'] !== $this->authKey) {
+			$response->withStatus(403);
+			return $response;
+		}
+
+		foreach ($body['users'] as $cloudId) {
+			$this->deleteDBRecord($cloudId);
+		}
+
+		return $response;
+
+	}
+
 
 	public function delete(Request $request, Response $response) {
 		$body = json_decode($request->getBody(), true);

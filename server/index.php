@@ -19,6 +19,7 @@ $app->add($container->get('BruteForceMiddleware'));
 $app->get('/users', 'UserManager:search');
 $app->post('/users', 'UserManager:register');
 $app->post('/gs/users', 'UserManager:batchRegister');
+$app->delete('/gs/users', 'UserManager:batchDelete');
 $app->delete('/users', 'UserManager:delete');
 $app->get('/validate/email/{token}', 'EmailValidator:validate')->setName('validateEmail');
 $app->get('/status', 'Status:status');
