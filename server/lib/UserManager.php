@@ -217,7 +217,7 @@ LIMIT ' . $limit);
 		$id = $this->db->lastInsertId();
 		$stmt->closeCursor();
 
-		$fields = ['name', 'email', 'address', 'website', 'twitter', 'phone', 'twitter_signature', 'website_signature'];
+		$fields = ['name', 'email', 'address', 'website', 'twitter', 'phone', 'twitter_signature', 'website_signature', 'userid'];
 
 		foreach ($fields as $field) {
 			if (!isset($data[$field]) || $data[$field] === '') {
@@ -249,7 +249,7 @@ LIMIT ' . $limit);
 		$stmt->bindParam(':timestamp', $timestamp, \PDO::PARAM_INT);
 		$stmt->execute();
 		$stmt->closeCursor();
-		$fields = ['name', 'email', 'address', 'website', 'twitter', 'phone', 'twitter_signature', 'website_signature'];
+		$fields = ['name', 'email', 'address', 'website', 'twitter', 'phone', 'twitter_signature', 'website_signature', 'userid'];
 
 		$stmt = $this->db->prepare('SELECT * FROM store WHERE userId = :userId');
 		$stmt->bindParam(':userId', $id, \PDO::PARAM_INT);
