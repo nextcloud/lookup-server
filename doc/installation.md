@@ -12,7 +12,7 @@
 * Create a lookup MySQL database. Use the mysql.dmp for that.
 * Create a config.php file and adapt the settings. config.sample.php can be used as a template.
 * Make sure the config folder is not accessible from the internet by configuring Apache to respect the .htaccess
-* Add a cronjob that calls cronjob.php every few minutes. Recommended is 10min
+* Add a cronjob that calls replicationcron.php every few minutes. Recommended is 10min
 * Configure an automatic backup of the mysql database and the vhost folder.
 * Test the installation by executing the example curl commands listed in the architecture.md file.
 
