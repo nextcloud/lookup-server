@@ -306,7 +306,7 @@ LIMIT ' . $limit);
 			$storeId = $this->db->lastInsertId();
 			$stmt->closeCursor();
 
-			if ($field === 'email') {
+			if ($field === 'email' && $this->globalScaleMode === false) {
 				$this->emailValidator->emailUpdated($data[$field], $storeId);
 			}
 		}
