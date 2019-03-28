@@ -61,6 +61,13 @@ class UserManager {
 		$this->authKey = $authKey;
 	}
 
+	private function escapeWildcard(string $input): string {
+		//Escape %
+		$output = str_replace('%', '\%', $input);
+		$output = str_replace('_', '\_', $output);
+		return $output;
+	}
+
 	public function search(Request $request, Response $response) {
 		$params = $request->getQueryParams();
 
@@ -141,7 +148,7 @@ WHERE karma >= ' . $minKarma . '
 ORDER BY karma
 LIMIT ' . $limit);
 
-		$search = $exactMatch ? $search : '%' . $search . '%';
+		$search = $exactMatch ? $search : $this->db->quote('%' . $this->escapeWildcard($search) . '%');
 		$stmt->bindParam(':search', $search, \PDO::PARAM_STR);
 
 		$stmt->execute();
