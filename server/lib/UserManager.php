@@ -130,8 +130,19 @@ class UserManager {
 
 		$operator = $exactMatch ? ' = ' : ' LIKE ';
 		$limit = $exactMatch ? ' 1 ' : ' 50 ';
-		$constraint = empty($parameters) ? '' : ' AND k IN (\'' . implode( '\', \'', $parameters ) . '\') ';
 
+		$constraint = '';
+		if (!empty($parameters)) {
+			$constraint = 'AND (';
+			$c = count($parameters);
+			for ($i = 0; $i < $c; $i++) {
+				if ($i !== 0) {
+					$constraint .= ' OR ';
+				}
+				$constraint .= '(k = :key' . $i . ')';
+			}
+			$constraint .= ')';
+		}
 
 		$stmt = $this->db->prepare('SELECT *
 FROM (
@@ -150,6 +161,12 @@ LIMIT ' . $limit);
 
 		$search = $exactMatch ? $search : $this->db->quote('%' . $this->escapeWildcard($search) . '%');
 		$stmt->bindParam(':search', $search, \PDO::PARAM_STR);
+
+		// bind parameters
+		foreach ($parameters as $parameter) {
+			$i = 0;
+			$stmt->bindParam(':key'.$i, $this->db->quote($parameter));
+		}
 
 		$stmt->execute();
 
