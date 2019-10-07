@@ -127,9 +127,8 @@ class UserManager {
 	 * @return array
 	 */
 	private function performSearch($search, $exactMatch, $parameters, $minKarma) {
-
 		$operator = $exactMatch ? ' = ' : ' LIKE ';
-		$limit = $exactMatch ? ' 1 ' : ' 50 ';
+		$limit = $exactMatch ? 1 : 50;
 
 		$constraint = '';
 		if (!empty($parameters)) {
@@ -155,12 +154,15 @@ FROM (
 	)
 	GROUP BY userId
 ) AS tmp
-WHERE karma >= ' . $minKarma . '
+WHERE karma >= :karma
 ORDER BY karma
-LIMIT ' . $limit);
+LIMIT :limit');
 
-		$search = $exactMatch ? $search : $this->db->quote('%' . $this->escapeWildcard($search) . '%');
-		$stmt->bindParam(':search', $search, \PDO::PARAM_STR);
+		$stmt->bindParam(':karma', $minKarma, \PDO::PARAM_INT);
+		$stmt->bindParam(':limit', $limit, \PDO::PARAM_INT);
+
+		$search = $exactMatch ? $search : '%' . $this->escapeWildcard($search) . '%';
+		$stmt->bindParam('search', $search, \PDO::PARAM_STR);
 
 		// bind parameters
 		foreach ($parameters as $parameter) {
