@@ -258,7 +258,7 @@ LIMIT :limit');
 			$storeId = $this->db->lastInsertId();
 			$stmt->closeCursor();
 
-			if ($field === 'email' && $this->globalScaleMode === false) {
+			if ($field === 'email') {
 				$this->emailValidator->emailUpdated($data[$field], $storeId);
 			}
 		}
@@ -308,7 +308,7 @@ LIMIT :limit');
 				$stmt->bindParam(':v', $data[$key]);
 				$stmt->execute();
 				$stmt->closeCursor();
-				if ($key === 'email' && $this->globalScaleMode === false) {
+				if ($key === 'email') {
 					$this->emailValidator->emailUpdated($data[$key], $row['id']);
 				}
 				// remove verification request from old data
