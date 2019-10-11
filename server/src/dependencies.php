@@ -29,7 +29,8 @@ $container['EmailValidator'] = function($c) {
 		$c->db,
 		$c->router,
 		$c->settings['host'],
-		$c->settings['emailfrom']
+		$c->settings['emailfrom'],
+		$c['settings']['global_scale']
 	);
 };
 $container['WebsiteValidator'] = function($c) {

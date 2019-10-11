@@ -19,22 +19,27 @@ class Email {
 	/** @var string */
 	private $from;
 
+	/** @var bool */
+	private $globalScale;
+
 	/**
 	 * Email constructor.
 	 * @param \PDO $db
 	 * @param \Slim\Interfaces\RouterInterface $router
 	 * @param string $host
 	 * @param string $from
+	 * @param bool $globalScale
 	 */
 	public function __construct(\PDO $db,
 								\Slim\Interfaces\RouterInterface $router,
 								$host,
-								$from) {
+								$from,
+								$globalScale) {
 		$this->db = $db;
 		$this->router = $router;
 		$this->host = $host;
 		$this->from = $from;
-
+		$this->globalScale = $globalScale;
 	}
 
 	public function validate(Request $request, Response $response) {
@@ -69,6 +74,11 @@ class Email {
 	}
 
 	public function emailUpdated($email, $storeId) {
+		if ($this->globalScale) {
+			// When in global scale mode we should not send e-mails
+			return;
+		}
+
 		// Delete old tokens
 		$stmt = $this->db->prepare('DELETE FROM emailValidation WHERE storeId = :storeId');
 		$stmt->bindParam(':storeId', $storeId);
