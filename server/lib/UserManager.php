@@ -72,8 +72,7 @@ class UserManager {
 		$params = $request->getQueryParams();
 
 		if (!isset($params['search']) || $params['search'] === '') {
-			$response->withStatus(404);
-			return $response;
+			return $response->withStatus(404);
 		}
 
 		$search = $params['search'];
@@ -363,8 +362,7 @@ LIMIT :limit');
 		if ($body === null || !isset($body['message']) || !isset($body['message']['data']) ||
 			!isset($body['message']['data']['federationId']) || !isset($body['signature']) ||
 			!isset($body['message']['timestamp'])) {
-			$response->withStatus(400);
-			return $response;
+			return $response->withStatus(400);
 		}
 
 		$cloudId = $body['message']['data']['federationId'];
@@ -372,18 +370,17 @@ LIMIT :limit');
 		try {
 			$verified = $this->signatureHandler->verify($cloudId, $body['message'], $body['signature']);
 		}  catch(\Exception $e) {
-			$response->withStatus(400);
-			return $response;
+			return $response->withStatus(400);
 		}
 
 		if ($verified) {
 			$result = $this->insertOrUpdate($cloudId, $body['message']['data'], $body['message']['timestamp']);
 			if ($result === false) {
-				$response->withStatus(403);
+				$response = $response->withStatus(403);
 			}
 		} else {
 			// ERROR OUT
-			$response->withStatus(403);
+			$response = $response->withStatus(403);
 		}
 
 		return $response;
@@ -401,13 +398,11 @@ LIMIT :limit');
 		$body = json_decode($request->getBody(), true);
 
 		if ($body === null || !isset($body['authKey']) || !isset($body['users'])) {
-			$response->withStatus(400);
-			return $response;
+			return $response->withStatus(400);
 		}
 
 		if ($body['authKey'] !== $this->authKey) {
-			$response->withStatus(403);
-			return $response;
+			return $$response->withStatus(403);
 		}
 
 		foreach ($body['users'] as $cloudId => $data) {
@@ -430,13 +425,11 @@ LIMIT :limit');
 		$body = json_decode($request->getBody(), true);
 
 		if ($body === null || !isset($body['authKey']) || !isset($body['users'])) {
-			$response->withStatus(400);
-			return $response;
+			return $response->withStatus(400);
 		}
 
 		if ($body['authKey'] !== $this->authKey) {
-			$response->withStatus(403);
-			return $response;
+			return $response->withStatus(403);
 		}
 
 		foreach ($body['users'] as $cloudId) {
@@ -454,8 +447,7 @@ LIMIT :limit');
 		if ($body === null || !isset($body['message']) || !isset($body['message']['data']) ||
 			!isset($body['message']['data']['federationId']) || !isset($body['signature']) ||
 			!isset($body['message']['timestamp'])) {
-			$response->withStatus(400);
-			return $response;
+			return $response->withStatus(400);
 		}
 
 		$cloudId = $body['message']['data']['federationId'];
@@ -463,19 +455,18 @@ LIMIT :limit');
 		try {
 			$verified = $this->signatureHandler->verify($cloudId, $body['message'], $body['signature']);
 		}  catch(\Exception $e) {
-			$response->withStatus(400);
-			return $response;
+			return $response->withStatus(400);
 		}
 
 
 		if ($verified) {
 			$result = $this->deleteDBRecord($cloudId);
 			if ($result === false) {
-				$response->withStatus(404);
+				$response = $response->withStatus(404);
 			}
 		} else {
 			// ERROR OUT
-			$response->withStatus(403);
+			$response = $response->withStatus(403);
 		}
 
 		return $response;
