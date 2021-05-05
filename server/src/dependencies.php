@@ -9,10 +9,13 @@ $container['db'] = function($c) {
 	return $pdo;
 };
 $container['UserManager'] = function($c) {
-	return new \LookupServer\UserManager($c->db, $c->EmailValidator, $c->WebsiteValidator, $c->TwitterValidator, $c->SignatureHandler, $c['settings']['global_scale'], $c['settings']['auth_key']);
+	return new \LookupServer\UserManager($c->db, $c->EmailValidator, $c->WebsiteValidator, $c->TwitterValidator, $c->InstanceManager, $c->SignatureHandler, $c['settings']['global_scale'], $c['settings']['auth_key']);
 };
 $container['SignatureHandler'] = function($c) {
 	return new \LookupServer\SignatureHandler();
+};
+$container['InstanceManager'] = function($c) {
+	return new \LookupServer\InstanceManager($c->db, $c->SignatureHandler, $c['settings']['global_scale'], $c['settings']['auth_key']);
 };
 $container['TwitterOAuth'] = function($c) {
 	$twitterConf = $c['settings']['twitter'];
@@ -45,3 +48,4 @@ $container['Status'] = function($c) {
 $container['Replication'] = function ($c) {
 	return new \LookupServer\Replication($c->db, $c->settings['replication_auth'], $c->settings['replication_hosts']);
 };
+

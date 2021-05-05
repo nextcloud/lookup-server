@@ -23,6 +23,8 @@
 namespace LookupServer;
 
 use GuzzleHttp\Client;
+use LookupServer\Exceptions\SignedRequestException;
+use Psr\Http\Message\ServerRequestInterface as Request;
 
 class SignatureHandler {
 
@@ -82,6 +84,35 @@ class SignatureHandler {
 		$user = substr($cloudId, 0, $loc);
 		$host = substr($cloudId, $loc+1);
 		return [$user, $host];
+	}
+
+
+	/**
+	 * @param Request $request
+	 *
+	 * @throws SignedRequestException
+	 */
+	public function verifyRequest(Request $request) {
+		$body = json_decode($request->getBody(), true);
+		if ($body === null || !isset($body['message']) || !isset($body['message']['data']) ||
+			!isset($body['message']['data']['federationId']) || !isset($body['signature']) ||
+			!isset($body['message']['timestamp'])) {
+			throw new SignedRequestException();
+		}
+
+		$cloudId = $body['message']['data']['federationId'];
+
+		try {
+			$verified = $this->verify($cloudId, $body['message'], $body['signature']);
+			if ($verified) {
+				list(, $host) = $this->splitCloudId($body['message']['data']['federationId']);
+
+				return $host;
+			}
+		} catch (\Exception $e) {
+		}
+
+		throw new SignedRequestException();
 	}
 
 
