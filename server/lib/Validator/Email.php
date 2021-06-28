@@ -54,7 +54,7 @@ class Email {
 		$stmt->closeCursor();
 
 		if ($validation === false) {
-			$response->withStatus(403);
+			$response = $response->withStatus(403);
 			$response->getBody()->write('Invalid token');
 		} else {
 			$stmt = $this->db->prepare('UPDATE store SET valid = 1 WHERE id = :storeId');
