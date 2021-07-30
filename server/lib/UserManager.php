@@ -221,7 +221,7 @@ LIMIT :limit');
 		}
 
 		$result = [
-			'federationId' => $data['federationId']
+			'federationId' => $this->instanceManager->convertFederatedId($data['federationId'])
 		];
 
 		$stmt = $this->db->prepare('SELECT * FROM store WHERE userId = :id');

@@ -23,6 +23,9 @@ class InstanceManager {
 	/** @var string */
 	private $authKey = '';
 
+	/** @var array */
+	private $instanceAliases = [];
+
 
 	/**
 	 * InstanceManager constructor.
@@ -31,17 +34,20 @@ class InstanceManager {
 	 * @param SignatureHandler $signatureHandler
 	 * @param bool $globalScaleMode
 	 * @param string $authKey
+	 * @param array $instancesAlias
 	 */
 	public function __construct(
 		PDO $db,
 		SignatureHandler $signatureHandler,
 		bool $globalScaleMode,
-		string $authKey
+		string $authKey,
+		array $instanceAliases
 	) {
 		$this->db = $db;
 		$this->signatureHandler = $signatureHandler;
 		$this->globalScaleMode = $globalScaleMode;
 		$this->authKey = $authKey;
+		$this->instanceAliases = $instanceAliases;
 	}
 
 
@@ -99,8 +105,13 @@ class InstanceManager {
 			$instances = $this->getAll();
 		}
 
+		$converted = [];
+		foreach ($instances as $instance) {
+			$converted[] = $this->convertToInternal($instance);
+		}
+
 		$response->getBody()
-				 ->write(json_encode($instances));
+				 ->write(json_encode($converted));
 
 		return $response;
 	}
@@ -255,5 +266,32 @@ class InstanceManager {
 		}
 	}
 
-}
 
+	/**
+	 * @param string $federatedId
+	 *
+	 * @return string
+	 */
+	public function convertFederatedId(string $federatedId): string {
+		$pos = strrpos($federatedId, '@');
+		$userId = substr($federatedId, 0, $pos);
+		$instance = $this->convertToInternal(substr($federatedId, $pos + 1));
+
+		return $userId . '@' . $instance;
+	}
+
+
+	/**
+	 * @param string $instance
+	 *
+	 * @return string
+	 */
+	public function convertToInternal(string $instance): string {
+		$lowered = strtolower($instance);
+		if (array_key_exists($lowered, $this->instanceAliases)) {
+			return $this->instanceAliases[$lowered];
+		}
+
+		return $instance;
+	}
+}

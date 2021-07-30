@@ -24,5 +24,9 @@ return [
 			'access_token' => $CONFIG['TWITTER']['ACCESS_TOKEN'],
 			'access_token_secret' => $CONFIG['TWITTER']['ACCESS_TOKEN_SECRET'],
 		],
-	]
+		'instance_aliases' => [
+			'i01.example.net' => '192.168.1.101',
+			'i02.example.net' => '192.168.1.102'
+		]
+	],
 ];
