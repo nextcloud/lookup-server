@@ -183,8 +183,11 @@ LIMIT :limit');
 		 */
 
 		$users = [];
-		while($data = $stmt->fetch()) {
-			$users[] = $this->getForUserId((int)$data['userId']);
+		while ($data = $stmt->fetch()) {
+			$entry = $this->getForUserId((int)$data['userId']);
+			if (!empty($entry)) {
+				$users[] = $entry;
+			}
 		}
 		$stmt->closeCursor();
 
