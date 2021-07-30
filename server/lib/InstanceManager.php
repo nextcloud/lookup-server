@@ -131,7 +131,8 @@ class InstanceManager {
 		$stmt->execute();
 		$instances = [];
 		while ($data = $stmt->fetch()) {
-			list(, $instance) = explode('@', $data['federationId'], 2);
+			$pos = strrpos($data['federationId'], '@');
+			$instance = substr($data['federationId'], $pos + 1);
 			if (!in_array($instance, $instances)) {
 				$instances[] = $instance;
 			}
