@@ -272,7 +272,11 @@ class InstanceManager {
 	 *
 	 * @return string
 	 */
-	public function convertFederatedId(string $federatedId): string {
+	public function convertFederatedId(string $federatedId, bool $frontal = false): string {
+		if ($frontal) {
+			return $federatedId;
+		}
+
 		$pos = strrpos($federatedId, '@');
 		$userId = substr($federatedId, 0, $pos);
 		$instance = $this->convertToInternal(substr($federatedId, $pos + 1));

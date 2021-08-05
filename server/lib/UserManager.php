@@ -82,6 +82,8 @@ class UserManager {
 			return $response;
 		}
 
+		$frontal = (array_key_exists('frontal', $params) && $params['frontal'] === '1');
+
 		$search = $params['search'];
 		// search for a specific federated cloud ID
 		$searchCloudId = isset($params['exactCloudId']) ? $params['exactCloudId'] === '1' : '0';
@@ -100,15 +102,15 @@ class UserManager {
 		}
 
 		if ($searchCloudId === true) {
-			$users = $this->getExactCloudId($search);
+			$users = $this->getExactCloudId($search, $frontal);
 		} else if ($this->globalScaleMode === true) {
 			// in a global scale setup we ignore the karma
 			// the lookup server is populated by the admin and we know
 			// that it contain only valid user information
-			$users = $this->performSearch($search, $exactMatch, $parameters, 0);
+			$users = $this->performSearch($search, $exactMatch, $parameters, 0, $frontal);
 		} else {
 			// in a general setup we only return users who validated at least one personal date
-			$users = $this->performSearch($search, $exactMatch, $parameters, 1);
+			$users = $this->performSearch($search, $exactMatch, $parameters, 1, $frontal);
 		}
 
 		// if we look for a exact match we return only this one result, not a list of one element
@@ -132,7 +134,7 @@ class UserManager {
 	 * @param int $minKarma
 	 * @return array
 	 */
-	private function performSearch($search, $exactMatch, $parameters, $minKarma) {
+	private function performSearch($search, $exactMatch, $parameters, $minKarma, bool $frontal = false) {
 		$operator = $exactMatch ? ' = ' : ' LIKE ';
 		$limit = $exactMatch ? 1 : 50;
 
@@ -184,7 +186,7 @@ LIMIT :limit');
 
 		$users = [];
 		while ($data = $stmt->fetch()) {
-			$entry = $this->getForUserId((int)$data['userId']);
+			$entry = $this->getForUserId((int)$data['userId'], $frontal);
 			if (!empty($entry)) {
 				$users[] = $entry;
 			}
@@ -195,7 +197,7 @@ LIMIT :limit');
 	}
 
 
-	private function getExactCloudId($cloudId) {
+	private function getExactCloudId($cloudId, bool $frontal = false) {
 		$stmt = $this->db->prepare('SELECT id FROM users WHERE federationId = :id');
 		$stmt->bindParam(':id', $cloudId);
 		$stmt->execute();
@@ -205,11 +207,10 @@ LIMIT :limit');
 			return [];
 		}
 
-		return $this->getForUserId((int)$data['id']);
-
+		return $this->getForUserId((int)$data['id'], $frontal);
 	}
 
-	private function getForUserId($userId) {
+	private function getForUserId(string $userId, bool $frontal = false) {
 		$stmt = $this->db->prepare('SELECT * FROM users WHERE id = :id');
 		$stmt->bindParam(':id', $userId, \PDO::PARAM_INT);
 		$stmt->execute();
@@ -221,7 +222,7 @@ LIMIT :limit');
 		}
 
 		$result = [
-			'federationId' => $this->instanceManager->convertFederatedId($data['federationId'])
+			'federationId' => $this->instanceManager->convertFederatedId($data['federationId'], $frontal)
 		];
 
 		$stmt = $this->db->prepare('SELECT * FROM store WHERE userId = :id');
