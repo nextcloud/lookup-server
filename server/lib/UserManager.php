@@ -134,37 +134,50 @@ class UserManager {
 	 *
 	 * @return array
 	 */
-	private function performSearch(
-		string $search,
-		bool $exactMatch,
-		array $parameters,
-		int $minKarma
-	): array {
-		$operator = $exactMatch ? ' = ' : ' LIKE ';
-		$limit = $exactMatch ? 1 : 50;
+	private function performSearch($search, $exactMatch, $parameters, $minKarma) {
+                /**
+                 * We assume that we want to check for matches in both userid
+                 * and email. However, if the search string looks like an email
+                 * address, we check if there are multiple accounts with the same
+                 * email address registred. If so, we limit the search to userid.
+                 * We will never search the name keys.
+                 */
+                $searchKeys = 'userid, email';
+                if (preg_match('/@\w?\w+(\.\w+)*$/', $search) === 1) {
+                        $numStmt = $this->db->prepare('SELECT count(*) FROM `store` WHERE v = :search AND k = "email"');
+                        $numStmt->bindParam('search', $search, \PDO::PARAM_STR);
+                        $numStmt->execute();
+                        $numResult = $numStmt->fetch();
+                        $numStmt->closeCursor();
+                        if ($numResult > 1) {
+                                $searchKeys = 'userid';
+                        }
+                }
+                $operator = $exactMatch ? ' = ' : ' LIKE ';
+                $limit = $exactMatch ? 1 : 50;
 
-		$constraint = '';
-		if (!empty($parameters)) {
-			$constraint = 'AND (';
-			$c = count($parameters);
-			for ($i = 0; $i < $c; $i++) {
-				if ($i !== 0) {
-					$constraint .= ' OR ';
-				}
-				$constraint .= '(k = :key' . $i . ')';
-			}
-			$constraint .= ')';
-		}
+                $constraint = '';
+                if (!empty($parameters)) {
+                        $constraint = 'AND (';
+                        $c = count($parameters);
+                        for ($i = 0; $i < $c; $i++) {
+                                if ($i !== 0) {
+                                        $constraint .= ' OR ';
+                                }
+                                $constraint .= '(k = :key' . $i . ')';
+                        }
+                        $constraint .= ')';
+                }
 
-		$stmt = $this->db->prepare(
-			'SELECT *
+                $constraint .' AND k IN ( ' . $searchKeys . ' )';
+		$stmt = $this->db->prepare('SELECT *
 FROM (
 	SELECT userId AS userId, SUM(valid) AS karma
 	FROM `store`
 	WHERE userId IN (
 		SELECT DISTINCT userId
 		FROM `store`
-		WHERE v ' . $operator . ' :search ' . $constraint .' AND k = "userid"
+		WHERE v ' . $operator . ' :search ' . $constraint .'
 	)
 	GROUP BY userId
 ) AS tmp
