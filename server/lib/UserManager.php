@@ -142,15 +142,15 @@ class UserManager {
                  * email address registred. If so, we limit the search to userid.
                  * We will never search the name keys.
                  */
-                $searchKeys = 'userid, email';
+                $searchKeys = ['userid', 'email'];
                 if (preg_match('/@\w?\w+(\.\w+)*$/', $search) === 1) {
-                        $numStmt = $this->db->prepare('SELECT count(*) FROM `store` WHERE v = :search AND k = "email"');
+                        $numStmt = $this->db->prepare('SELECT count(*) as count FROM `store` WHERE v = :search AND k = "email"');
                         $numStmt->bindParam('search', $search, \PDO::PARAM_STR);
                         $numStmt->execute();
-                        $numResult = $numStmt->fetch();
+                        $numResult = (int) $numStmt->fetch()['count'];
                         $numStmt->closeCursor();
                         if ($numResult > 1) {
-                                $searchKeys = 'userid';
+                                $searchKeys = ['userid'];
                         }
                 }
                 $operator = $exactMatch ? ' = ' : ' LIKE ';
@@ -168,8 +168,12 @@ class UserManager {
                         }
                         $constraint .= ')';
                 }
+                $constraint .= ' AND  (';
+                foreach ($searchKeys as $key) {
+                        $constraint .= 'k = "' . $key . '" OR ';
 
-                $constraint .' AND k IN ( ' . $searchKeys . ' )';
+                }
+                $constraint = preg_replace('/" OR $/', '" )', $constraint);
 		$stmt = $this->db->prepare('SELECT *
 FROM (
 	SELECT userId AS userId, SUM(valid) AS karma
