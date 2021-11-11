@@ -135,45 +135,45 @@ class UserManager {
 	 * @return array
 	 */
 	private function performSearch($search, $exactMatch, $parameters, $minKarma) {
-                /**
-                 * We assume that we want to check for matches in both userid
-                 * and email. However, if the search string looks like an email
-                 * address, we check if there are multiple accounts with the same
-                 * email address registred. If so, we limit the search to userid.
-                 * We will never search the name keys.
-                 */
-                $searchKeys = ['userid', 'email'];
-                if (preg_match('/@\w?\w+(\.\w+)*$/', $search) === 1) {
-                        $numStmt = $this->db->prepare('SELECT count(*) as count FROM `store` WHERE v = :search AND k = "email"');
-                        $numStmt->bindParam('search', $search, \PDO::PARAM_STR);
-                        $numStmt->execute();
-                        $numResult = (int) $numStmt->fetch()['count'];
-                        $numStmt->closeCursor();
-                        if ($numResult > 1) {
-                                $searchKeys = ['userid'];
-                        }
-                }
-                $operator = $exactMatch ? ' = ' : ' LIKE ';
-                $limit = $exactMatch ? 1 : 50;
+		/**
+		 * We assume that we want to check for matches in both userid
+		 * and email. However, if the search string looks like an email
+		 * address, we check if there are multiple accounts with the same
+		 * email address registred. If so, we limit the search to userid.
+		 * We will never search the name keys.
+		 */
+		$searchKeys = ['userid', 'email'];
+		if (preg_match('/@\w?\w+(\.\w+)*$/', $search) === 1) {
+			$numStmt = $this->db->prepare('SELECT count(*) as count FROM `store` WHERE v = :search AND k = "email"');
+			$numStmt->bindParam('search', $search, \PDO::PARAM_STR);
+			$numStmt->execute();
+			$numResult = (int) $numStmt->fetch()['count'];
+			$numStmt->closeCursor();
+			if ($numResult > 1) {
+				$searchKeys = ['userid'];
+			}
+		}
+		$operator = $exactMatch ? ' = ' : ' LIKE ';
+		$limit = $exactMatch ? 1 : 50;
 
-                $constraint = '';
-                if (!empty($parameters)) {
-                        $constraint = 'AND (';
-                        $c = count($parameters);
-                        for ($i = 0; $i < $c; $i++) {
-                                if ($i !== 0) {
-                                        $constraint .= ' OR ';
-                                }
-                                $constraint .= '(k = :key' . $i . ')';
-                        }
-                        $constraint .= ')';
-                }
-                $constraint .= ' AND  (';
-                foreach ($searchKeys as $key) {
-                        $constraint .= 'k = "' . $key . '" OR ';
+		$constraint = '';
+		if (!empty($parameters)) {
+			$constraint = 'AND (';
+			$c = count($parameters);
+			for ($i = 0; $i < $c; $i++) {
+				if ($i !== 0) {
+					$constraint .= ' OR ';
+				}
+				$constraint .= '(k = :key' . $i . ')';
+			}
+			$constraint .= ')';
+		}
+		$constraint .= ' AND  (';
+		foreach ($searchKeys as $key) {
+			$constraint .= 'k = "' . $key . '" OR ';
 
-                }
-                $constraint = preg_replace('/" OR $/', '" )', $constraint);
+		}
+		$constraint = preg_replace('/" OR $/', '" )', $constraint);
 		$stmt = $this->db->prepare('SELECT *
 FROM (
 	SELECT userId AS userId, SUM(valid) AS karma
