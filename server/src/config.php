@@ -24,10 +24,6 @@ return [
 			'access_token' => $CONFIG['TWITTER']['ACCESS_TOKEN'],
 			'access_token_secret' => $CONFIG['TWITTER']['ACCESS_TOKEN_SECRET'],
 		],
-		'instances' => [
-//			'i01.example.net',
-//			'i02.example.net'
-		],
-
+		'instances' => $CONFIG['INSTANCES']
 	]
 ];

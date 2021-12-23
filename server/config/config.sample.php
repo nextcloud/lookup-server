@@ -65,6 +65,11 @@ $CONFIG = [
 		'CONSUMER_SECRET' => '',
 		'ACCESS_TOKEN' => '',
 		'ACCESS_TOKEN_SECRET' => '',
+	],
+
+	'INSTANCES' => [
+//			'i01.example.net',
+//			'i02.example.net'
 	]
 ];
 
