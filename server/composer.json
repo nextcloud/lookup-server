@@ -10,7 +10,7 @@
         }
     },
      "require": {
-          "slim/slim": "^3.5",
+          "slim/slim": "^4.10",
           "guzzlehttp/guzzle": "^6.2",
           "abraham/twitteroauth": "^0.7.2"
      }
