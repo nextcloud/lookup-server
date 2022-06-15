@@ -29,15 +29,13 @@ class Replication {
 		$userInfo = explode(':', $userInfo, 2);
 
 		if (count($userInfo) !== 2 || $userInfo[0] !== 'lookup' || $userInfo[1] !== $this->auth)  {
-			$response = $response->withStatus(401);
-			return $response;
+			return $response->withStatus(401);
 		}
 
 		$params = $request->getQueryParams();
 		if (!isset($params['timestamp'], $params['page']) || !ctype_digit($params['timestamp']) ||
 		    !ctype_digit($params['page'])) {
-			$response = $response->withStatus(400);
-			return $response;
+			return $response->withStatus(400);
 		}
 
 		$timestamp = (int)$params['timestamp'];

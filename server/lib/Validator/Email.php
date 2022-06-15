@@ -2,8 +2,8 @@
 
 namespace LookupServer\Validator;
 
-use \Psr\Http\Message\ServerRequestInterface as Request;
-use \Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
 
 class Email {
 
@@ -54,8 +54,7 @@ class Email {
 		$stmt->closeCursor();
 
 		if ($validation === false) {
-			$response->withStatus(403);
-			$response->getBody()->write('Invalid token');
+			return $response->withStatus(403, 'Invalid token');
 		} else {
 			$stmt = $this->db->prepare('UPDATE store SET valid = 1 WHERE id = :storeId');
 			$stmt->bindParam('storeId', $validation['storeId']);
