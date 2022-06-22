@@ -1,17 +1,18 @@
 {
-     "config": {
-       "vendor-dir": "vendor",
-       "optimize-autoloader": true,
-       "classmap-authoritative": true
-     },
-    "autoload" : {
-        "psr-4": {
-            "LookupServer\\": "lib/"
-        }
-    },
-     "require": {
-          "slim/slim": "^3.5",
-          "guzzlehttp/guzzle": "^6.2",
-          "abraham/twitteroauth": "^0.7.2"
-     }
+  "config": {
+    "vendor-dir": "vendor",
+    "optimize-autoloader": true,
+    "classmap-authoritative": true
+  },
+  "autoload": {
+    "psr-4": {
+      "LookupServer\\": "lib/"
+    }
+  },
+  "require": {
+    "php-di/php-di": "^6.4.0",
+    "slim/slim": "^4.10.0",
+    "guzzlehttp/guzzle": "^7.4.5",
+    "abraham/twitteroauth": "^3.3.0"
+  }
 }

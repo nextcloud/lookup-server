@@ -9,6 +9,8 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
 class UserManager {
+	use TDebug;
+
 
 	/** @var \PDO */
 	private $db;
@@ -45,13 +47,15 @@ class UserManager {
 	 * @param bool $globalScaleMode
 	 * @param string $authKey
 	 */
-	public function __construct(\PDO $db,
-								Email $emailValidator,
-								Website $websiteValidator,
-								Twitter $twitterValidator,
-								SignatureHandler $signatureHandler,
-								$globalScaleMode,
-								$authKey) {
+	public function __construct(
+		\PDO $db,
+		Email $emailValidator,
+		Website $websiteValidator,
+		Twitter $twitterValidator,
+		SignatureHandler $signatureHandler,
+		$globalScaleMode,
+		$authKey
+	) {
 		$this->db = $db;
 		$this->emailValidator = $emailValidator;
 		$this->websiteValidator = $websiteValidator;
@@ -65,10 +69,12 @@ class UserManager {
 		//Escape %
 		$output = str_replace('%', '\%', $input);
 		$output = str_replace('_', '\_', $output);
+
 		return $output;
 	}
 
-	public function search(Request $request, Response $response) {
+
+	public function search(Request $request, Response $response, array $args = []): Response {
 		$params = $request->getQueryParams();
 
 		if (!isset($params['search']) || $params['search'] === '') {
@@ -105,14 +111,14 @@ class UserManager {
 		}
 
 		// if we look for a exact match we return only this one result, not a list of one element
-		if($exactMatch && !empty($users)) {
+		if ($exactMatch && !empty($users)) {
 			$users = $users[0];
 		}
 
 		$response->getBody()->write(json_encode($users));
+
 		return $response;
 	}
-
 
 
 	/**
@@ -123,6 +129,7 @@ class UserManager {
 	 * @param bool $exactMatch
 	 * @param array $parameters
 	 * @param int $minKarma
+	 *
 	 * @return array
 	 */
 	private function performSearch($search, $exactMatch, $parameters, $minKarma) {
@@ -142,20 +149,22 @@ class UserManager {
 			$constraint .= ')';
 		}
 
-		$stmt = $this->db->prepare('SELECT *
+		$stmt = $this->db->prepare(
+			'SELECT *
 FROM (
 	SELECT userId AS userId, SUM(valid) AS karma
 	FROM `store`
 	WHERE userId IN (
 		SELECT DISTINCT userId
 		FROM `store`
-		WHERE v ' . $operator . ' :search ' . $constraint .'
+		WHERE v ' . $operator . ' :search ' . $constraint . '
 	)
 	GROUP BY userId
 ) AS tmp
 WHERE karma >= :karma
 ORDER BY karma
-LIMIT :limit');
+LIMIT :limit'
+		);
 
 		$stmt->bindParam(':karma', $minKarma, \PDO::PARAM_INT);
 		$stmt->bindParam(':limit', $limit, \PDO::PARAM_INT);
@@ -166,7 +175,7 @@ LIMIT :limit');
 		// bind parameters
 		foreach ($parameters as $parameter) {
 			$i = 0;
-			$stmt->bindParam(':key'.$i, $this->db->quote($parameter));
+			$stmt->bindParam(':key' . $i, $this->db->quote($parameter));
 		}
 
 		$stmt->execute();
@@ -176,7 +185,7 @@ LIMIT :limit');
 		 */
 
 		$users = [];
-		while($data = $stmt->fetch()) {
+		while ($data = $stmt->fetch()) {
 			$users[] = $this->getForUserId((int)$data['userId']);
 		}
 		$stmt->closeCursor();
@@ -218,7 +227,7 @@ LIMIT :limit');
 		$stmt->bindParam(':id', $userId, \PDO::PARAM_INT);
 		$stmt->execute();
 
-		while($data = $stmt->fetch()) {
+		while ($data = $stmt->fetch()) {
 			$result[$data['k']] = [
 				'value' => $data['v'],
 				'verified' => $data['valid']
@@ -226,6 +235,7 @@ LIMIT :limit');
 		}
 
 		$stmt->closeCursor();
+
 		return $result;
 	}
 
@@ -235,14 +245,19 @@ LIMIT :limit');
 	 * @param int $timestamp
 	 */
 	private function insert($cloudId, $data, $timestamp) {
-		$stmt = $this->db->prepare('INSERT INTO users (federationId, timestamp) VALUES (:federationId, FROM_UNIXTIME(:timestamp))');
+		$stmt = $this->db->prepare(
+			'INSERT INTO users (federationId, timestamp) VALUES (:federationId, FROM_UNIXTIME(:timestamp))'
+		);
 		$stmt->bindParam(':federationId', $cloudId, \PDO::PARAM_STR);
 		$stmt->bindParam(':timestamp', $timestamp, \PDO::PARAM_INT);
 		$stmt->execute();
 		$id = $this->db->lastInsertId();
 		$stmt->closeCursor();
 
-		$fields = ['name', 'email', 'address', 'website', 'twitter', 'phone', 'twitter_signature', 'website_signature', 'userid'];
+		$fields = [
+			'name', 'email', 'address', 'website', 'twitter', 'phone', 'twitter_signature',
+			'website_signature', 'userid'
+		];
 
 		foreach ($fields as $field) {
 			if (!isset($data[$field]) || $data[$field] === '') {
@@ -274,7 +289,10 @@ LIMIT :limit');
 		$stmt->bindParam(':timestamp', $timestamp, \PDO::PARAM_INT);
 		$stmt->execute();
 		$stmt->closeCursor();
-		$fields = ['name', 'email', 'address', 'website', 'twitter', 'phone', 'twitter_signature', 'website_signature', 'userid'];
+		$fields = [
+			'name', 'email', 'address', 'website', 'twitter', 'phone', 'twitter_signature',
+			'website_signature', 'userid'
+		];
 
 		$stmt = $this->db->prepare('SELECT * FROM store WHERE userId = :userId');
 		$stmt->bindParam(':userId', $id, \PDO::PARAM_INT);
@@ -343,9 +361,12 @@ LIMIT :limit');
 		$stmt->execute();
 		$alreadyExists = $stmt->fetch();
 
-		if ($alreadyExists === false && isset($data['verificationStatus'][$key]) && $data['verificationStatus'][$key] === '1') {
+		if ($alreadyExists === false && isset($data['verificationStatus'][$key])
+			&& $data['verificationStatus'][$key] === '1') {
 			$tries = 0;
-			$stmt = $this->db->prepare('INSERT INTO toVerify (userId, storeId, property, location, tries) VALUES (:userId, :storeId, :property, :location, :tries)');
+			$stmt = $this->db->prepare(
+				'INSERT INTO toVerify (userId, storeId, property, location, tries) VALUES (:userId, :storeId, :property, :location, :tries)'
+			);
 			$stmt->bindParam(':userId', $userId, \PDO::PARAM_INT);
 			$stmt->bindParam(':storeId', $storeId, \PDO::PARAM_INT);
 			$stmt->bindParam(':property', $key);
@@ -356,7 +377,8 @@ LIMIT :limit');
 		}
 	}
 
-	public function register(Request $request, Response $response) {
+
+	public function register(Request $request, Response $response, array $args = []) {
 		$body = json_decode($request->getBody(), true);
 
 		if ($body === null || !isset($body['message']) || !isset($body['message']['data']) ||
@@ -374,7 +396,8 @@ LIMIT :limit');
 		}
 
 		if ($verified) {
-			$result = $this->insertOrUpdate($cloudId, $body['message']['data'], $body['message']['timestamp']);
+			$result =
+				$this->insertOrUpdate($cloudId, $body['message']['data'], $body['message']['timestamp']);
 			if ($result === false) {
 			return $response->withStatus(403);
 			}
@@ -391,6 +414,7 @@ LIMIT :limit');
 	 *
 	 * @param Request $request
 	 * @param Response $response
+	 *
 	 * @return Response
 	 */
 	public function batchRegister(Request $request, Response $response) {
@@ -418,6 +442,7 @@ LIMIT :limit');
 	 *
 	 * @param Request $request
 	 * @param Response $response
+	 *
 	 * @return Response
 	 */
 	public function batchDelete(Request $request, Response $response) {
@@ -507,6 +532,7 @@ LIMIT :limit');
 		// max number of tries reached, remove verification request and return
 		if ($tries > $this->maxVerifyTries) {
 			$this->removeOpenVerificationRequest($verificationData['id']);
+
 			return;
 		}
 
@@ -564,6 +590,7 @@ LIMIT :limit');
 		$stmt->execute();
 		$result = $stmt->fetchAll();
 		$stmt->closeCursor();
+
 		return $result;
 	}
 
@@ -571,6 +598,7 @@ LIMIT :limit');
 	 * @param string $cloudId
 	 * @param string[] $data
 	 * @param int $timestamp
+	 *
 	 * @return bool
 	 */
 	private function insertOrUpdate($cloudId, $data, $timestamp) {
@@ -602,6 +630,7 @@ LIMIT :limit');
 	 * federated cloud ID in order to propagate the changes
 	 *
 	 * @param string $cloudId
+	 *
 	 * @return bool
 	 */
 	private function deleteDBRecord($cloudId) {

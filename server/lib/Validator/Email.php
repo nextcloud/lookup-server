@@ -31,18 +31,18 @@ class Email {
 	 * @param bool $globalScale
 	 */
 	public function __construct(\PDO $db,
-								\Slim\Interfaces\RouterInterface $router,
+//								\Slim\Interfaces\RouterInterface $router,
 								$host,
 								$from,
 								$globalScale) {
 		$this->db = $db;
-		$this->router = $router;
+//		$this->router = $router;
 		$this->host = $host;
 		$this->from = $from;
 		$this->globalScale = $globalScale;
 	}
 
-	public function validate(Request $request, Response $response) {
+	public function validate(Request $request, Response $response, array $args = []) {
 		/** @var $route \Slim\Route */
 		$route = $request->getAttribute('route');
 		$token = $route->getArgument('token');
