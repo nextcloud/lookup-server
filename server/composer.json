@@ -12,6 +12,6 @@
      "require": {
           "slim/slim": "^3.5",
           "guzzlehttp/guzzle": "^6.2",
-          "abraham/twitteroauth": "^0.7.2"
+          "abraham/twitteroauth": "^4.0.1"
      }
 }
