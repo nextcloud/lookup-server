@@ -42,6 +42,12 @@ if (!isset($app) || !isset($container)) {
 	return;
 }
 
+function debug(string $line) {
+	if (defined('_DEBUG_')) {
+		file_put_contents(__DIR__ . '/debug.log', '. ' . $line . "\n", FILE_APPEND);
+	}
+}
+
 $r_search = function (ServerRequestInterface $request, ResponseInterface $response, array $args) {
 	/** @var UserManager $userManager */
 	$userManager = $this->get('UserManager');

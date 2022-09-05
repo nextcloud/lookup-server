@@ -47,6 +47,11 @@ $app = AppFactory::create();
 $app->setBasePath('');
 
 $settings = require __DIR__ . '/src/config.php';
+$debug = $settings['settings']['debug'] ?? false;
+if (is_bool($debug) && $debug) {
+	define('_DEBUG_', true);
+}
+
 $container->set('Settings', function (Container $c) use ($settings) {
 	return $settings;
 });
@@ -55,4 +60,3 @@ $container->set('DependenciesService', function (Container $c) {
 	return new DependenciesService($c->get('Settings'));
 });
 $container->get('DependenciesService')->initContainer($container, $app);
-
