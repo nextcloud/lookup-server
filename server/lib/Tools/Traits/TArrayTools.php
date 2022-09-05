@@ -33,18 +33,18 @@ namespace LookupServer\Tools\Traits;
 
 use Exception;
 use JsonSerializable;
-use OCA\Circles\Tools\Exceptions\ArrayNotFoundException;
-use OCA\Circles\Tools\Exceptions\ItemNotFoundException;
-use OCA\Circles\Tools\Exceptions\MalformedArrayException;
-use OCA\Circles\Tools\Exceptions\UnknownTypeException;
+use LookupServer\Tools\Exceptions\ArrayNotFoundException;
+use LookupServer\Tools\Exceptions\ItemNotFoundException;
+use LookupServer\Tools\Exceptions\MalformedArrayException;
+use LookupServer\Tools\Exceptions\UnknownTypeException;
 
 trait TArrayTools {
-	public static $TYPE_NULL = 'Null';
-	public static $TYPE_STRING = 'String';
-	public static $TYPE_ARRAY = 'Array';
-	public static $TYPE_BOOLEAN = 'Boolean';
-	public static $TYPE_INTEGER = 'Integer';
-	public static $TYPE_SERIALIZABLE = 'Serializable';
+	public static string $TYPE_NULL = 'Null';
+	public static string $TYPE_STRING = 'String';
+	public static string $TYPE_ARRAY = 'Array';
+	public static string $TYPE_BOOLEAN = 'Boolean';
+	public static string $TYPE_INTEGER = 'Integer';
+	public static string $TYPE_SERIALIZABLE = 'Serializable';
 
 
 	/**

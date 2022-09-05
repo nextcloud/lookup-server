@@ -1,5 +1,33 @@
 <?php
 
+declare(strict_types=1);
+
+
+/**
+ * lookup-server - Standalone Lookup Server.
+ *
+ * This file is licensed under the Affero General Public License version 3 or
+ * later. See the COPYING file.
+ *
+ * @author Maxence Lange <maxence@artificial-owl.com>
+ * @copyright 2022
+ * @license GNU AGPL version 3 or any later version
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+
 
 namespace LookupServer\Service;
 
@@ -8,25 +36,29 @@ use DI\Container;
 use Exception;
 use LookupServer\Replication;
 use LookupServer\SignatureHandler;
-use LookupServer\Status;
 use LookupServer\Tools\Traits\TArrayTools;
 use LookupServer\UserManager;
 use LookupServer\Validator\Email;
 use LookupServer\Validator\Twitter;
 use LookupServer\Validator\Website;
 use PDO;
+use Slim\App;
 
 class DependenciesService {
 	use TArrayTools;
 
 	private array $settings;
 
-	public function __construct(array $settings) {
+	public function __construct(array $settings = []) {
 		$this->settings = $settings;
 	}
 
 
-	public function initContainer(Container $container): void {
+	/**
+	 * @param Container $container
+	 * @param App $app
+	 */
+	public function initContainer(Container $container, App $app): void {
 
 		$container->set('db', function (Container $c) {
 			$db = $this->getArray('settings.db', $c->get('Settings'));
@@ -62,7 +94,7 @@ class DependenciesService {
 			return new SignatureHandler();
 		});
 
-		$container->set('TwitterOAuth', function ($c) {
+		$container->set('TwitterOAuth', function (Container $c) {
 			/** @var array $settings */
 			$settings = $c->get('Settings');
 
@@ -75,24 +107,24 @@ class DependenciesService {
 		});
 
 
-		$container->set('EmailValidator', function ($c) {
+		$container->set('EmailValidator', function (Container $c) use ($app) {
 			$settings = $c->get('Settings');
 
 			return new Email(
 				$c->get('db'),
-//				$c->get('RouterInterface'),
+				$app->getRouteCollector()->getRouteParser(),
 				$this->get('settings.host', $settings),
 				$this->get('settings.emailfrom', $settings),
 				$this->getBool('settings.global_scale', $settings)
 			);
 		});
 
-		$container->set('WebsiteValidator', function ($c) {
+		$container->set('WebsiteValidator', function (Container $c) {
 			return new Website($c->get('SignatureHandler'));
 		});
 
 
-		$container->set('TwitterValidator', function ($c) {
+		$container->set('TwitterValidator', function (Container $c) {
 			return new Twitter(
 				$c->get('TwitterOAuth'),
 				$c->get('SignatureHandler'),
@@ -101,12 +133,7 @@ class DependenciesService {
 		});
 
 
-		$container->set('Status', function ($c) {
-			return new Status();
-		});
-
-
-		$container->set('Replication', function ($c) {
+		$container->set('Replication', function (Container $c) {
 			$settings = $c->get('Settings');
 
 			return new Replication(

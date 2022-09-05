@@ -1,6 +1,6 @@
 <?php
 
-namespace LookupServer;
+namespace LookupServer\Tools\Traits;
 
 
 trait TDebug {

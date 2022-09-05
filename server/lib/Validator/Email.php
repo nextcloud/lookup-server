@@ -1,49 +1,77 @@
 <?php
 
+declare(strict_types=1);
+
+
+/**
+ * lookup-server - Standalone Lookup Server.
+ *
+ * This file is licensed under the Affero General Public License version 3 or
+ * later. See the COPYING file.
+ *
+ * @author Bjoern Schiessle <bjoern@schiessle.org>
+ * @author Maxence Lange <maxence@artificial-owl.com>
+ *
+ * @copyright 2017
+ * @license GNU AGPL version 3 or any later version
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+
+
 namespace LookupServer\Validator;
 
+use Exception;
+use PDO;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use Slim\Interfaces\RouteParserInterface;
+use Slim\Routing\Route;
 
 class Email {
 
-	/** @var \PDO */
-	private $db;
+	private PDO $db;
+	private RouteParserInterface $routeParser;
+	private string $host;
+	private string $from;
+	private bool $globalScale;
 
-	/** @var \Slim\Interfaces\RouterInterface */
-	private $router;
-
-	/** @var string */
-	private $host;
-
-	/** @var string */
-	private $from;
-
-	/** @var bool */
-	private $globalScale;
 
 	/**
-	 * Email constructor.
-	 * @param \PDO $db
-	 * @param \Slim\Interfaces\RouterInterface $router
+	 * @param PDO $db
+	 * @param RouteParserInterface $routeParser
 	 * @param string $host
 	 * @param string $from
 	 * @param bool $globalScale
 	 */
-	public function __construct(\PDO $db,
-//								\Slim\Interfaces\RouterInterface $router,
-								$host,
-								$from,
-								$globalScale) {
+	public function __construct(
+		PDO $db,
+		RouteParserInterface $routeParser,
+		string $host,
+		string $from,
+		bool $globalScale
+	) {
 		$this->db = $db;
-//		$this->router = $router;
+		$this->routeParser = $routeParser;
 		$this->host = $host;
 		$this->from = $from;
 		$this->globalScale = $globalScale;
 	}
 
-	public function validate(Request $request, Response $response, array $args = []) {
-		/** @var $route \Slim\Route */
+	public function validate(Request $request, Response $response, array $args = []): Response {
+		/** @var Route $route */
 		$route = $request->getAttribute('route');
 		$token = $route->getArgument('token');
 
@@ -72,7 +100,7 @@ class Email {
 		return $response;
 	}
 
-	public function emailUpdated($email, $storeId) {
+	public function emailUpdated(string $email, int $storeId): void {
 		if ($this->globalScale) {
 			// When in global scale mode we should not send e-mails
 			return;
@@ -95,23 +123,34 @@ class Email {
 		$stmt->closeCursor();
 
 		// Actually send e-mail
-		$link = $this->host . $this->router->pathFor('validateEmail', ['token' => $token]);
+		$link = $this->host . $this->routeParser->urlFor('validateEmail', ['token' => $token]);
 		$text = 'Please click this link to confirm your e-mail address: ' . $link;
 
-		$headers = 'From: '.$this->from."\r\n" .'X-Mailer: PHP/' . phpversion();
+		$headers = 'From: ' . $this->from . "\r\n" . 'X-Mailer: PHP/' . phpversion();
 		mail($email, 'Email confirmation', $text, $headers);
 	}
 
-	private function generate($length,
-							 $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789') {
+
+	/**
+	 * @param int $length
+	 * @param string $characters
+	 *
+	 * @return string
+	 * @throws Exception
+	 */
+	private function generate(
+		int $length,
+		string $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+	): string {
 		$maxCharIndex = strlen($characters) - 1;
 		$randomString = '';
 
-		while($length > 0) {
-			$randomNumber = \random_int(0, $maxCharIndex);
+		while ($length > 0) {
+			$randomNumber = random_int(0, $maxCharIndex);
 			$randomString .= $characters[$randomNumber];
 			$length--;
 		}
+
 		return $randomString;
 	}
 }
