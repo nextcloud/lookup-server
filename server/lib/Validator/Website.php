@@ -1,6 +1,11 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * @copyright Copyright (c) 2017 Bjoern Schiessle <bjoern@schiessle.org>
+ *
+ * @author Maxence Lange <maxence@artificial-owl.com>
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -23,12 +28,12 @@
 namespace LookupServer\Validator;
 
 
+use Exception;
 use LookupServer\SignatureHandler;
 
 class Website {
 
-	/** @var  SignatureHandler */
-	private $signatureHandler;
+	private SignatureHandler $signatureHandler;
 
 	public function __construct(SignatureHandler $signatureHandler) {
 		$this->signatureHandler = $signatureHandler;
@@ -39,9 +44,10 @@ class Website {
 	 *
 	 * @param array $verificationData from toVerify table
 	 * @param array $userData stored user data
+	 *
 	 * @return bool
 	 */
-	public function verify($verificationData, $userData) {
+	public function verify(array $verificationData, array $userData): bool {
 		$url = $this->getValidUrl($verificationData['location']);
 		$proof = @file_get_contents($url);
 		$result = false;
@@ -52,7 +58,7 @@ class Website {
 				list($message, $signature) = $this->splitMessageSignature($proofSanitized);
 				$result = $this->signatureHandler->verify($cloudId, $message, $signature);
 			}
-		} catch (\Exception $e) {
+		} catch (Exception $e) {
 			// do nothing, just return false
 		}
 
@@ -63,9 +69,10 @@ class Website {
 	 * construct valid URL to proof
 	 *
 	 * @param string $url
+	 *
 	 * @return string
 	 */
-	private function getValidUrl($url) {
+	private function getValidUrl(string $url): string {
 		$url = trim($url);
 		$url = rtrim($url, '/');
 		if (strpos($url, 'http://') !== 0 && strpos($url, 'https://') !== 0) {
@@ -79,9 +86,10 @@ class Website {
 	 * split message and signature
 	 *
 	 * @param string $proof
+	 *
 	 * @return array
 	 */
-	private function splitMessageSignature($proof) {
+	private function splitMessageSignature(string $proof): array {
 		$signature = substr($proof, -344);
 		$message = substr($proof, 0, -344);
 

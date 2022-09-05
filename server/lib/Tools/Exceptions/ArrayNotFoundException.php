@@ -1,7 +1,17 @@
 <?php
+
+declare(strict_types=1);
+
+
+
 /**
- * @copyright Copyright (c) 2017 Bjoern Schiessle <bjoern@schiessle.org>
+ * lookup-server - Standalone Lookup Server.
  *
+ * This file is licensed under the Affero General Public License version 3 or
+ * later. See the COPYING file.
+ *
+ * @author Maxence Lange <maxence@artificial-owl.com>
+ * @copyright 2022
  * @license GNU AGPL version 3 or any later version
  *
  * This program is free software: you can redistribute it and/or modify
@@ -19,25 +29,15 @@
  *
  */
 
-use LookupServer\UserManager;
 
-require __DIR__ . '/vendor/autoload.php';
+namespace LookupServer\Tools\Exceptions;
 
-if (PHP_SAPI !== 'cli') {
-	return;
+use Exception;
+
+/**
+ * Class ArrayNotFoundException
+ *
+ * @package LookupServer\Tools\Exceptions
+ */
+class ArrayNotFoundException extends Exception {
 }
-
-
-require __DIR__ . '/init.php';
-
-if (!isset($app) || !isset($container)) {
-	return;
-}
-
-/** @var UserManager $userManager */
-$userManager = $container->get('UserManager');
-$userManager->verify();
-
-
-$app->map(['GET'], '/verify', 'UserManager:verify');
-$app->run();

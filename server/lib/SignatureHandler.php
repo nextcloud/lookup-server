@@ -1,6 +1,12 @@
 <?php
+
+declare(strict_types=1);
+
+
 /**
  * @copyright Copyright (c) 2017 Bjoern Schiessle <bjoern@schiessle.org>
+ *
+ * @author Maxence Lange <maxence@artificial-owl.com>
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -22,7 +28,10 @@
 
 namespace LookupServer;
 
+use BadMethodCallException;
+use Exception;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\GuzzleException;
 
 class SignatureHandler {
 
@@ -32,57 +41,60 @@ class SignatureHandler {
 	 * @param string $cloudId
 	 * @param string $message
 	 * @param string $signature
+	 *
 	 * @return bool
-	 * @throws \Exception
+	 * @throws GuzzleException
 	 */
-	public function verify($cloudId, $message, $signature) {
+	public function verify(string $cloudId, string $message, string $signature): bool {
 		// Get fed id
 		list($user, $host) = $this->splitCloudId($cloudId);
 
 		// Retrieve public key && store
 		$ocsreq = new \GuzzleHttp\Psr7\Request(
 			'GET',
-			'http://'.$host . '/ocs/v2.php/identityproof/key/' . $user,
+			'http://' . $host . '/ocs/v2.php/identityproof/key/' . $user,
 			[
 				'OCS-APIREQUEST' => 'true',
 				'Accept' => 'application/json',
-			]);
+			]
+		);
 
 		$client = new Client();
 		$ocsresponse = $client->send($ocsreq, ['timeout' => 10]);
 
-		$ocsresponse = json_decode($ocsresponse->getBody(), true);
+		$ocsresponse = json_decode($ocsresponse->getBody()->getContents(), true);
 
-		if ($ocsresponse === null || !isset($ocsresponse['ocs']) ||
-			!isset($ocsresponse['ocs']['data']) || !isset($ocsresponse['ocs']['data']['public'])) {
-			throw new \BadMethodCallException();
+		if ($ocsresponse === null || !isset($ocsresponse['ocs'])
+			|| !isset($ocsresponse['ocs']['data'])
+			|| !isset($ocsresponse['ocs']['data']['public'])) {
+			throw new BadMethodCallException();
 		}
 
 		$key = $ocsresponse['ocs']['data']['public'];
 
 		// verify message
 		$message = json_encode($message);
-		$signature= base64_decode($signature);
+		$signature = base64_decode($signature);
 
 		$res = openssl_verify($message, $signature, $key, OPENSSL_ALGO_SHA512);
 
 		return $res === 1;
-
 	}
 
 	/**
 	 * Split a cloud id in a user and host post
 	 *
-	 * @param $cloudId
+	 * @param string $cloudId
+	 *
 	 * @return string[]
 	 */
-	private function splitCloudId($cloudId) {
+	private function splitCloudId(string $cloudId): array {
 		$loc = strrpos($cloudId, '@');
 
 		$user = substr($cloudId, 0, $loc);
-		$host = substr($cloudId, $loc+1);
+		$host = substr($cloudId, $loc + 1);
+
 		return [$user, $host];
 	}
-
 
 }

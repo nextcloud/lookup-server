@@ -1,19 +1,20 @@
 <?php
 
+use LookupServer\Replication;
+
 require __DIR__ . '/vendor/autoload.php';
 
 if (PHP_SAPI !== 'cli') {
 	return;
 }
 
-$env = \Slim\Http\Environment::mock(['REQUEST_URI' => '/import']);
 
-$settings = require __DIR__ . '/src/config.php';
-$settings['environment'] = $env;
-$container = new \Slim\Container($settings);
-require __DIR__ . '/src/dependencies.php';
+require __DIR__ . '/init.php';
 
-$app = new \Slim\App($container);
+if (!isset($app) || !isset($container)) {
+	return;
+}
 
-$app->map(['GET'], '/import', 'Replication:import');
-$app->run();
+/** @var Replication $replication */
+$replication = $container->get('Replication');
+$replication->import();

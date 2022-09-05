@@ -2,6 +2,9 @@
 
 namespace LookupServer;
 
+/**
+ * @deprecated
+ */
 class BruteForceMiddleware {
     /**
      * Brute force middleware

@@ -1,6 +1,11 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * @copyright Copyright (c) 2017 Bjoern Schiessle <bjoern@schiessle.org>
+ *
+ * @author Maxence Lange <maxence@artificial-owl.com>
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -24,27 +29,24 @@ namespace LookupServer\Validator;
 
 
 use Abraham\TwitterOAuth\TwitterOAuth;
+use Exception;
 use LookupServer\SignatureHandler;
+use PDO;
 
 class Twitter {
 
-	/** @var TwitterOAuth */
-	private $twitterOAuth;
-
-	/** @var SignatureHandler */
-	private $signatureHandler;
-
-	/** @var \PDO */
-	private $db;
+	private TwitterOAuth $twitterOAuth;
+	private SignatureHandler $signatureHandler;
+	private PDO $db;
 
 	/**
 	 * Twitter constructor.
 	 *
 	 * @param TwitterOAuth $twitterOAuth
 	 * @param SignatureHandler $signatureHandler
-	 * @param \PDO $db
+	 * @param PDO $db
 	 */
-	public function __construct(TwitterOAuth $twitterOAuth, SignatureHandler $signatureHandler, \PDO $db) {
+	public function __construct(TwitterOAuth $twitterOAuth, SignatureHandler $signatureHandler, PDO $db) {
 		$this->twitterOAuth = $twitterOAuth;
 		$this->signatureHandler = $signatureHandler;
 		$this->db = $db;
@@ -55,9 +57,10 @@ class Twitter {
 	 *
 	 * @param array $verificationData from toVerify table
 	 * @param array $userData stored user data
+	 *
 	 * @return bool
 	 */
-	public function verify(array $verificationData, array $userData) {
+	public function verify(array $verificationData, array $userData): bool {
 		$twitterHandle = $verificationData['location'];
 		$isValid = $this->isValidTwitterHandle($twitterHandle);
 		$result = false;
@@ -76,8 +79,8 @@ class Twitter {
 				$result = $this->signatureHandler->verify($cloudId, $message, $signature);
 				$result = $result && md5($signature) === $md5signature;
 			}
-		} catch (\Exception $e) {
-			// do nothing, just return false;
+		} catch (Exception $e) {
+			return false;
 		}
 
 		if ($result === true) {
@@ -91,9 +94,10 @@ class Twitter {
 	 * get tweet text and id
 	 *
 	 * @param string $userName user name without the '@'
+	 *
 	 * @return array
 	 */
-	private function getTweet($userName) {
+	private function getTweet(string $userName): array {
 
 		try {
 			$search = 'from:' . $userName . ' Use my Federated Cloud ID to share with me';
@@ -101,7 +105,7 @@ class Twitter {
 
 			$id = $statuses->statuses[0]->id;
 			$text = $statuses->statuses[0]->text;
-		} catch (\Exception $e) {
+		} catch (Exception $e) {
 			return [null, null];
 		}
 
@@ -111,11 +115,13 @@ class Twitter {
 	/**
 	 * check if we have a correct twitter Handle
 	 *
-	 * @param $twitterHandle
+	 * @param string $twitterHandle
+	 *
 	 * @return bool
 	 */
-	private function isValidTwitterHandle($twitterHandle) {
+	private function isValidTwitterHandle(string $twitterHandle): bool {
 		$result = preg_match('/^@[A-Za-z0-9_]+$/', $twitterHandle);
+
 		return $result === 1;
 	}
 
@@ -123,9 +129,10 @@ class Twitter {
 	 * split message and signature
 	 *
 	 * @param string $proof
+	 *
 	 * @return array
 	 */
-	private function splitMessageSignature($proof) {
+	private function splitMessageSignature(string $proof): array {
 		$signature = substr($proof, -32);
 		$message = substr($proof, 0, -32);
 
@@ -135,25 +142,25 @@ class Twitter {
 	/**
 	 * store reference to tweet
 	 *
-	 * @param $userId
-	 * @param $tweetId
+	 * @param int $userId
+	 * @param string $tweetId
 	 */
-	private function storeReference($userId, $tweetId) {
+	private function storeReference(int $userId, string $tweetId) {
 
 		$key = 'tweet_id';
 
 		// delete old value, if exists
 		$stmt = $this->db->prepare('DELETE FROM store WHERE userId = :userId AND k = :k');
-		$stmt->bindParam(':userId', $userId, \PDO::PARAM_INT);
-		$stmt->bindParam(':k', $key, \PDO::PARAM_STR);
+		$stmt->bindParam(':userId', $userId, PDO::PARAM_INT);
+		$stmt->bindParam(':k', $key, PDO::PARAM_STR);
 		$stmt->execute();
 		$stmt->closeCursor();
 
 		// add new value
 		$stmt = $this->db->prepare('INSERT INTO store (userId, k, v) VALUES (:userId, :k, :v)');
-		$stmt->bindParam(':userId', $userId, \PDO::PARAM_INT);
-		$stmt->bindParam(':k', $key, \PDO::PARAM_STR);
-		$stmt->bindParam(':v', $tweetId, \PDO::PARAM_STR);
+		$stmt->bindParam(':userId', $userId, PDO::PARAM_INT);
+		$stmt->bindParam(':k', $key, PDO::PARAM_STR);
+		$stmt->bindParam(':v', $tweetId, PDO::PARAM_STR);
 		$stmt->execute();
 		$stmt->closeCursor();
 	}
