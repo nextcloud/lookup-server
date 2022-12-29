@@ -71,6 +71,16 @@ $app->delete('/users', $r_delete);
 $app->delete('/index.php/users', $r_delete);
 
 
+$r_batchDetails = function (ServerRequestInterface $request, ResponseInterface $response, array $args) {
+	/** @var UserManager $userManager */
+	$userManager = $this->get('UserManager');
+
+	return $userManager->batchDetails($request, $response, $args);
+};
+$app->get('/gs/users', $r_batchDetails);
+$app->get('/index.php/gs/users', $r_batchDetails);
+
+
 $r_batchRegister = function (ServerRequestInterface $request, ResponseInterface $response, array $args) {
 	/** @var UserManager $userManager */
 	$userManager = $this->get('UserManager');

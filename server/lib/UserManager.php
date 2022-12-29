@@ -429,6 +429,33 @@ LIMIT :limit'
 		return $response;
 	}
 
+
+	/**
+	 * returns details about a list of registered users
+	 *
+	 * @param Request $request
+	 * @param Response $response
+	 * @param array $args
+	 *
+	 * @return Response
+	 */
+	public function batchDetails(Request $request, Response $response, array $args = []): Response {
+		$body = json_decode($request->getBody(), true);
+
+		if ($body === null || !isset($body['authKey']) || !isset($body['users'])) {
+			return $response->withStatus(400);
+		}
+
+		if ($body['authKey'] !== $this->authKey) {
+			return $response->withStatus(403);
+		}
+
+		$response->getBody()->write(json_encode($this->selectDetails($body['users'])));
+
+		return $response;
+	}
+
+
 	/**
 	 * let Nextcloud servers auto register users, used in the global scale scenario
 	 *
@@ -455,7 +482,6 @@ LIMIT :limit'
 		}
 
 		return $response;
-
 	}
 
 	/**
@@ -564,6 +590,33 @@ LIMIT :limit'
 
 		return $response;
 	}
+
+
+	private function selectDetails(array $userIds): array {
+		$stmt = $this->db->prepare('SELECT
+    `u`.`federationId`,
+    `s`.`v` AS `displayName`
+FROM
+    `store` AS `s`,
+    `users` AS `u`
+WHERE
+    `u`.`id` = `s`.`userId` AND `s`.`k` = \'name\' 
+  AND `u`.`federationId`
+          IN (' . implode(',', array_fill(0, count($userIds), '?')) . ')'
+		);
+
+		$stmt->execute($userIds);
+
+		$details = [];
+		while ($data = $stmt->fetch()) {
+			$details[$data['federationId']] = $data['displayName'];
+		}
+
+		$stmt->closeCursor();
+
+		return $details;
+	}
+	
 
 	/**
 	 * increase number of max tries to verify account data
