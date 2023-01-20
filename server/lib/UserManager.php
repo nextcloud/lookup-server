@@ -134,12 +134,25 @@ class UserManager {
 	 *
 	 * @return array
 	 */
-	private function performSearch(
-		string $search,
-		bool $exactMatch,
-		array $parameters,
-		int $minKarma
-	): array {
+	private function performSearch($search, $exactMatch, $parameters, $minKarma) {
+		/**
+		 * We assume that we want to check for matches in both userid
+		 * and email. However, if the search string looks like an email
+		 * address, we check if there are multiple accounts with the same
+		 * email address registred. If so, we limit the search to userid.
+		 * We will never search the name keys.
+		 */
+		$searchKeys = ['userid', 'email'];
+		if (preg_match('/@\w?\w+(\.\w+)*$/', $search) === 1) {
+			$numStmt = $this->db->prepare('SELECT count(*) as count FROM `store` WHERE v = :search AND k = "email"');
+			$numStmt->bindParam('search', $search, \PDO::PARAM_STR);
+			$numStmt->execute();
+			$numResult = (int) $numStmt->fetch()['count'];
+			$numStmt->closeCursor();
+			if ($numResult > 1) {
+				$searchKeys = ['userid'];
+			}
+		}
 		$operator = $exactMatch ? ' = ' : ' LIKE ';
 		$limit = $exactMatch ? 1 : 50;
 
@@ -155,16 +168,20 @@ class UserManager {
 			}
 			$constraint .= ')';
 		}
+		$constraint .= ' AND  (';
+		foreach ($searchKeys as $key) {
+			$constraint .= 'k = "' . $key . '" OR ';
 
-		$stmt = $this->db->prepare(
-			'SELECT *
+		}
+		$constraint = preg_replace('/" OR $/', '" )', $constraint);
+		$stmt = $this->db->prepare('SELECT *
 FROM (
 	SELECT userId AS userId, SUM(valid) AS karma
 	FROM `store`
 	WHERE userId IN (
 		SELECT DISTINCT userId
 		FROM `store`
-		WHERE v ' . $operator . ' :search ' . $constraint . '
+		WHERE v ' . $operator . ' :search ' . $constraint .'
 	)
 	GROUP BY userId
 ) AS tmp
