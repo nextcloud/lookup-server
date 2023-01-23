@@ -34,6 +34,7 @@ namespace LookupServer\Service;
 use Abraham\TwitterOAuth\TwitterOAuth;
 use DI\Container;
 use Exception;
+use LookupServer\InstanceManager;
 use LookupServer\Replication;
 use LookupServer\SignatureHandler;
 use LookupServer\Tools\Traits\TArrayTools;
@@ -77,12 +78,23 @@ class DependenciesService {
 		});
 
 
+		$container->set('InstanceManager', function (Container $c) {
+			return new InstanceManager(
+				$c->get('db'),
+				$c->get('SignatureHandler'),
+				$this->getBool('settings.global_scale', $c->get('Settings')),
+				$this->get('settings.auth_key', $c->get('Settings')),
+				$this->getArray('settings.instances', $c->get('Settings'))
+			);
+		});
+
 		$container->set('UserManager', function (Container $c) {
 			return new UserManager(
 				$c->get('db'),
 				$c->get('EmailValidator'),
 				$c->get('WebsiteValidator'),
 				$c->get('TwitterValidator'),
+				$c->get('InstanceManager'),
 				$c->get('SignatureHandler'),
 				$this->getBool('settings.global_scale', $c->get('Settings')),
 				$this->get('settings.auth_key', $c->get('Settings'))
