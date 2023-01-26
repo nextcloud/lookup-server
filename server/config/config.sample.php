@@ -65,6 +65,12 @@ $CONFIG = [
 		'CONSUMER_SECRET' => '',
 		'ACCESS_TOKEN' => '',
 		'ACCESS_TOKEN_SECRET' => '',
+	],
+
+	// enforce listing of instance instead of auto-generating it based on users' account
+	'INSTANCES' => [
+	// 'i001.example.net',
+	// 'i002.example.net',
 	]
 ];
 

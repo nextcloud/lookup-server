@@ -29,9 +29,10 @@ declare(strict_types=1);
 namespace LookupServer;
 
 use BadMethodCallException;
-use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
+use LookupServer\Exceptions\SignedRequestException;
+use Psr\Http\Message\ServerRequestInterface as Request;
 
 class SignatureHandler {
 
@@ -97,4 +98,34 @@ class SignatureHandler {
 		return [$user, $host];
 	}
 
+
+	/**
+	 * @param Request $request
+	 *
+	 * @throws SignedRequestException
+	 */
+	public function verifyRequest(Request $request): string {
+		$body = json_decode((string)$request->getBody(), true);
+		if ($body === null
+			|| !isset($body['message']['data']['federationId'])
+			|| !isset($body['signature'])
+			|| !isset($body['message']['timestamp'])) {
+			throw new SignedRequestException('malformed body');
+		}
+
+		$cloudId = $body['message']['data']['federationId'];
+
+		try {
+			$verified = $this->verify($cloudId, $body['message'], $body['signature']);
+			if ($verified) {
+				[, $host] = $this->splitCloudId($body['message']['data']['federationId']);
+
+				return $host;
+			}
+		} catch (\Exception $e) {
+			throw new SignedRequestException($e->getMessage(), 0, $e);
+		}
+
+		throw new SignedRequestException('not verified');
+	}
 }

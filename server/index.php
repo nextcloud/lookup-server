@@ -101,6 +101,18 @@ $app->delete('/gs/users', $r_batchDelete);
 $app->delete('/index.php/gs/users', $r_batchDelete);
 
 
+
+$r_instances = function (ServerRequestInterface $request, ResponseInterface $response, array $args) {
+	/** @var InstanceManager $instanceManager */
+	$instanceManager = $this->get('InstanceManager');
+
+	return $instanceManager->getInstances($request, $response);
+};
+$app->get('/gs/instances', $r_instances);
+$app->get('/index.php/gs/instances', $r_instances);
+$app->post('/instances', $r_instances); // retro compatibility until nc26
+$app->post('/index.php/instances', $r_instances); // retro compatibility until nc26
+
 $r_validateEmail = function (ServerRequestInterface $request, ResponseInterface $response, array $args) {
 	/** @var Email $emailValidator */
 	$emailValidator = $this->get('EmailValidator');

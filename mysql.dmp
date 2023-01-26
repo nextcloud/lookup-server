@@ -41,6 +41,15 @@ CREATE TABLE IF NOT EXISTS `users` (
   KEY `federationId` (`federationId`(191))
 ) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+DROP TABLE IF EXISTS `instances`;
+CREATE TABLE IF NOT EXISTS `instances` (
+  `id` int(6) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `instance` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `instance` (`instance`(191))
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 DROP TABLE IF EXISTS `toVerify`;
 CREATE TABLE IF NOT EXISTS `toVerify` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
