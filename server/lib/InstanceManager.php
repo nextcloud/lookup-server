@@ -1,8 +1,35 @@
 <?php
 
+declare(strict_types=1);
+
+/**
+ * lookup-server - Standalone Lookup Server.
+ *
+ * This file is licensed under the Affero General Public License version 3 or
+ * later. See the COPYING file.
+ *
+ * @author Maxence Lange <maxence@artificial-owl.com>
+ * @copyright 2022
+ * @license GNU AGPL version 3 or any later version
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
 
 namespace LookupServer;
 
+use Exception;
 use PDO;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -11,9 +38,9 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 class InstanceManager {
 	private PDO $db;
 	private SignatureHandler $signatureHandler;
-	private bool $globalScaleMode = false;
-	private string $authKey = '';
-	private array $instances = [];
+	private bool $globalScaleMode;
+	private string $authKey;
+	private array $instances;
 
 	public function __construct(
 		PDO $db,
@@ -26,13 +53,11 @@ class InstanceManager {
 		$this->signatureHandler = $signatureHandler;
 		$this->globalScaleMode = $globalScaleMode;
 		$this->authKey = $authKey;
-		if (is_array($instances)) {
-			$this->instances = $instances;
-		}
+		$this->instances = $instances ?? [];
 	}
 
 
-	public function insert(string $instance) {
+	public function insert(string $instance): void {
 		$stmt = $this->db->prepare('SELECT id, instance, timestamp FROM instances WHERE instance=:instance');
 		$stmt->bindParam(':instance', $instance, PDO::PARAM_STR);
 		$stmt->execute();
@@ -46,7 +71,10 @@ class InstanceManager {
 			$insert->bindParam(':instance', $instance, PDO::PARAM_STR);
 			$insert->bindParam(':timestamp', $time, PDO::PARAM_INT);
 
-			$insert->execute();
+			try {
+				$insert->execute();
+			} catch (Exception $e) {
+			}
 		}
 	}
 
@@ -164,7 +192,7 @@ class InstanceManager {
 	/**
 	 * @param string $instance
 	 */
-	private function removeUsers(string $instance) {
+	private function removeUsers(string $instance): void {
 		$search = '%@' . $this->escapeWildcard($instance);
 		$stmt = $this->db->prepare('SELECT id FROM users WHERE federationId LIKE :search');
 		$stmt->bindParam(':search', $search);
@@ -182,7 +210,7 @@ class InstanceManager {
 	/**
 	 * @param int $userId
 	 */
-	private function removeUser(int $userId) {
+	private function removeUser(int $userId): void {
 		$stmt = $this->db->prepare('DELETE FROM users WHERE id = :id');
 		$stmt->bindParam(':id', $userId);
 		$stmt->execute();
@@ -231,7 +259,7 @@ class InstanceManager {
 	/**
 	 * @param string $instance
 	 */
-	private function removingEmptyInstance(string $instance) {
+	private function removingEmptyInstance(string $instance): void {
 		$search = '%@' . $this->escapeWildcard($instance);
 
 		$stmt = $this->db->prepare('SELECT federationId FROM users WHERE federationId LIKE :search');

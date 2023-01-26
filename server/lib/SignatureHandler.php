@@ -105,12 +105,12 @@ class SignatureHandler {
 	 * @throws SignedRequestException
 	 */
 	public function verifyRequest(Request $request): string {
-		$body = json_decode($request->getBody(), true);
-		if ($body === null || !isset($body['message']) || !isset($body['message']['data'])
+		$body = json_decode((string)$request->getBody(), true);
+		if ($body === null
 			|| !isset($body['message']['data']['federationId'])
 			|| !isset($body['signature'])
 			|| !isset($body['message']['timestamp'])) {
-			throw new SignedRequestException();
+			throw new SignedRequestException('malformed body');
 		}
 
 		$cloudId = $body['message']['data']['federationId'];
@@ -118,13 +118,14 @@ class SignatureHandler {
 		try {
 			$verified = $this->verify($cloudId, $body['message'], $body['signature']);
 			if ($verified) {
-				list(, $host) = $this->splitCloudId($body['message']['data']['federationId']);
+				[, $host] = $this->splitCloudId($body['message']['data']['federationId']);
 
 				return $host;
 			}
 		} catch (\Exception $e) {
+			throw new SignedRequestException($e->getMessage());
 		}
 
-		throw new SignedRequestException();
+		throw new SignedRequestException('not verified');
 	}
 }
