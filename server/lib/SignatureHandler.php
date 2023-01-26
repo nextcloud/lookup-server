@@ -123,7 +123,7 @@ class SignatureHandler {
 				return $host;
 			}
 		} catch (\Exception $e) {
-			throw new SignedRequestException($e->getMessage());
+			throw new SignedRequestException($e->getMessage(), 0, $e);
 		}
 
 		throw new SignedRequestException('not verified');

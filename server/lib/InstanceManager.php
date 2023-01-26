@@ -174,7 +174,7 @@ class InstanceManager {
 
 
 	/**
-	 * @param string|null $instance
+	 * @param string $instance
 	 * @param bool $removeUsers
 	 */
 	public function remove(string $instance, bool $removeUsers = false): void {
