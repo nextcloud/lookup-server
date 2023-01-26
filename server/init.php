@@ -36,7 +36,7 @@ use LookupServer\Service\DependenciesService;
 use Slim\Factory\AppFactory;
 
 
-define('VERSION', '1.0.0');
+define('VERSION', '1.1.0');
 
 
 require __DIR__ . '/vendor/autoload.php';
