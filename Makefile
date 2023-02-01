@@ -14,7 +14,13 @@ all: release
 clean:
 	rm -rf $(build_dir)
 
-release: clean
+clean-composer:
+	rm -fr server/vendor/
+
+composer:
+	composer install -d server --no-dev
+
+release: clean clean-composer composer
 	mkdir -p $(sign_dir)
 	rsync -a \
 	--exclude=/build \

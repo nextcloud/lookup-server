@@ -40,7 +40,6 @@
   "require-dev": {
     "phpunit/phpunit": "^9.5",
     "vimeo/psalm": "^4.22",
-    "christophwurst/nextcloud": "dev-master",
     "nextcloud/coding-standard": "^1.0"
   }
 }
