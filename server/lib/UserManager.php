@@ -96,12 +96,8 @@ class UserManager {
 		// parameters allow you to specify which keys should be checked for a search query
 		// by default we check all keys, this way you can for example search for email addresses only
 		$parameters = [];
-		if ($exactMatch === true) {
-			$keys = $this->get('keys', $params, '{}');
-			$keysDecoded = json_decode($keys, false, 2);
-			if (is_array($keysDecoded)) {
-				$parameters = $keysDecoded;
-			}
+		if ($exactMatch) {
+			$parameters = $this->getArray('keys', $params);
 		}
 
 		if ($searchCloudId === true) {
@@ -138,7 +134,12 @@ class UserManager {
 	 *
 	 * @return array
 	 */
-	private function performSearch($search, $exactMatch, $parameters, $minKarma) {
+	private function performSearch(
+		string $search,
+		bool $exactMatch,
+		array $parameters,
+		int $minKarma
+	) {
 		/**
 		 * We assume that we want to check for matches in both userid
 		 * and email. However, if the search string looks like an email
@@ -147,7 +148,7 @@ class UserManager {
 		 * We will never search the name keys.
 		 */
 		$searchKeys = ['userid', 'email'];
-		if (preg_match('/@\w?\w+(\.\w+)*$/', $search) === 1) {
+		if (empty($parameters) && preg_match('/@\w?\w+(\.\w+)*$/', $search) === 1) {
 			$numStmt = $this->db->prepare('SELECT count(*) as count FROM `store` WHERE v = :search AND k = "email"');
 			$numStmt->bindParam('search', $search, \PDO::PARAM_STR);
 			$numStmt->execute();
@@ -203,8 +204,7 @@ LIMIT :limit'
 		// bind parameters
 		foreach ($parameters as $parameter) {
 			$i = 0;
-			$q = $this->db->quote($parameter);
-			$stmt->bindParam(':key' . $i, $q);
+			$stmt->bindParam(':key' . $i, $parameter);
 		}
 
 		$stmt->execute();
@@ -642,7 +642,7 @@ WHERE
 
 		return $details;
 	}
-	
+
 
 	/**
 	 * increase number of max tries to verify account data
