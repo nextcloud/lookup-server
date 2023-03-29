@@ -42,6 +42,12 @@ if (!isset($app) || !isset($container)) {
 	return;
 }
 
+$r_head = function (ServerRequestInterface $request, ResponseInterface $response, array $args) {
+	return $response->withHeader('X-Version', VERSION);
+};
+$app->map(['HEAD'], '/', $r_head);
+$app->map(['HEAD'], '/index.php', $r_head);
+
 $r_search = function (ServerRequestInterface $request, ResponseInterface $response, array $args) {
 	/** @var UserManager $userManager */
 	$userManager = $this->get('UserManager');
