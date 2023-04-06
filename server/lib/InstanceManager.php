@@ -95,7 +95,7 @@ class InstanceManager {
 			return $response;
 		}
 
-		$body = json_decode($request->getBody(), true);
+		$body = json_decode($request->getBody()->getContents(), true);
 		if ($body === null || !isset($body['authKey'])) {
 			$response->withStatus(400);
 
