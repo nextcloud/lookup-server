@@ -140,6 +140,11 @@ class UserManager {
 		array $parameters,
 		int $minKarma
 	) {
+		$searchKeys = ['userid', 'email'];
+		if (!$exactMatch) { // in case of general search, we search also on display name
+			$searchKeys[] = 'name';
+		}
+
 		/**
 		 * We assume that we want to check for matches in both userid
 		 * and email. However, if the search string looks like an email
@@ -147,7 +152,6 @@ class UserManager {
 		 * email address registred. If so, we limit the search to userid.
 		 * We will never search the name keys.
 		 */
-		$searchKeys = ['userid', 'email'];
 		if (empty($parameters) && preg_match('/@\w?\w+(\.\w+)*$/', $search) === 1) {
 			$numStmt = $this->db->prepare('SELECT count(*) as count FROM `store` WHERE v = :search AND k = "email"');
 			$numStmt->bindParam('search', $search, \PDO::PARAM_STR);
