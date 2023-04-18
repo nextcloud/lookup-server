@@ -30,6 +30,7 @@ release: clean clean-composer composer
 	--exclude=/tests \
 	--exclude=.git \
 	--exclude=/.github \
+	--exclude=/.idea \
 	--exclude=/l10n/l10n.pl \
 	--exclude=/CONTRIBUTING.md \
 	--exclude=/issue_template.md \
