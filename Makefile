@@ -7,7 +7,7 @@ sign_dir=$(build_dir)/sign
 package_name=$(shell echo $(app_name) | tr '[:upper:]' '[:lower:]')
 cert_dir=$(HOME)/.nextcloud/certificates
 branch=master
-version=1.1.1
+version=1.1.2
 
 all: release
 
