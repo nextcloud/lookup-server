@@ -87,7 +87,7 @@ class UserManager {
 			return $response->withStatus(404);
 		}
 
-		$search = (string)$params['search'];
+		$search = urldecode((string)$params['search']);
 		// search for a specific federated cloud ID
 		$searchCloudId = $this->getBool('exactCloudId', $params);
 		// return unique exact match, e.g. the user with a specific email address
