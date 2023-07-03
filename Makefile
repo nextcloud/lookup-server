@@ -9,7 +9,7 @@ cert_dir=$(HOME)/.nextcloud/certificates
 branch=master
 version=1.1.2
 
-all: release
+all: clean clean-composer composer release
 
 clean:
 	rm -rf $(build_dir)
@@ -20,7 +20,7 @@ clean-composer:
 composer:
 	composer install -d server --no-dev
 
-release: clean clean-composer composer
+release:
 	mkdir -p $(sign_dir)
 	rsync -a \
 	--exclude=/build \
