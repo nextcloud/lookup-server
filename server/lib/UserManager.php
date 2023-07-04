@@ -5,7 +5,6 @@ namespace LookupServer;
 use Exception;
 use GuzzleHttp\Exception\GuzzleException;
 use LookupServer\Tools\Traits\TArrayTools;
-use LookupServer\Tools\Traits\TDebug;
 use LookupServer\Validator\Email;
 use LookupServer\Validator\Twitter;
 use LookupServer\Validator\Website;
@@ -14,7 +13,6 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
 class UserManager {
-	use TDebug;
 	use TArrayTools;
 
 	private PDO $db;
