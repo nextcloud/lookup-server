@@ -77,13 +77,15 @@ class DependenciesService {
 			return $pdo;
 		});
 
+		$container->set('SecurityService', function (Container $c) {
+			$settings = $c->get('Settings');
+			return new SecurityService($settings);
+		});
 
 		$container->set('InstanceManager', function (Container $c) {
 			return new InstanceManager(
 				$c->get('db'),
-				$c->get('SignatureHandler'),
-				$this->getBool('settings.global_scale', $c->get('Settings')),
-				$this->get('settings.auth_key', $c->get('Settings')),
+				$c->get('SecurityService'),
 				$this->getArray('settings.instances', $c->get('Settings'))
 			);
 		});
@@ -96,8 +98,7 @@ class DependenciesService {
 				$c->get('TwitterValidator'),
 				$c->get('InstanceManager'),
 				$c->get('SignatureHandler'),
-				$this->getBool('settings.global_scale', $c->get('Settings')),
-				$this->get('settings.auth_key', $c->get('Settings'))
+				$c->get('SecurityService')
 			);
 		});
 
@@ -127,7 +128,7 @@ class DependenciesService {
 				$app->getRouteCollector()->getRouteParser(),
 				$this->get('settings.host', $settings),
 				$this->get('settings.emailfrom', $settings),
-				$this->getBool('settings.global_scale', $settings)
+				$c->get('SecurityService'),
 			);
 		});
 
@@ -144,13 +145,12 @@ class DependenciesService {
 			);
 		});
 
-
 		$container->set('Replication', function (Container $c) {
 			$settings = $c->get('Settings');
 
 			return new Replication(
 				$c->get('db'),
-				$this->get('settings.replication_auth', $settings),
+				$c->get('SecurityService'),
 				$this->getArray('settings.replication_hosts', $settings)
 			);
 		});
