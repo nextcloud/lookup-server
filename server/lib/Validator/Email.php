@@ -1,8 +1,6 @@
 <?php
 
 declare(strict_types=1);
-
-
 /**
  * lookup-server - Standalone Lookup Server.
  *
@@ -30,10 +28,10 @@ declare(strict_types=1);
  *
  */
 
-
 namespace LookupServer\Validator;
 
 use Exception;
+use LookupServer\Service\SecurityService;
 use PDO;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -41,33 +39,13 @@ use Slim\Interfaces\RouteParserInterface;
 use Slim\Routing\Route;
 
 class Email {
-
-	private PDO $db;
-	private RouteParserInterface $routeParser;
-	private string $host;
-	private string $from;
-	private bool $globalScale;
-
-
-	/**
-	 * @param PDO $db
-	 * @param RouteParserInterface $routeParser
-	 * @param string $host
-	 * @param string $from
-	 * @param bool $globalScale
-	 */
 	public function __construct(
-		PDO $db,
-		RouteParserInterface $routeParser,
-		string $host,
-		string $from,
-		bool $globalScale
+		private PDO $db,
+		private RouteParserInterface $routeParser,
+		private string $host,
+		private string $from,
+		private SecurityService $securityService,
 	) {
-		$this->db = $db;
-		$this->routeParser = $routeParser;
-		$this->host = $host;
-		$this->from = $from;
-		$this->globalScale = $globalScale;
 	}
 
 	public function validate(Request $request, Response $response, array $args = []): Response {
@@ -101,7 +79,7 @@ class Email {
 	}
 
 	public function emailUpdated(string $email, int $storeId): void {
-		if ($this->globalScale) {
+		if ($this->securityService->isGlobalScale()) {
 			// When in global scale mode we should not send e-mails
 			return;
 		}

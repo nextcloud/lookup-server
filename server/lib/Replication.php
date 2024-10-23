@@ -32,6 +32,7 @@ declare(strict_types=1);
 namespace LookupServer;
 
 use GuzzleHttp\Client;
+use LookupServer\Service\SecurityService;
 use PDO;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -40,14 +41,10 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 
 class Replication {
 
-	private PDO $db;
-	private string $auth;
-	private array $replicationHosts;
-
-	public function __construct(PDO $db, string $auth, array $replicationHosts) {
-		$this->db = $db;
-		$this->auth = $auth;
-		$this->replicationHosts = $replicationHosts;
+	public function __construct(
+		private PDO $db,
+		private SecurityService $securityService,
+		private array $replicationHosts) {
 	}
 
 
@@ -63,7 +60,7 @@ class Replication {
 
 		$userInfo = explode(':', $userInfo, 2);
 
-		if (count($userInfo) !== 2 || $userInfo[0] !== 'lookup' || $userInfo[1] !== $this->auth) {
+		if (count($userInfo) !== 2 || $userInfo[0] !== 'lookup' || !$this->securityService->isValidReplicationAuth($userInfo[1])) {
 			return $response->withStatus(401);
 		}
 
