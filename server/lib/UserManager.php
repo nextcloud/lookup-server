@@ -53,7 +53,7 @@ class UserManager {
 		$search = urldecode($params['search'] ?? '');
 
 		if ($search === '') {
-			return $response->withStatus(404);
+			return $response->withStatus(400);
 		}
 
 		// search for a specific federated cloud ID
@@ -77,7 +77,7 @@ class UserManager {
 			$users = $this->performSearch($search, $exactMatch, $parameters, 0);
 		} else {
 			// is not globalscale, we only accept request with exactCloudId=1
-			return $response->withStatus(401);
+			return $response->withStatus(400);
 
 			// previous behavior:
 			// in a general setup we only return users who validated at least one personal date
