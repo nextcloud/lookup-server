@@ -1,7 +1,6 @@
 <?php
 
 declare(strict_types=1);
-
 /**
  * lookup-server - Standalone Lookup Server.
  *
@@ -30,34 +29,61 @@ declare(strict_types=1);
 namespace LookupServer;
 
 use Exception;
+use LookupServer\Service\SecurityService;
 use PDO;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
-
 class InstanceManager {
-	private PDO $db;
-	private SignatureHandler $signatureHandler;
-	private bool $globalScaleMode;
-	private string $authKey;
-	private array $instances;
-
 	public function __construct(
-		PDO $db,
-		SignatureHandler $signatureHandler,
-		bool $globalScaleMode,
-		string $authKey,
-		?array $instances
+		private PDO $db,
+		private SecurityService $securityService,
+		private array $instances
 	) {
-		$this->db = $db;
-		$this->signatureHandler = $signatureHandler;
-		$this->globalScaleMode = $globalScaleMode;
-		$this->authKey = $authKey;
-		$this->instances = $instances ?? [];
 	}
 
+	/**
+	 * let Nextcloud servers obtains the full list of registered instances in the global scale scenario
+	 * If result is empty, sync from the users list
+	 *
+	 * @param Request $request
+	 * @param Response $response
+	 *
+	 * @return Response
+	 */
+	public function getInstances(Request $request, Response $response): Response {
+		if (!$this->securityService->isGlobalScale()) {
+			return $response->withStatus(404);
+		}
 
-	public function insert(string $instance): void {
+		$body = json_decode($request->getBody()->getContents(), true);
+		if ($body === null || !isset($body['authKey'])) {
+			$response->withStatus(400);
+
+			return $response;
+		}
+
+		if (!$this->securityService->isValidAuth($body['authKey'])) {
+			return $response->withStatus(403);
+		}
+
+		$instances = $this->getAll();
+		if (empty($instances)) {
+			$this->syncInstances();
+			$instances = $this->getAll();
+		}
+
+		$response->getBody()
+				 ->write(json_encode($instances));
+
+		return $response;
+	}
+
+	private function insert(string $instance): void {
+		if (!$this->securityService->isGlobalScale()) {
+			return;
+		}
+
 		$stmt = $this->db->prepare('SELECT id, instance, timestamp FROM instances WHERE instance=:instance');
 		$stmt->bindParam(':instance', $instance, PDO::PARAM_STR);
 		$stmt->execute();
@@ -78,53 +104,10 @@ class InstanceManager {
 		}
 	}
 
-
-	/**
-	 * let Nextcloud servers obtains the full list of registered instances in the global scale scenario
-	 * If result is empty, sync from the users list
-	 *
-	 * @param Request $request
-	 * @param Response $response
-	 *
-	 * @return Response
-	 */
-	public function getInstances(Request $request, Response $response): Response {
-		if ($this->globalScaleMode !== true) {
-			$response->withStatus(404);
-
-			return $response;
-		}
-
-		$body = json_decode($request->getBody()->getContents(), true);
-		if ($body === null || !isset($body['authKey'])) {
-			$response->withStatus(400);
-
-			return $response;
-		}
-
-		if ($body['authKey'] !== $this->authKey) {
-			$response->withStatus(403);
-
-			return $response;
-		}
-
-		$instances = $this->getAll();
-		if (empty($instances)) {
-			$this->syncInstances();
-			$instances = $this->getAll();
-		}
-
-		$response->getBody()
-				 ->write(json_encode($instances));
-
-		return $response;
-	}
-
-
 	/**
 	 * @return array
 	 */
-	public function getAll(): array {
+	private function getAll(): array {
 		if (is_array($this->instances) && !empty($this->instances)) {
 			return $this->instances;
 		}
@@ -141,15 +124,10 @@ class InstanceManager {
 		return $instances;
 	}
 
-
-	public function getAllFromConfig(): array {
-		return $this->instances;
-	}
-
 	/**
 	 * sync the instances from the users table
 	 */
-	public function syncInstances(): void {
+	private function syncInstances(): void {
 		$stmt = $this->db->prepare('SELECT federationId FROM users');
 		$stmt->execute();
 		$instances = [];
@@ -172,12 +150,11 @@ class InstanceManager {
 		$this->removeDeprecatedInstances($instances);
 	}
 
-
 	/**
 	 * @param string $instance
 	 * @param bool $removeUsers
 	 */
-	public function remove(string $instance, bool $removeUsers = false): void {
+	private function remove(string $instance, bool $removeUsers = false): void {
 		$stmt = $this->db->prepare('DELETE FROM instances WHERE instance = :instance');
 		$stmt->bindParam(':instance', $instance);
 		$stmt->execute();
@@ -187,7 +164,6 @@ class InstanceManager {
 			$this->removeUsers($instance);
 		}
 	}
-
 
 	/**
 	 * @param string $instance
@@ -206,7 +182,6 @@ class InstanceManager {
 		$this->removingEmptyInstance($instance);
 	}
 
-
 	/**
 	 * @param int $userId
 	 */
@@ -220,7 +195,6 @@ class InstanceManager {
 		$stmt->execute();
 	}
 
-
 	/**
 	 * @param string $input
 	 *
@@ -233,7 +207,6 @@ class InstanceManager {
 		return $output;
 	}
 
-
 	/**
 	 * @param string $cloudId
 	 */
@@ -243,7 +216,6 @@ class InstanceManager {
 
 		$this->insert($instance);
 	}
-
 
 	/**
 	 * @param string $cloudId
@@ -260,6 +232,10 @@ class InstanceManager {
 	 * @param string $instance
 	 */
 	private function removingEmptyInstance(string $instance): void {
+		if (!$this->securityService->isGlobalScale()) {
+			return;
+		}
+
 		$search = '%@' . $this->escapeWildcard($instance);
 
 		$stmt = $this->db->prepare('SELECT federationId FROM users WHERE federationId LIKE :search');
@@ -269,7 +245,6 @@ class InstanceManager {
 			$this->remove($instance);
 		}
 	}
-
 
 	/**
 	 * @param array $instances

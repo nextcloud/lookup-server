@@ -4,6 +4,7 @@ namespace LookupServer;
 
 use Exception;
 use GuzzleHttp\Exception\GuzzleException;
+use LookupServer\Service\SecurityService;
 use LookupServer\Tools\Traits\TArrayTools;
 use LookupServer\Validator\Email;
 use LookupServer\Validator\Twitter;
@@ -15,46 +16,15 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 class UserManager {
 	use TArrayTools;
 
-	private PDO $db;
-	private Email $emailValidator;
-	private Website $websiteValidator;
-	private Twitter $twitterValidator;
-	private InstanceManager $instanceManager;
-	private SignatureHandler $signatureHandler;
-	private int $maxVerifyTries = 10;
-	private bool $globalScaleMode;
-	private string $authKey;
-
-	/**
-	 * UserManager constructor.
-	 *
-	 * @param PDO $db
-	 * @param Email $emailValidator
-	 * @param Website $websiteValidator
-	 * @param Twitter $twitterValidator
-	 * @param InstanceManager $instanceManager
-	 * @param SignatureHandler $signatureHandler
-	 * @param bool $globalScaleMode
-	 * @param string $authKey
-	 */
 	public function __construct(
-		PDO $db,
-		Email $emailValidator,
-		Website $websiteValidator,
-		Twitter $twitterValidator,
-		InstanceManager $instanceManager,
-		SignatureHandler $signatureHandler,
-		bool $globalScaleMode,
-		string $authKey
+		private PDO $db,
+		private Email $emailValidator,
+		private Website $websiteValidator,
+		private Twitter $twitterValidator,
+		private InstanceManager $instanceManager,
+		private SignatureHandler $signatureHandler,
+		private SecurityService $securityService
 	) {
-		$this->db = $db;
-		$this->emailValidator = $emailValidator;
-		$this->websiteValidator = $websiteValidator;
-		$this->twitterValidator = $twitterValidator;
-		$this->instanceManager = $instanceManager;
-		$this->signatureHandler = $signatureHandler;
-		$this->globalScaleMode = $globalScaleMode;
-		$this->authKey = $authKey;
 	}
 
 
@@ -80,12 +50,12 @@ class UserManager {
 	 */
 	public function search(Request $request, Response $response, array $args = []): Response {
 		$params = $request->getQueryParams();
+		$search = urldecode($params['search'] ?? '');
 
-		if ($this->get('search', $params) === '') {
-			return $response->withStatus(404);
+		if ($search === '') {
+			return $response->withStatus(400);
 		}
 
-		$search = urldecode((string)$params['search']);
 		// search for a specific federated cloud ID
 		$searchCloudId = $this->getBool('exactCloudId', $params);
 		// return unique exact match, e.g. the user with a specific email address
@@ -100,14 +70,18 @@ class UserManager {
 
 		if ($searchCloudId === true) {
 			$users = $this->getExactCloudId($search);
-		} else if ($this->globalScaleMode === true) {
+		} else if ($this->securityService->isGlobalScale()) {
 			// in a global scale setup we ignore the karma
 			// the lookup server is populated by the admin and we know
 			// that it contain only valid user information
 			$users = $this->performSearch($search, $exactMatch, $parameters, 0);
 		} else {
+			// is not globalscale, we only accept request with exactCloudId=1
+			return $response->withStatus(400);
+
+			// previous behavior:
 			// in a general setup we only return users who validated at least one personal date
-			$users = $this->performSearch($search, $exactMatch, $parameters, 1);
+			//$users = $this->performSearch($search, true, $parameters, 1);
 		}
 
 		// if we look for a exact match we return only this one result, not a list of one element
@@ -474,7 +448,7 @@ LIMIT :limit'
 			return $response->withStatus(400);
 		}
 
-		if ($body['authKey'] !== $this->authKey) {
+		if (!$this->securityService->isValidAuth($body['authKey'])) {
 			return $response->withStatus(403);
 		}
 
@@ -494,14 +468,13 @@ LIMIT :limit'
 	 * @return Response
 	 */
 	public function batchRegister(Request $request, Response $response, array $args = []): Response {
-
 		$body = json_decode($request->getBody(), true);
 
 		if ($body === null || !isset($body['authKey']) || !isset($body['users'])) {
 			return $response->withStatus(400);
 		}
 
-		if ($body['authKey'] !== $this->authKey) {
+		if (!$this->securityService->isValidAuth($body['authKey'])) {
 			return $response->withStatus(403);
 		}
 
@@ -522,14 +495,13 @@ LIMIT :limit'
 	 * @return Response
 	 */
 	public function batchDelete(Request $request, Response $response, array $args = []): Response {
-
 		$body = json_decode($request->getBody(), true);
 
-		if ($body === null || !isset($body['authKey']) || !isset($body['users'])) {
+		if (!$this->securityService->isGlobalScale() || $body === null || !isset($body['authKey']) || !isset($body['users'])) {
 			return $response->withStatus(400);
 		}
 
-		if ($body['authKey'] !== $this->authKey) {
+		if (!$this->securityService->isValidAuth($body['authKey'])) {
 			return $response->withStatus(403);
 		}
 
@@ -567,7 +539,6 @@ LIMIT :limit'
 		} catch (Exception $e) {
 			return $response->withStatus(400);
 		}
-
 
 		if ($verified) {
 			$result = $this->deleteDBRecord($cloudId);
@@ -656,7 +627,7 @@ WHERE
 		$tries++;
 
 		// max number of tries reached, remove verification request and return
-		if ($tries > $this->maxVerifyTries) {
+		if ($tries > 3) {
 			$this->removeOpenVerificationRequest($verificationData['id']);
 
 			return;
@@ -760,7 +731,6 @@ WHERE
 	 * @return bool
 	 */
 	private function deleteDBRecord(string $cloudId): bool {
-
 		$stmt = $this->db->prepare('SELECT * FROM users WHERE federationId = :federationId');
 		$stmt->bindParam(':federationId', $cloudId);
 		$stmt->execute();
