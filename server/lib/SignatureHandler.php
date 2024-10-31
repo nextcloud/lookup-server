@@ -40,13 +40,13 @@ class SignatureHandler {
 	 * check signature of incoming request
 	 *
 	 * @param string $cloudId
-	 * @param string $message
+	 * @param string|array $message
 	 * @param string $signature
 	 *
 	 * @return bool
 	 * @throws GuzzleException
 	 */
-	public function verify(string $cloudId, string $message, string $signature): bool {
+	public function verify(string $cloudId, string|array $message, string $signature): bool {
 		// Get fed id
 		list($user, $host) = $this->splitCloudId($cloudId);
 
