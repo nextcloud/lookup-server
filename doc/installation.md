@@ -137,8 +137,14 @@ Result should be similar to:
 * Regular Backups are strongly recommended
 * github.com/nextcloud/lookup-server should be checked regulary to make sure all security updates are installed
 
-### Enable the logfile
+### Enable the logfiles
 
 Create a file owned by the user running the webserver, e.g. `sudo -u www-data touch /var/log/lookupserver.log`
 
 In `/var/www/html/config/config.php`, set `LOG` to `/var/log/lookupserver.log`.
+
+Do the same for the replication log file.
+
+### Check for updates
+
+To date, there is no automatic updates checks for the lookup server, so make sure you regularly check this repository to check for updates.
