@@ -11,14 +11,14 @@
 * MySQL
 
 ## Installation steps
-1. Create a lookup MySQL database. Use the mysql.dmp for that.
+1. Create a lookup MySQL database. Use the `mysql.dmp` for that.
 1. Setup an Apache SSL/TLS vhost for the lookup server
-2. Put the contents of the server subfolder in the vhost root.
-4. Create a config.php file and adapt the settings. config.sample.php can be used as a template.
-5. Make sure the config folder is not accessible from the internet by configuring Apache to respect the .htaccess
-6. Add a cronjob that calls replicationcron.php every few minutes. Recommended is 10min
-7. Configure an automatic backup of the mysql database and the vhost folder.
-8. Test the installation by executing the example curl commands listed in the architecture.md file.
+2. Put the contents of the `server` subfolder in the vhost root.
+4. Create a `config.php` file and adapt the settings. `config.sample.php` can be used as a template.
+5. Make sure the config folder is not accessible from the internet by configuring Apache to respect the `.htaccess`
+6. Add a cronjob that calls `replicationcron.php` every few minutes. Recommended is 10min.
+7. Configure an automatic backup of the `mysql database` and the `vhost folder`.
+8. Test the installation by executing the example curl commands listed in the [architecture.md](./architecture.md) file.
 
 ### Initialization of the lookup server database
 
@@ -57,8 +57,79 @@ For the database, instructions are similar to those for the Nextcloud server [he
 
 ## Test the installation
 
+### Test the connection between the webserver and the database
+
+From the lookup server host, run:
+```sh
+mysql -h database_host -u username -p database_name -e "show databases;";
+```
+
+### Status endpoint
+From the lookup server itself, query the status endpoint to check if the lookup server is running:
+```sh
+curl http://localhost/status
+```
+Result should be similar to: `{"version":"1.1.2"}`
 
 
+### Test the network betwwen the lookup server and the Nextcloud servers
+
+From the Nextcloud servers run:
+```sh
+curl https://lookup.example.com/status
+```
+Result should be similar to: `{"version":"1.1.2"}`
+
+
+### Insert and query data
+Other tests can be performed. Let's consider a JSON example:
+
+```json
+{
+    "message": {
+      "data": {
+        "federationId": "foo@cloud.example.com",
+        "name" : "Foo Bar",
+        "email" : "foo@bar.com",
+        "address" : "Foo Road 1",
+        "website" : "example.com",
+        "twitter" : "@foo",
+        "phone" : "+1234567890"
+      },
+      "type" : "lookupserver",
+      "timestamp" : 1337,
+      "signer" : "foo@cloud.bar.com"
+    },
+    "signature" : "0ABCDDEE...."
+}
+```
+
+On the lookup server, create a json file, and paste the content above:
+
+```sh
+nano testuser.json
+```
+
+Then, run the following to insert data into the lookup server directory:
+
+```sh
+# instert data in the lookup database
+curl -v -X POST -H "Content-Type: application/json" -H "Authorization: Bearer lookup" -d @testuser.json https://lookup.example.com/users
+```
+
+Check the data has been inserted with:
+
+```sh
+# search for a user
+curl -v -X GET https://cloud.example.com/users?search=foo
+```
+
+Result should be similar to:
+
+```
+[snip]
+[{"federationId":"foo@cloud.example.com","name":{"value":"Foo Bar","verified":0},"email":{"value":"foo@bar.com","verified":0},"userid":{"value":"foo","verified":0}}]
+```
 
 ## Operations
 * It is recommended to activate the logfile and monitor the activity at the beginning to make sure everything works
@@ -66,3 +137,8 @@ For the database, instructions are similar to those for the Nextcloud server [he
 * Regular Backups are strongly recommended
 * github.com/nextcloud/lookup-server should be checked regulary to make sure all security updates are installed
 
+### Enable the logfile
+
+Create a file owned by the user running the webserver, e.g. `sudo -u www-data touch /var/log/lookupserver.log`
+
+In `/var/www/html/config/config.php`, set `LOG` to `/var/log/lookupserver.log`.
