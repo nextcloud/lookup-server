@@ -47,7 +47,7 @@ A full list of the parameters available is accessible [there](../server/config/c
 The job that must run every 10 minutes for the lookup server is `replicationcron.php`, located in the webserver root.
 If not familiar with cronjob, please refer to the Nextcloud official documentation [here](https://docs.nextcloud.com/server/latest/admin_manual/configuration_server/background_jobs_configuration.html#cron) about how to setup cronjobs.
 
-**NB:*** Note that you will have to replace `cron.php` by `replicationcron.php`.
+**NB:** Note that you will have to replace `cron.php` by `replicationcron.php`.
 
 ### Configure the backups
 
