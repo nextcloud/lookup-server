@@ -131,6 +131,8 @@ Result should be similar to:
 [{"federationId":"foo@cloud.example.com","name":{"value":"Foo Bar","verified":0},"email":{"value":"foo@bar.com","verified":0},"userid":{"value":"foo","verified":0}}]
 ```
 
+More details about testing and the lookup server APIs is available [here](./architecture.md).
+
 ## Operations
 * It is recommended to activate the logfile and monitor the activity at the beginning to make sure everything works
 * There is an additional replication logfile. This should also be monitored to make sure everything works
