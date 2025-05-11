@@ -12,7 +12,7 @@ The Lookup-Server is a server component that can be run independently from an Ne
 
 ## Documentation
 
-Please look into the doc directory for more information.
+Please look into the [doc](./doc) directory for more information.
 
 ## License
 
