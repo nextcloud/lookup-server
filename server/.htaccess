@@ -1,5 +1,17 @@
 # SPDX-FileCopyrightText: 2017 Nextcloud GmbH and Nextcloud contributors
 # SPDX-License-Identifier: AGPL-3.0-or-later
 RewriteEngine On
+
+### Allow server-status from localhost for supervision ###
+RewriteCond %{HTTP_HOST} ^localhost$
+RewriteCond %{REQUEST_URI} ^/server-status
+RewriteRule ^(.*)$ - [L]
+
+### Normal rewrite rules for lookup-server ###
 RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+### Exclude server-status from rewrite to index.php ###
+RewriteCond %{REQUEST_URI} !^/server-status
 RewriteRule ^ index.php [QSA,L]
+
