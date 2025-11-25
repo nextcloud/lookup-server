@@ -28,7 +28,8 @@ class UserManager {
 		private Twitter $twitterValidator,
 		private InstanceManager $instanceManager,
 		private SignatureHandler $signatureHandler,
-		private SecurityService $securityService
+		private SecurityService $securityService,
+        private ?Logger $logger
 	) {
 	}
 
@@ -56,6 +57,10 @@ class UserManager {
 	public function search(Request $request, Response $response, array $args = []): Response {
 		$params = $request->getQueryParams();
 		$search = urldecode($params['search'] ?? '');
+
+		if ($this->logger) {
+			$this->logger->info('Search request', ['search' => $search, 'params' => $params]);
+		}
 
 		if ($search === '') {
 			return $response->withStatus(400);
@@ -411,6 +416,9 @@ LIMIT :limit'
 			|| !isset($body['message']['data']['federationId'])
 			|| !isset($body['signature'])
 			|| !isset($body['message']['timestamp'])) {
+			if ($this->logger) {
+				$this->logger->warning('Invalid registration request - missing required fields');
+			}
 			return $response->withStatus(400);
 		}
 
@@ -419,6 +427,12 @@ LIMIT :limit'
 		try {
 			$verified = $this->signatureHandler->verify($cloudId, $body['message'], $body['signature']);
 		} catch (Exception $e) {
+			if ($this->logger) {
+				$this->logger->error('Registration signature verification failed', [
+					'cloudId' => $cloudId,
+					'error' => $e->getMessage()
+				]);
+			}
 			return $response->withStatus(400);
 		}
 
@@ -426,10 +440,19 @@ LIMIT :limit'
 			$result =
 				$this->insertOrUpdate($cloudId, $body['message']['data'], $body['message']['timestamp']);
 			if ($result === false) {
+				if ($this->logger) {
+					$this->logger->warning('Registration rejected - timestamp too old', ['cloudId' => $cloudId]);
+				}
 				return $response->withStatus(403);
+			}
+			if ($this->logger) {
+				$this->logger->info('User registered/updated successfully', ['cloudId' => $cloudId]);
 			}
 		} else {
 			// ERROR OUT
+			if ($this->logger) {
+				$this->logger->error('Registration signature invalid', ['cloudId' => $cloudId]);
+			}
 			return $response->withStatus(403);
 		}
 
@@ -542,16 +565,31 @@ LIMIT :limit'
 		try {
 			$verified = $this->signatureHandler->verify($cloudId, $body['message'], $body['signature']);
 		} catch (Exception $e) {
+			if ($this->logger) {
+				$this->logger->error('Delete signature verification failed', [
+					'cloudId' => $cloudId,
+					'error' => $e->getMessage()
+				]);
+			}
 			return $response->withStatus(400);
 		}
 
 		if ($verified) {
 			$result = $this->deleteDBRecord($cloudId);
 			if ($result === false) {
+				if ($this->logger) {
+					$this->logger->warning('Delete failed - user not found', ['cloudId' => $cloudId]);
+				}
 				return $response->withStatus(404);
+			}
+			if ($this->logger) {
+				$this->logger->info('User deleted successfully', ['cloudId' => $cloudId]);
 			}
 		} else {
 			// ERROR OUT
+			if ($this->logger) {
+				$this->logger->error('Delete signature invalid', ['cloudId' => $cloudId]);
+			}
 			return $response->withStatus(403);
 		}
 

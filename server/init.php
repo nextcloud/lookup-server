@@ -35,3 +35,28 @@ $container->set('DependenciesService', function (Container $c) {
 });
 $container->get('DependenciesService')->initContainer($container, $app);
 
+// Add error middleware for logging
+$errorMiddleware = $app->addErrorMiddleware(
+	$settings['settings']['displayErrorDetails'] ?? true,
+	true,  // logErrors
+	true   // logErrorDetails
+);
+
+// Set custom error handler that logs to our Logger
+$errorHandler = $errorMiddleware->getDefaultErrorHandler();
+$errorHandler->registerErrorRenderer('text/html', function ($exception, $displayErrorDetails) use ($container) {
+	/** @var \LookupServer\Logger $logger */
+	$logger = $container->get('Logger');
+	$logger->error('Exception: ' . $exception->getMessage(), [
+		'file' => $exception->getFile(),
+		'line' => $exception->getLine(),
+		'trace' => $exception->getTraceAsString()
+	]);
+
+	$message = $displayErrorDetails
+		? sprintf('Error: %s in %s:%d', $exception->getMessage(), $exception->getFile(), $exception->getLine())
+		: 'An error occurred';
+
+	return "<html><body><h1>Error</h1><p>{$message}</p></body></html>";
+});
+
