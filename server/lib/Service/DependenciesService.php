@@ -13,6 +13,7 @@ use Abraham\TwitterOAuth\TwitterOAuth;
 use DI\Container;
 use Exception;
 use LookupServer\InstanceManager;
+use LookupServer\Logger;
 use LookupServer\Replication;
 use LookupServer\SignatureHandler;
 use LookupServer\Tools\Traits\TArrayTools;
@@ -38,6 +39,14 @@ class DependenciesService {
 	 * @param App $app
 	 */
 	public function initContainer(Container $container, App $app): void {
+
+		$container->set('Logger', function (Container $c) {
+			$settings = $c->get('Settings');
+			return new Logger(
+				$this->get('settings.log_file', $settings),
+				$this->getBool('settings.log_enabled', $settings)
+			);
+		});
 
 		$container->set('db', function (Container $c) {
 			$db = $this->getArray('settings.db', $c->get('Settings'));
@@ -76,7 +85,8 @@ class DependenciesService {
 				$c->get('TwitterValidator'),
 				$c->get('InstanceManager'),
 				$c->get('SignatureHandler'),
-				$c->get('SecurityService')
+				$c->get('SecurityService'),
+				$c->get('Logger')
 			);
 		});
 
