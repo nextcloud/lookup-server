@@ -11,6 +11,7 @@ return [
 	'settings' => [
 		'displayErrorDetails' => true,
 		'addContentLengthHeader' => true,
+		'base_path' => $CONFIG['BASE_PATH'] ?? '',
 		'db' => [
 			'host' => $CONFIG['DB']['host'] ?? 'localhost',
 			'user' => $CONFIG['DB']['user'] ?? 'lookup',

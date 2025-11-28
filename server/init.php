@@ -19,19 +19,20 @@ define('VERSION', '1.1.2');
 
 
 require __DIR__ . '/vendor/autoload.php';
+$settings = require __DIR__ . '/src/config.php';
 
 $container = new Container();
 AppFactory::setContainer($container);
 $app = AppFactory::create();
-$app->setBasePath('');
 
-$settings = require __DIR__ . '/src/config.php';
 $container->set('Settings', function (Container $c) use ($settings) {
 	return $settings;
 });
+
+$basePath = $settings['settings']['base_path'] ?? '';
+$app->setBasePath($basePath);
 
 $container->set('DependenciesService', function (Container $c) {
 	return new DependenciesService($c->get('Settings'));
 });
 $container->get('DependenciesService')->initContainer($container, $app);
-
