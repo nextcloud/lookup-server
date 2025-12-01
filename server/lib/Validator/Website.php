@@ -11,14 +11,15 @@ namespace LookupServer\Validator;
 
 
 use Exception;
+use LookupServer\Service\LoggerService;
 use LookupServer\SignatureHandler;
 
 class Website {
 
-	private SignatureHandler $signatureHandler;
-
-	public function __construct(SignatureHandler $signatureHandler) {
-		$this->signatureHandler = $signatureHandler;
+	public function __construct(
+		private SignatureHandler $signatureHandler,
+		private LoggerService $logger,
+	) {
 	}
 
 	/**

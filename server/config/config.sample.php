@@ -19,8 +19,16 @@ $CONFIG = [
 	// error verbose
 	'ERROR_VERBOSE' => true,
 
-	// logfile
-	'LOG' => '/tmp/lookup.log',
+	// *MUST* ensure that log file is stored in a folder made not available to the outside world
+	'LOG' => [
+		'ENABLED' => true,
+		'LEVEL' => 0,
+		'FILE' => __DIR__ . '/../../logs/lookup.log',
+		'FILE_MODE' => 0640,
+		'DATE_FORMAT' => 'Y-m-d H:i:s',
+		'DATE_TIMEZONE' => 'UTC',
+		'HIDE_BACKTRACE' => false,
+	],
 
 	// replication logfile
 	'REPLICATION_LOG' => '/tmp/lookup_replication.log',

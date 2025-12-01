@@ -13,9 +13,15 @@ use BadMethodCallException;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use LookupServer\Exceptions\SignedRequestException;
+use LookupServer\Service\LoggerService;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
 class SignatureHandler {
+
+	public function __construct(
+		private LoggerService $logger,
+	) {
+	}
 
 	/**
 	 * check signature of incoming request
