@@ -69,7 +69,7 @@ From the lookup server itself, query the status endpoint to check if the lookup 
 ```sh
 curl http://localhost/status
 ```
-Result should be similar to: `{"version":"1.1.2"}`
+Result should be similar to: `{"version":"1.1.3"}`
 
 
 ### Test the network betwwen the lookup server and the Nextcloud servers
@@ -78,7 +78,7 @@ From the Nextcloud servers run:
 ```sh
 curl https://lookup.example.com/status
 ```
-Result should be similar to: `{"version":"1.1.2"}`
+Result should be similar to: `{"version":"1.1.3"}`
 
 
 ### Insert and query data

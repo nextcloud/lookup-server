@@ -12,7 +12,7 @@ use DI\Container;
 use LookupServer\Service\DependenciesService;
 use Slim\Factory\AppFactory;
 
-define('VERSION', '1.1.2');
+define('VERSION', '1.1.3');
 
 require __DIR__ . '/vendor/autoload.php';
 
