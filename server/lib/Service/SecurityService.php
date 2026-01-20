@@ -14,7 +14,10 @@ use LookupServer\Tools\Traits\TArrayTools;
 class SecurityService {
 	use TArrayTools;
 
-	public function __construct(private array $settings = []) {
+	public function __construct(
+		private array $settings,
+		private readonly LoggerService $logger,
+	) {
 	}
 
 	public function isGlobalScale(): bool {

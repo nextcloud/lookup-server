@@ -9,6 +9,7 @@ namespace LookupServer;
 
 use Exception;
 use GuzzleHttp\Exception\GuzzleException;
+use LookupServer\Service\LoggerService;
 use LookupServer\Service\SecurityService;
 use LookupServer\Tools\Traits\TArrayTools;
 use LookupServer\Validator\Email;
@@ -28,10 +29,10 @@ class UserManager {
 		private Twitter $twitterValidator,
 		private InstanceManager $instanceManager,
 		private SignatureHandler $signatureHandler,
-		private SecurityService $securityService
+		private SecurityService $securityService,
+		private readonly LoggerService $logger,
 	) {
 	}
-
 
 	/**
 	 * @param string $input
@@ -56,6 +57,8 @@ class UserManager {
 	public function search(Request $request, Response $response, array $args = []): Response {
 		$params = $request->getQueryParams();
 		$search = urldecode($params['search'] ?? '');
+
+		$this->logger->info('Search request', ['search' => $search, 'params' => $params]);
 
 		if ($search === '') {
 			return $response->withStatus(400);
@@ -411,6 +414,7 @@ LIMIT :limit'
 			|| !isset($body['message']['data']['federationId'])
 			|| !isset($body['signature'])
 			|| !isset($body['message']['timestamp'])) {
+			$this->logger->warning('Invalid registration request - missing required fields');
 			return $response->withStatus(400);
 		}
 
@@ -419,17 +423,19 @@ LIMIT :limit'
 		try {
 			$verified = $this->signatureHandler->verify($cloudId, $body['message'], $body['signature']);
 		} catch (Exception $e) {
+			$this->logger->error('Registration signature verification failed', ['cloudId' => $cloudId, 'exception' => $e]);
 			return $response->withStatus(400);
 		}
 
 		if ($verified) {
-			$result =
-				$this->insertOrUpdate($cloudId, $body['message']['data'], $body['message']['timestamp']);
+			$result = $this->insertOrUpdate($cloudId, $body['message']['data'], $body['message']['timestamp']);
 			if ($result === false) {
+				$this->logger->warning('Registration rejected - timestamp too old', ['cloudId' => $cloudId]);
 				return $response->withStatus(403);
 			}
+			$this->logger->info('User registered/updated successfully', ['cloudId' => $cloudId]);
 		} else {
-			// ERROR OUT
+			$this->logger->error('Registration signature invalid', ['cloudId' => $cloudId]);
 			return $response->withStatus(403);
 		}
 
@@ -542,16 +548,19 @@ LIMIT :limit'
 		try {
 			$verified = $this->signatureHandler->verify($cloudId, $body['message'], $body['signature']);
 		} catch (Exception $e) {
+			$this->logger->error('Delete signature verification failed', ['cloudId' => $cloudId, 'exception' => $e]);
 			return $response->withStatus(400);
 		}
 
 		if ($verified) {
 			$result = $this->deleteDBRecord($cloudId);
 			if ($result === false) {
+				$this->logger->info('Delete failed - user not found', ['cloudId' => $cloudId]);
 				return $response->withStatus(404);
 			}
+			$this->logger->info('User deleted successfully', ['cloudId' => $cloudId]);
 		} else {
-			// ERROR OUT
+			$this->logger->error('Delete signature invalid', ['cloudId' => $cloudId]);
 			return $response->withStatus(403);
 		}
 

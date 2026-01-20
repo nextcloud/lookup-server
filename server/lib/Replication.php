@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace LookupServer;
 
 use GuzzleHttp\Client;
+use LookupServer\Service\LoggerService;
 use LookupServer\Service\SecurityService;
 use PDO;
 use Psr\Http\Message\ResponseInterface;
@@ -22,7 +23,9 @@ class Replication {
 	public function __construct(
 		private PDO $db,
 		private SecurityService $securityService,
-		private array $replicationHosts) {
+		private array $replicationHosts,
+		private LoggerService $logger,
+	) {
 	}
 
 

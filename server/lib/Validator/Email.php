@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace LookupServer\Validator;
 
 use Exception;
+use LookupServer\Service\LoggerService;
 use LookupServer\Service\SecurityService;
 use PDO;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -24,6 +25,7 @@ class Email {
 		private string $host,
 		private string $from,
 		private SecurityService $securityService,
+		private LoggerService $logger,
 	) {
 	}
 

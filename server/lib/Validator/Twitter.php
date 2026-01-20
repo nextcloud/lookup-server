@@ -12,26 +12,17 @@ namespace LookupServer\Validator;
 
 use Abraham\TwitterOAuth\TwitterOAuth;
 use Exception;
+use LookupServer\Service\LoggerService;
 use LookupServer\SignatureHandler;
 use PDO;
 
 class Twitter {
-
-	private TwitterOAuth $twitterOAuth;
-	private SignatureHandler $signatureHandler;
-	private PDO $db;
-
-	/**
-	 * Twitter constructor.
-	 *
-	 * @param TwitterOAuth $twitterOAuth
-	 * @param SignatureHandler $signatureHandler
-	 * @param PDO $db
-	 */
-	public function __construct(TwitterOAuth $twitterOAuth, SignatureHandler $signatureHandler, PDO $db) {
-		$this->twitterOAuth = $twitterOAuth;
-		$this->signatureHandler = $signatureHandler;
-		$this->db = $db;
+	public function __construct(
+		private TwitterOAuth $twitterOAuth,
+		private SignatureHandler $signatureHandler,
+		private PDO $db,
+		private LoggerService $logger,
+	) {
 	}
 
 	/**

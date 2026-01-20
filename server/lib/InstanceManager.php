@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace LookupServer;
 
 use Exception;
+use LookupServer\Service\LoggerService;
 use LookupServer\Service\SecurityService;
 use PDO;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -19,7 +20,8 @@ class InstanceManager {
 	public function __construct(
 		private PDO $db,
 		private SecurityService $securityService,
-		private array $instances
+		private array $instances,
+		private LoggerService $logger,
 	) {
 	}
 
