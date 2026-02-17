@@ -9,7 +9,7 @@ sign_dir=$(build_dir)/sign
 package_name=$(shell echo $(app_name) | tr '[:upper:]' '[:lower:]')
 cert_dir=$(HOME)/.nextcloud/certificates
 branch=master
-version=1.1.3
+version=1.1.3.1
 
 all: clean clean-composer composer release
 
