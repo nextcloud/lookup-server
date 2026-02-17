@@ -21,7 +21,7 @@ $CONFIG = [
 
 	// *MUST* ensure that log file is stored in a folder made not available to the outside world
 	'LOG' => [
-		'ENABLED' => true,
+		'ENABLED' => false,
 		'LEVEL' => 0,
 		'FILE' => __DIR__ . '/../../logs/lookup.log',
 		'FILE_MODE' => 0640,

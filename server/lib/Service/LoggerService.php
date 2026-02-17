@@ -148,10 +148,10 @@ class LoggerService implements LoggerInterface {
 
 		return [
 			$this->requestId,
-			$_SERVER['REQUEST_METHOD'],
-			$_SERVER['REQUEST_URI'],
-			$_SERVER['REMOTE_ADDR'],
-			$_SERVER['HTTP_USER_AGENT']
+			$_SERVER['REQUEST_METHOD'] ?? '',
+			$_SERVER['REQUEST_URI'] ?? '',
+			$_SERVER['REMOTE_ADDR'] ?? '',
+			$_SERVER['HTTP_USER_AGENT'] ?? '',
 		];
 	}
 
