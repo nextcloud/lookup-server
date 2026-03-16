@@ -4,33 +4,31 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3b1d468970cbad0b55ab24fa71682868",
+    "content-hash": "74f7ec4285d56b5c83a422f09388b15c",
     "packages": [
         {
             "name": "abraham/twitteroauth",
-            "version": "3.3.0",
+            "version": "8.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/abraham/twitteroauth.git",
-                "reference": "2e640c1e8bb9b5dbcb2230703f97c89a852e30b5"
+                "reference": "95da0d496c4931a7b7e1c816280df953c285648d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/abraham/twitteroauth/zipball/2e640c1e8bb9b5dbcb2230703f97c89a852e30b5",
-                "reference": "2e640c1e8bb9b5dbcb2230703f97c89a852e30b5",
+                "url": "https://api.github.com/repos/abraham/twitteroauth/zipball/95da0d496c4931a7b7e1c816280df953c285648d",
+                "reference": "95da0d496c4931a7b7e1c816280df953c285648d",
                 "shasum": ""
             },
             "require": {
-                "composer/ca-bundle": "^1.2",
+                "composer/ca-bundle": "^1",
                 "ext-curl": "*",
-                "php": "^7.4 || ^8.0 || ^8.1"
+                "php": "^8.2"
             },
             "require-dev": {
-                "php-vcr/php-vcr": "^1",
-                "php-vcr/phpunit-testlistener-vcr": "dev-php-8",
-                "phpmd/phpmd": "^2",
-                "phpunit/phpunit": "^8 || ^9",
-                "squizlabs/php_codesniffer": "^3"
+                "phpunit/phpunit": "^9",
+                "rector/rector": "^0.15.7 || ^2.0.0",
+                "squizlabs/php_codesniffer": "^3 || ^4"
             },
             "type": "library",
             "autoload": {
@@ -65,20 +63,20 @@
                 "issues": "https://github.com/abraham/twitteroauth/issues",
                 "source": "https://github.com/abraham/twitteroauth"
             },
-            "time": "2022-01-19T01:10:09+00:00"
+            "time": "2026-01-18T23:30:08+00:00"
         },
         {
             "name": "composer/ca-bundle",
-            "version": "1.5.2",
+            "version": "1.5.10",
             "source": {
                 "type": "git",
                 "url": "https://github.com/composer/ca-bundle.git",
-                "reference": "48a792895a2b7a6ee65dd5442c299d7b835b6137"
+                "reference": "961a5e4056dd2e4a2eedcac7576075947c28bf63"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/composer/ca-bundle/zipball/48a792895a2b7a6ee65dd5442c299d7b835b6137",
-                "reference": "48a792895a2b7a6ee65dd5442c299d7b835b6137",
+                "url": "https://api.github.com/repos/composer/ca-bundle/zipball/961a5e4056dd2e4a2eedcac7576075947c28bf63",
+                "reference": "961a5e4056dd2e4a2eedcac7576075947c28bf63",
                 "shasum": ""
             },
             "require": {
@@ -125,7 +123,7 @@
             "support": {
                 "irc": "irc://irc.freenode.org/composer",
                 "issues": "https://github.com/composer/ca-bundle/issues",
-                "source": "https://github.com/composer/ca-bundle/tree/1.5.2"
+                "source": "https://github.com/composer/ca-bundle/tree/1.5.10"
             },
             "funding": [
                 {
@@ -135,13 +133,9 @@
                 {
                     "url": "https://github.com/composer",
                     "type": "github"
-                },
-                {
-                    "url": "https://tidelift.com/funding/github/packagist/composer/composer",
-                    "type": "tidelift"
                 }
             ],
-            "time": "2024-09-25T07:49:53+00:00"
+            "time": "2025-12-08T15:06:51+00:00"
         },
         {
             "name": "guzzlehttp/guzzle",
@@ -4980,13 +4974,13 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {},
     "prefer-stable": false,
     "prefer-lowest": false,
-    "platform": [],
-    "platform-dev": [],
+    "platform": {},
+    "platform-dev": {},
     "platform-overrides": {
         "php": "8.2"
     },
-    "plugin-api-version": "2.3.0"
+    "plugin-api-version": "2.6.0"
 }
