@@ -145,7 +145,7 @@ trait TArrayTools {
 			return $default;
 		}
 
-		return intval($arr[$k]);
+		return floatval($arr[$k]);
 	}
 
 
