@@ -213,9 +213,10 @@ LIMIT :limit'
 		$stmt->bindParam('search', $search, PDO::PARAM_STR);
 
 		// bind parameters
+		$i = 0;
 		foreach ($parameters as $parameter) {
-			$i = 0;
 			$stmt->bindParam(':key' . $i, $parameter);
+			$i++;
 		}
 
 		$stmt->execute();
