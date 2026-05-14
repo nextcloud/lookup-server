@@ -156,7 +156,7 @@ class UserManager {
 		 * We assume that we want to check for matches in both userid
 		 * and email. However, if the search string looks like an email
 		 * address, we check if there are multiple accounts with the same
-		 * email address registred. If so, we limit the search to userid.
+		 * email address registered. If so, we limit the search to userid.
 		 * We will never search the name keys.
 		 */
 		if (empty($parameters) && preg_match('/@\w?\w+(\.\w+)*$/', $search) === 1) {
