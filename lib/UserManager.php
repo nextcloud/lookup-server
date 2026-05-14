@@ -378,7 +378,7 @@ LIMIT :limit'
 				}
 			}
 
-			// remove verification request if correspondig data was deleted
+			// remove verification request if corresponding data was deleted
 			$this->removeOpenVerificationRequestByStoreId($row['id']);
 		}
 
