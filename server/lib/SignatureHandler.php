@@ -37,6 +37,15 @@ class SignatureHandler {
 		// Get fed id
 		list($user, $host) = $this->splitCloudId($cloudId);
 
+		$host = parse_url('http://' . $host, PHP_URL_HOST);
+		if (!$host) {
+			throw new BadMethodCallException('Invalid host');
+		}
+		$ip  = gethostbyname($host);
+		if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+			throw new BadMethodCallException('Invalid or private IP: ' . $host);
+		}
+
 		// Retrieve public key && store
 		$ocsreq = new \GuzzleHttp\Psr7\Request(
 			'GET',
@@ -47,7 +56,11 @@ class SignatureHandler {
 			]
 		);
 
-		$client = new Client();
+		$client = new Client(
+			// ensure curl uses the already validated IP to avoid DNS rebinding attacks
+			['curl' => [CURLOPT_RESOLVE => [$host . ':80:' . $ip,],],]
+		);
+
 		$ocsresponse = $client->send($ocsreq, ['timeout' => 10]);
 
 		$ocsresponse = json_decode($ocsresponse->getBody()->getContents(), true);
