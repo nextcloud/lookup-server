@@ -99,6 +99,7 @@ class DependenciesService {
 
 		$container->set('SignatureHandler', function (Container $c) {
 			return new SignatureHandler(
+				$c->get('SecurityService'),
 				$c->get('LoggerService'),
 			);
 		});
