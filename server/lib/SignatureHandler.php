@@ -12,14 +12,20 @@ namespace LookupServer;
 use BadMethodCallException;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
+use LookupServer\Exceptions\InvalidHostException;
 use LookupServer\Exceptions\SignedRequestException;
 use LookupServer\Service\LoggerService;
+use LookupServer\Service\SecurityService;
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Message\UriInterface;
 
 class SignatureHandler {
 
 	public function __construct(
-		private LoggerService $logger,
+		private readonly SecurityService $securityService,
+		private readonly LoggerService $logger,
 	) {
 	}
 
@@ -35,19 +41,53 @@ class SignatureHandler {
 	 */
 	public function verify(string $cloudId, string|array $message, string $signature): bool {
 		// Get fed id
-		list($user, $host) = $this->splitCloudId($cloudId);
+		list($user, $hostCloudId) = $this->splitCloudId($cloudId);
+
+		$sanitizedHost = strtok(preg_replace('#^https?://#', '', $hostCloudId), '#?');
+		$host = parse_url('http://' . $sanitizedHost, PHP_URL_HOST);
+		$port = parse_url('http://' . $sanitizedHost, PHP_URL_PORT);
+		$path = parse_url('http://' . $sanitizedHost, PHP_URL_PATH);
+
+		try {
+			list($host, $ip) = $this->securityService->validateHost($host);
+		} catch (InvalidHostException $e) {
+			$this->logger->error('Invalid host detected', ['cloudId' => $cloudId, 'host' => $host, 'exception' => $e]);
+			throw new BadMethodCallException($e->getMessage());
+		}
 
 		// Retrieve public key && store
 		$ocsreq = new \GuzzleHttp\Psr7\Request(
 			'GET',
-			'http://' . $host . '/ocs/v2.php/identityproof/key/' . $user,
+			'http://' . $host . ($port !== null ? ':' . $port : '') . ($path ?? '') . '/ocs/v2.php/identityproof/key/' . $user,
 			[
 				'OCS-APIREQUEST' => 'true',
 				'Accept' => 'application/json',
 			]
 		);
 
-		$client = new Client();
+		$client = new Client(
+			[
+				// ensure curl uses the already validated IP to avoid DNS rebinding attacks
+				'curl' => [CURLOPT_RESOLVE => [$host . ':' . ($port ?? 80) . ':' . $ip,],],
+				// validate host again upon redirection
+				'allow_redirects' => [
+					'on_redirect' => function (
+						RequestInterface $request,
+						ResponseInterface $response,
+						UriInterface $uri,
+					): void {
+						$host = parse_url($uri->__toString(), PHP_URL_HOST);
+						try {
+							$this->securityService->validateHost($host);
+						} catch (InvalidHostException $e) {
+							$this->logger->error('Invalid host detected', ['host' => $host, 'exception' => $e]);
+							throw new BadMethodCallException($e->getMessage());
+						}
+					},
+				],
+			],
+		);
+
 		$ocsresponse = $client->send($ocsreq, ['timeout' => 10]);
 
 		$ocsresponse = json_decode($ocsresponse->getBody()->getContents(), true);
