@@ -1,0 +1,188 @@
+diff --git a/.github/workflows/psalm.yml b/.github/workflows/psalm.yml
+index 3059026..e181b28 100644
+--- a/.github/workflows/psalm.yml
++++ b/.github/workflows/psalm.yml
+@@ -28,17 +28,10 @@ jobs:
+         with:
+           persist-credentials: false
+ 
+-      - name: Get php version
+-        id: versions
+-        uses: icewind1991/nextcloud-version-matrix@58becf3b4bb6dc6cef677b15e2fd8e7d48c0908f # v1.3.1
+-
+-      - name: Check enforcement of minimum PHP version ${{ steps.versions.outputs.php-min }} in psalm.xml
+-        run: grep 'phpVersion="${{ steps.versions.outputs.php-min }}' psalm.xml
+-
+-      - name: Set up php${{ steps.versions.outputs.php-available }}
++      - name: Set up php8.3
+         uses: shivammathur/setup-php@bf6b4fbd49ca58e4608c9c89fba0b8d90bd2a39f # v2.35.5
+         with:
+-          php-version: ${{ steps.versions.outputs.php-available }}
++          php-version: 8.3
+           extensions: bz2, ctype, curl, dom, fileinfo, gd, iconv, intl, json, libxml, mbstring, openssl, pcntl, posix, session, simplexml, xmlreader, xmlwriter, zip, zlib, sqlite, pdo_sqlite
+           coverage: none
+           ini-file: development
+@@ -48,15 +41,11 @@ jobs:
+           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+ 
+       - name: Install dependencies
++        working-directory: ./server
+         run: |
+           composer remove nextcloud/ocp --dev --no-scripts
+           composer i
+ 
+-      - name: Check for vulnerable PHP dependencies
+-        run: composer require --dev roave/security-advisories:dev-latest
+-
+-      - name: Install nextcloud/ocp
+-        run: composer require --dev nextcloud/ocp:dev-${{ steps.versions.outputs.branches-max }} --ignore-platform-reqs --with-dependencies
+-
+       - name: Run coding standards check
++        working-directory: ./server
+         run: composer run psalm -- --threads=1 --monochrome --no-progress --output-format=github
+diff --git a/.github/workflows/psalm.yml.patch b/.github/workflows/psalm.yml.patch
+index 2187292..e69de29 100644
+--- a/.github/workflows/psalm.yml.patch
++++ b/.github/workflows/psalm.yml.patch
+@@ -1,141 +0,0 @@
+-diff --git a/.github/workflows/psalm.yml b/.github/workflows/psalm.yml
+-index 3059026..ce7f8f3 100644
+---- a/.github/workflows/psalm.yml
+-+++ b/.github/workflows/psalm.yml
+-@@ -28,17 +28,10 @@ jobs:
+-         with:
+-           persist-credentials: false
+- 
+--      - name: Get php version
+--        id: versions
+--        uses: icewind1991/nextcloud-version-matrix@58becf3b4bb6dc6cef677b15e2fd8e7d48c0908f # v1.3.1
+--
+--      - name: Check enforcement of minimum PHP version ${{ steps.versions.outputs.php-min }} in psalm.xml
+--        run: grep 'phpVersion="${{ steps.versions.outputs.php-min }}' psalm.xml
+--
+--      - name: Set up php${{ steps.versions.outputs.php-available }}
+-+      - name: Set up php8.3
+-         uses: shivammathur/setup-php@bf6b4fbd49ca58e4608c9c89fba0b8d90bd2a39f # v2.35.5
+-         with:
+--          php-version: ${{ steps.versions.outputs.php-available }}
+-+          php-version: 8.3
+-           extensions: bz2, ctype, curl, dom, fileinfo, gd, iconv, intl, json, libxml, mbstring, openssl, pcntl, posix, session, simplexml, xmlreader, xmlwriter, zip, zlib, sqlite, pdo_sqlite
+-           coverage: none
+-           ini-file: development
+-@@ -48,15 +41,15 @@ jobs:
+-           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+- 
+-       - name: Install dependencies
+-+        working-directory: ./server
+-         run: |
+-           composer remove nextcloud/ocp --dev --no-scripts
+-           composer i
+- 
+--      - name: Check for vulnerable PHP dependencies
+--        run: composer require --dev roave/security-advisories:dev-latest
+--
+-       - name: Install nextcloud/ocp
+--        run: composer require --dev nextcloud/ocp:dev-${{ steps.versions.outputs.branches-max }} --ignore-platform-reqs --with-dependencies
+-+        working-directory: ./server
+-+        run: composer require --dev nextcloud/ocp:master --ignore-platform-reqs --with-dependencies
+- 
+-       - name: Run coding standards check
+-+        working-directory: ./server
+-         run: composer run psalm -- --threads=1 --monochrome --no-progress --output-format=github
+-diff --git a/.github/workflows/psalm.yml.patch b/.github/workflows/psalm.yml.patch
+-index 105cf90..e69de29 100644
+---- a/.github/workflows/psalm.yml.patch
+-+++ b/.github/workflows/psalm.yml.patch
+-@@ -1,92 +0,0 @@
+--diff --git a/.github/workflows/psalm.yml b/.github/workflows/psalm.yml
+--index 3059026..7c6888f 100644
+----- a/.github/workflows/psalm.yml
+--+++ b/.github/workflows/psalm.yml
+--@@ -28,17 +28,10 @@ jobs:
+--         with:
+--           persist-credentials: false
+-- 
+---      - name: Get php version
+---        id: versions
+---        uses: icewind1991/nextcloud-version-matrix@58becf3b4bb6dc6cef677b15e2fd8e7d48c0908f # v1.3.1
+---
+---      - name: Check enforcement of minimum PHP version ${{ steps.versions.outputs.php-min }} in psalm.xml
+---        run: grep 'phpVersion="${{ steps.versions.outputs.php-min }}' psalm.xml
+---
+---      - name: Set up php${{ steps.versions.outputs.php-available }}
+--+      - name: Set up php8.3
+--         uses: shivammathur/setup-php@bf6b4fbd49ca58e4608c9c89fba0b8d90bd2a39f # v2.35.5
+--         with:
+---          php-version: ${{ steps.versions.outputs.php-available }}
+--+          php-version: 8.3
+--           extensions: bz2, ctype, curl, dom, fileinfo, gd, iconv, intl, json, libxml, mbstring, openssl, pcntl, posix, session, simplexml, xmlreader, xmlwriter, zip, zlib, sqlite, pdo_sqlite
+--           coverage: none
+--           ini-file: development
+--@@ -48,15 +41,15 @@ jobs:
+--           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+-- 
+--       - name: Install dependencies
+--+        working-directory: ./server
+--         run: |
+--           composer remove nextcloud/ocp --dev --no-scripts
+--           composer i
+-- 
+---      - name: Check for vulnerable PHP dependencies
+---        run: composer require --dev roave/security-advisories:dev-latest
+---
+--       - name: Install nextcloud/ocp
+--+        working-directory: ./server
+--         run: composer require --dev nextcloud/ocp:dev-${{ steps.versions.outputs.branches-max }} --ignore-platform-reqs --with-dependencies
+-- 
+--       - name: Run coding standards check
+--+        working-directory: ./server
+--         run: composer run psalm -- --threads=1 --monochrome --no-progress --output-format=github
+--diff --git a/.github/workflows/psalm.yml.patch b/.github/workflows/psalm.yml.patch
+--index a0fa678..e69de29 100644
+----- a/.github/workflows/psalm.yml.patch
+--+++ b/.github/workflows/psalm.yml.patch
+--@@ -1,44 +0,0 @@
+---diff --git a/.github/workflows/psalm.yml b/.github/workflows/psalm.yml
+---index 3059026..ebe4236 100644
+------ a/.github/workflows/psalm.yml
+---+++ b/.github/workflows/psalm.yml
+---@@ -28,17 +28,10 @@ jobs:
+---         with:
+---           persist-credentials: false
+--- 
+----      - name: Get php version
+----        id: versions
+----        uses: icewind1991/nextcloud-version-matrix@58becf3b4bb6dc6cef677b15e2fd8e7d48c0908f # v1.3.1
+----
+----      - name: Check enforcement of minimum PHP version ${{ steps.versions.outputs.php-min }} in psalm.xml
+----        run: grep 'phpVersion="${{ steps.versions.outputs.php-min }}' psalm.xml
+----
+----      - name: Set up php${{ steps.versions.outputs.php-available }}
+---+      - name: Set up php8.3
+---         uses: shivammathur/setup-php@bf6b4fbd49ca58e4608c9c89fba0b8d90bd2a39f # v2.35.5
+---         with:
+----          php-version: ${{ steps.versions.outputs.php-available }}
+---+          php-version: 8.3
+---           extensions: bz2, ctype, curl, dom, fileinfo, gd, iconv, intl, json, libxml, mbstring, openssl, pcntl, posix, session, simplexml, xmlreader, xmlwriter, zip, zlib, sqlite, pdo_sqlite
+---           coverage: none
+---           ini-file: development
+---@@ -48,15 +41,19 @@ jobs:
+---           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+--- 
+---       - name: Install dependencies
+---+        working-directory: ./server
+---         run: |
+---           composer remove nextcloud/ocp --dev --no-scripts
+---           composer i
+--- 
+---       - name: Check for vulnerable PHP dependencies
+---+        working-directory: ./server
+---         run: composer require --dev roave/security-advisories:dev-latest
+--- 
+---       - name: Install nextcloud/ocp
+---+        working-directory: ./server
+---         run: composer require --dev nextcloud/ocp:dev-${{ steps.versions.outputs.branches-max }} --ignore-platform-reqs --with-dependencies
+--- 
+---       - name: Run coding standards check
+---+        working-directory: ./server
+---         run: composer run psalm -- --threads=1 --monochrome --no-progress --output-format=github

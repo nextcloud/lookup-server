@@ -5,6 +5,9 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
+ /**
+  * @psalm-suppress MissingFile - It will be present in production
+  */
 require __DIR__ . '/../config/config.php';
 
 return [
