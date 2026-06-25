@@ -6,7 +6,7 @@ SPDX-PackageSupplier = "Nextcloud <info@nextcloud.com>"
 SPDX-PackageDownloadLocation = "https://github.com/nextcloud/lookup-server"
 
 [[annotations]]
-path = ["mysql.dmp", "server/composer.json", "server/composer.lock"]
+path = ["mysql.dmp", "server/composer.json", "server/composer.lock", ".github/workflows/lint-php.yml.patch", ".github/workflows/psalm.yml.patch", "server/psalm.xml"]
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2016 Nextcloud GmbH and Nextcloud contributors"
 SPDX-License-Identifier = "AGPL-3.0-or-later"
