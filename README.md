@@ -14,6 +14,26 @@ The Lookup-Server is a server component that can be run independently from an Ne
 
 Please look into the [doc](./doc) directory for more information.
 
+## Duplicate `federationId` entries on `users` table
+
+In some cases, due to race condition, duplicate entries may have been inserted into the `users` table, meaning more than one row with the same `federationId`. While this does not cause any critical issues, it can lead to unnecessary database growth over time.
+
+Since this was reported, a `UNIQUE KEY` constraint has been added to `users.federationId` in `mysql.dmp`, preventing this from happening on new installations.
+
+If your installation was set up before this change, two SQL scripts are available under `sql/` to help you fix this:
+
+1. `sql/cleanup_duplicate_users.sql` - removes entries with duplicated `federationId`, keeping the most recent one
+2. `sql/add_unique_federationId.sql` - adds the unique constraint on `users.federationId`
+
+`cleanup_duplicate_users.sql` should be run before `add_unique_federationId.sql`, since the unique constraint cannot be added while duplicates exist.
+
+Scripts can be run like:
+```bash
+mysql -h database_host -u username -p database_name < sql/cleanup_duplicate_users.sql
+```
+
+> Even though data in these tables is regenerated upon new user creation/login, it is advised to back up your database before running the scripts.
+
 ## License
 
 This code is licensed as AGPL v3 or later.
