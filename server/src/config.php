@@ -41,6 +41,10 @@ return [
 			'access_token' => $CONFIG['TWITTER']['ACCESS_TOKEN'] ?? '',
 			'access_token_secret' => $CONFIG['TWITTER']['ACCESS_TOKEN_SECRET'] ?? '',
 		],
+        'config' => [
+            'minSearchStringLength' => $CONFIG['CONFIG']['MIN_SEARCH_STRING_LENGTH'] ?? 2,
+            'maxSearchResults' => $CONFIG['CONFIG']['MAX_SEARCH_RESULTS'] ?? 35,
+        ],
 		'instances' => $CONFIG['INSTANCES'] ?? [],
 	]
 ];
