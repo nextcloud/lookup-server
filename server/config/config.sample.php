@@ -84,6 +84,10 @@ $CONFIG = [
 	'INSTANCES' => [
 	// 'i001.example.net',
 	// 'i002.example.net',
-	]
-];
+	],
 
+    'CONFIG' => [
+        'MIN_SEARCH_STRING_LENGTH' => 3,
+        'MAX_SEARCH_RESULTS' => 25,
+    ]
+];
