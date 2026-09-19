@@ -163,6 +163,18 @@ class UserManager {
 
 		}
 		$constraint = preg_replace('/" OR $/', '" )', $constraint);
+
+		// every word of a free search has to match the same value
+		$words = $exactMatch ? [$search] : preg_split('/\s+/', trim($search), -1, PREG_SPLIT_NO_EMPTY);
+		if (empty($words)) {
+			return [];
+		}
+		$valueMatch = [];
+		foreach ($words as $i => $word) {
+			$valueMatch[] = 'v ' . $operator . ' :search' . $i;
+		}
+		$valueMatch = '(' . implode(' AND ', $valueMatch) . ')';
+
 		$stmt = $this->db->prepare('SELECT *
 FROM (
 	SELECT userId AS userId, SUM(valid) AS karma
@@ -170,7 +182,7 @@ FROM (
 	WHERE userId IN (
 		SELECT DISTINCT userId
 		FROM `store`
-		WHERE v ' . $operator . ' :search ' . $constraint .'
+		WHERE ' . $valueMatch . ' ' . $constraint .'
 	)
 	GROUP BY userId
 ) AS tmp
@@ -182,8 +194,10 @@ LIMIT :limit'
 		$stmt->bindParam(':karma', $minKarma, PDO::PARAM_INT);
 		$stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
 
-		$search = $exactMatch ? $search : '%' . $this->escapeWildcard($search) . '%';
-		$stmt->bindParam('search', $search, PDO::PARAM_STR);
+		foreach ($words as $i => $word) {
+			$value = $exactMatch ? $word : '%' . $this->escapeWildcard($word) . '%';
+			$stmt->bindValue(':search' . $i, $value, PDO::PARAM_STR);
+		}
 
 		// bind parameters
 		foreach ($parameters as $parameter) {
