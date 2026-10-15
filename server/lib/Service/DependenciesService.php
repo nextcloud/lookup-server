@@ -87,6 +87,7 @@ class DependenciesService {
 		$container->set('UserManager', function (Container $c) {
 			return new UserManager(
 				$c->get('db'),
+                $this->getArray('settings.config', $c->get('Settings')),
 				$c->get('EmailValidator'),
 				$c->get('WebsiteValidator'),
 				$c->get('TwitterValidator'),

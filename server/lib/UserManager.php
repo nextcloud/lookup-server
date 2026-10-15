@@ -24,6 +24,7 @@ class UserManager {
 
 	public function __construct(
 		private PDO $db,
+        private array $config,
 		private Email $emailValidator,
 		private Website $websiteValidator,
 		private Twitter $twitterValidator,
@@ -57,10 +58,10 @@ class UserManager {
 	public function search(Request $request, Response $response, array $args = []): Response {
 		$params = $request->getQueryParams();
 		$search = urldecode($params['search'] ?? '');
-
+        $limit = min(max(1, (int) $params['limit']), $this->config['maxSearchResults']);
 		$this->logger->info('Search request', ['search' => $search, 'params' => $params]);
 
-		if ($search === '') {
+		if (strlen($search) < $this->config['minSearchStringLength']) {
 			return $response->withStatus(400);
 		}
 
@@ -68,6 +69,10 @@ class UserManager {
 		$searchCloudId = $this->getBool('exactCloudId', $params);
 		// return unique exact match, e.g. the user with a specific email address
 		$exactMatch = $this->getBool('exact', $params);
+
+        $options = [
+            'limit' => $limit,
+        ];
 
 		// parameters allow you to specify which keys should be checked for a search query
 		// by default we check all keys, this way you can for example search for email addresses only
@@ -82,7 +87,7 @@ class UserManager {
 			// in a global scale setup we ignore the karma
 			// the lookup server is populated by the admin and we know
 			// that it contain only valid user information
-			$users = $this->performSearch($search, $exactMatch, $parameters, 0);
+            $users = $this->performSearch($search, $exactMatch, $parameters, $options, 0);
 		} else {
 			// is not globalscale, we only accept request with exactCloudId=1
 			return $response->withStatus(400);
@@ -118,6 +123,7 @@ class UserManager {
 		string $search,
 		bool $exactMatch,
 		array $parameters,
+        array $options,
 		int $minKarma
 	) {
 		$searchKeys = ['userid', 'email'];
@@ -143,7 +149,7 @@ class UserManager {
 			}
 		}
 		$operator = $exactMatch ? ' = ' : ' LIKE ';
-		$limit = $exactMatch ? 1 : 50;
+		$limit = $exactMatch ? 1 : $options['limit'] ?? 50;
 
 		$constraint = '';
 		if (!empty($parameters)) {
