@@ -486,12 +486,15 @@ LIMIT :limit'
 	 */
 	public function batchRegister(Request $request, Response $response, array $args = []): Response {
 		$body = json_decode($request->getBody(), true);
+        $this->logger->debug('new batch register', ['users' => $body['users'] ?? []]);
 
 		if ($body === null || !isset($body['authKey']) || !isset($body['users'])) {
+            $this->logger->warning('request body is invalid', ['keys' => array_keys($body ?? [])]);
 			return $response->withStatus(400);
 		}
 
 		if (!$this->securityService->isValidAuth($body['authKey'])) {
+            $this->logger->warning('not valid authKey', ['body' => $body]);
 			return $response->withStatus(403);
 		}
 
