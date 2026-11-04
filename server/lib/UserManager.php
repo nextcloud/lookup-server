@@ -61,14 +61,15 @@ class UserManager {
 		$limit = min(max(1, (int)($params['limit'] ?? $this->config['maxSearchResults'])), $this->config['maxSearchResults']);
 		$this->logger->info('Search request', ['search' => $search, 'params' => $params]);
 
-		if (strlen($search) < $this->config['minSearchStringLength']) {
-			return $response->withStatus(400);
-		}
-
 		// search for a specific federated cloud ID
 		$searchCloudId = $this->getBool('exactCloudId', $params);
 		// return unique exact match, e.g. the user with a specific email address
 		$exactMatch = $this->getBool('exact', $params);
+
+		if ($search === ''
+			|| (!$searchCloudId && !$exactMatch && strlen($search) < $this->config['minSearchStringLength'])) {
+			return $response->withStatus(400);
+		}
 
         $options = [
             'limit' => $limit,
