@@ -65,20 +65,36 @@ mysql -h database_host -u username -p database_name -e "show databases;";
 ```
 
 ### Status endpoint
-From the lookup server itself, query the status endpoint to check if the lookup server is running:
+
+Multiple way to confirms the lookup server is running, listening on the correct path and is reachable from a remote instance
+
 ```sh
-curl http://localhost/status
+curl -I https://lus.example.net/
+HTTP/1.1 200 OK
+Date: Sun, 18 Mar 1871 10:48:04 GMT
+Server: Apache/2.4.69 (Debian)
+Strict-Transport-Security: max-age=15768000; includeSubDomains; preload
+X-Version: 1.1.4
+Content-Type: text/html; charset=UTF-8
 ```
-Result should be similar to: `{"version":"1.1.3"}`
 
 
-### Test the network betwwen the lookup server and the Nextcloud servers
-
-From the Nextcloud servers run:
 ```sh
-curl https://lookup.example.com/status
+curl -X GET https://lus.example.net/status
+{"version":"1.1.4"}
 ```
-Result should be similar to: `{"version":"1.1.3"}`
+
+**_Note_**: If the previous curl request returns a 404, it means your httpd is missing a redirection.
+This can be avoided by adding `'/index.php'` to the configured address in your nextcloud `config.php`:
+```php
+   'lookup_server' => 'https://lus.example.net/index.php',
+```
+
+
+```sh
+curl -X GET https://lus.example.net/index.php/status
+{"version":"1.1.4"}
+```
 
 
 ### Insert and query data
