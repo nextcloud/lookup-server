@@ -527,7 +527,7 @@ LIMIT :limit'
 		}
 
 		foreach ($body['users'] as $cloudId) {
-			$this->deleteDBRecord($cloudId);
+			$this->deleteDBRecord($cloudId, time());
 		}
 
 		return $response;
@@ -563,7 +563,7 @@ LIMIT :limit'
 		}
 
 		if ($verified) {
-			$result = $this->deleteDBRecord($cloudId);
+			$result = $this->deleteDBRecord($cloudId, $body['message']['timestamp']);
 			if ($result === false) {
 				$this->logger->info('Delete failed - user not found', ['cloudId' => $cloudId]);
 				return $response->withStatus(404);
@@ -723,7 +723,7 @@ WHERE
 	 * @return bool
 	 */
 	private function insertOrUpdate(string $cloudId, array $data, int $timestamp): bool {
-		$stmt = $this->db->prepare('SELECT * FROM users WHERE federationId = :federationId');
+		$stmt = $this->db->prepare('SELECT id, UNIX_TIMESTAMP(timestamp) AS timestamp FROM users WHERE federationId = :federationId');
 		$stmt->bindParam(':federationId', $cloudId);
 		$stmt->execute();
 		$row = $stmt->fetch();
@@ -734,7 +734,7 @@ WHERE
 			// INSERT
 			$this->insert($cloudId, $data, $timestamp);
 		} else {
-			// User found. Check if it is not a replay from an old
+			// User found. Check if it is not a replay from an old request
 			if ($timestamp <= (int)$row['timestamp']) {
 				return false;
 			}
@@ -751,11 +751,12 @@ WHERE
 	 * federated cloud ID in order to propagate the changes
 	 *
 	 * @param string $cloudId
+	 * @param int $timestamp
 	 *
 	 * @return bool
 	 */
-	private function deleteDBRecord(string $cloudId): bool {
-		$stmt = $this->db->prepare('SELECT * FROM users WHERE federationId = :federationId');
+	private function deleteDBRecord(string $cloudId, int $timestamp): bool {
+		$stmt = $this->db->prepare('SELECT id, UNIX_TIMESTAMP(timestamp) AS timestamp FROM users WHERE federationId = :federationId');
 		$stmt->bindParam(':federationId', $cloudId);
 		$stmt->execute();
 		$row = $stmt->fetch();
@@ -765,6 +766,18 @@ WHERE
 		if ($row === false) {
 			return false;
 		}
+
+		// User found. Check if it is not a replay from an old request
+		if ($timestamp <= (int)$row['timestamp']) {
+			return false;
+		}
+
+		// Bump stored timestamp so a stale create can't resurrect this record afterward
+		$stmt = $this->db->prepare('UPDATE users SET timestamp = FROM_UNIXTIME(:timestamp) WHERE id = :id');
+		$stmt->bindParam(':id', $row['id']);
+		$stmt->bindParam(':timestamp', $timestamp, PDO::PARAM_INT);
+		$stmt->execute();
+		$stmt->closeCursor();
 
 		// delete user data
 		$stmt = $this->db->prepare('DELETE FROM store WHERE userId = :userId');
