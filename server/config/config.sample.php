@@ -8,6 +8,9 @@
 // Lookup-Server Config
 
 $CONFIG = [
+	// Application BASE Path. If the application is located under a subpath, define the path here.
+	'BASE_PATH' => '/lookup-server',
+
 	//DB
 	'DB' => [
 		'host' => 'localhost',
